@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pre-Dev Pipeline State",
+  "description": "Tracks the state of the pre-dev pipeline for a single Jira ticket",
+  "type": "object",
+  "required": ["jira_id", "pipeline", "status", "created_at", "updated_at", "phases"],
+  "properties": {
+    "jira_id": { "type": "string", "description": "Jira ticket ID (e.g., CAP-12345)" },
+    "pipeline": { "type": "string", "const": "pre-dev" },
+    "status": { "type": "string", "enum": ["not_started", "in_progress", "awaiting_review", "completed", "failed"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "phases": {
+      "type": "object",
+      "properties": {
+        "prd_ingestion": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "skipped"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "codebase_scout": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "skipped"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "hld_generation": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "awaiting_review"] },
+            "current_version": { "type": "integer", "minimum": 0 },
+            "confluence_url": { "type": ["string", "null"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "lld_generation": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "awaiting_review"] },
+            "current_version": { "type": "integer", "minimum": 0 },
+            "confluence_url": { "type": ["string", "null"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "testcase_generation": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed"] },
+            "confluence_url": { "type": ["string", "null"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "properties": {
+        "last_successful_phase": { "type": ["string", "null"] },
+        "can_resume_from": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

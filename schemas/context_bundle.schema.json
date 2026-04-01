@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Context Bundle",
+  "description": "Unified input context assembled by prd-ingestion agent",
+  "type": "object",
+  "required": ["jira", "fetched_at"],
+  "properties": {
+    "jira": {
+      "type": "object",
+      "required": ["id", "summary"],
+      "properties": {
+        "id": { "type": "string" },
+        "summary": { "type": "string" },
+        "description": { "type": "string" },
+        "acceptance_criteria": { "type": "string" },
+        "epic": { "type": ["string", "null"] },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "linked_urls": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "prd": {
+      "type": "object",
+      "properties": {
+        "source": { "type": "string", "enum": ["google_doc", "confluence", "jira_fallback"] },
+        "content": { "type": "string" },
+        "fallback_reason": { "type": ["string", "null"] }
+      }
+    },
+    "transcript_summary": {
+      "type": "object",
+      "properties": {
+        "decisions": { "type": "array", "items": { "type": "string" } },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "tech_feedback": { "type": "array", "items": { "type": "string" } },
+        "design_inputs": { "type": "array", "items": { "type": "string" } },
+        "open_questions": { "type": "array", "items": { "type": "string" } },
+        "action_items": { "type": "array", "items": { "type": "string" } },
+        "raw_transcript_path": { "type": ["string", "null"], "description": "Reference to original transcript file — never loaded in full" }
+      }
+    },
+    "figma": {
+      "type": "object",
+      "properties": {
+        "file_id": { "type": ["string", "null"] },
+        "frame_id": { "type": ["string", "null"] },
+        "component_tree": { "type": ["object", "null"] },
+        "tokens": { "type": ["object", "null"] },
+        "dimensions": { "type": ["object", "null"] },
+        "status": { "type": "string", "enum": ["fetched", "partial", "unavailable"] }
+      }
+    },
+    "codebase_context": {
+      "type": "object",
+      "description": "Appended by codebase-scout agent",
+      "properties": {
+        "existing_organisms": { "type": "array", "items": { "type": "string" } },
+        "existing_pages": { "type": "array", "items": { "type": "string" } },
+        "existing_endpoints": { "type": "array", "items": { "type": "string" } },
+        "existing_redux_slices": { "type": "array", "items": { "type": "string" } },
+        "existing_api_functions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "fetched_at": { "type": "string", "format": "date-time" }
+  }
+}

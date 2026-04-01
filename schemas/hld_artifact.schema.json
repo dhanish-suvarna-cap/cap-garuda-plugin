@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HLD Artifact",
+  "description": "Structured High Level Design output from hld-generator agent",
+  "type": "object",
+  "required": ["feature_name", "feasibility", "bandwidth", "epic_breakdown", "tech_impact", "version", "generated_at"],
+  "properties": {
+    "feature_name": { "type": "string" },
+    "feasibility": {
+      "type": "object",
+      "required": ["verdict"],
+      "properties": {
+        "verdict": { "type": "string", "enum": ["feasible", "feasible_with_caveats", "not_feasible"] },
+        "caveats": { "type": "array", "items": { "type": "string" } },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "bandwidth": {
+      "type": "object",
+      "properties": {
+        "total_person_days": { "type": "number" },
+        "breakdown": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "task": { "type": "string" },
+              "days": { "type": "number" },
+              "parallelizable": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "epic_breakdown": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_name": { "type": "string" },
+          "description": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "can_parallel": { "type": "array", "items": { "type": "string" } },
+          "estimated_days": { "type": "number" }
+        }
+      }
+    },
+    "tech_impact": {
+      "type": "object",
+      "properties": {
+        "new_organisms": { "type": "array", "items": { "type": "string" } },
+        "modified_organisms": { "type": "array", "items": { "type": "string" } },
+        "new_apis": { "type": "array", "items": { "type": "string" } },
+        "new_routes": { "type": "array", "items": { "type": "string" } },
+        "state_changes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "components_needed": {
+      "type": "object",
+      "properties": {
+        "atoms": { "type": "array", "items": { "type": "string" } },
+        "molecules": { "type": "array", "items": { "type": "string" } },
+        "organisms": { "type": "array", "items": { "type": "string" } },
+        "pages": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "apis_needed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+          "purpose": { "type": "string" },
+          "source": { "type": "string", "enum": ["backend_hld", "existing", "new"] }
+        }
+      }
+    },
+    "open_questions": { "type": "array", "items": { "type": "string" } },
+    "confluence_url": { "type": ["string", "null"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "format": "date-time" }
+  }
+}

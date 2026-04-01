@@ -1,0 +1,10 @@
+{
+  "name": "cap-garuda-plugin",
+  "version": "1.0.0",
+  "description": "Pre-Dev documentation and Dev execution pipelines for garuda-ui — Capillary Loyalty Frontend",
+  "author": "Capillary Frontend Team",
+
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "skills": "./skills/"
+}

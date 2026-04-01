@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Test Case Sheet",
+  "description": "Test cases and use case flows generated from LLD",
+  "type": "object",
+  "required": ["unit_tests", "usecase_flows", "deployment_verification", "generated_at"],
+  "properties": {
+    "unit_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["component", "file", "test_cases"],
+        "properties": {
+          "component": { "type": "string" },
+          "file": { "type": "string", "description": "e.g., Component.test.js, reducer.test.js, saga.test.js" },
+          "test_cases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["description", "type", "priority"],
+              "properties": {
+                "description": { "type": "string" },
+                "type": { "type": "string", "enum": ["render", "interaction", "state", "saga", "reducer", "selector"] },
+                "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+                "setup": { "type": "string", "description": "Test setup/preconditions" },
+                "assertion": { "type": "string", "description": "What to assert" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "usecase_flows": {
+      "type": "object",
+      "properties": {
+        "p0_critical": {
+          "type": "array",
+          "description": "Must-work flows — app is broken if these fail",
+          "items": {
+            "type": "object",
+            "properties": {
+              "flow_name": { "type": "string" },
+              "steps": { "type": "array", "items": { "type": "string" } },
+              "expected_outcome": { "type": "string" },
+              "verify_in": { "type": "array", "items": { "type": "string", "enum": ["staging", "production", "dev"] } }
+            }
+          }
+        },
+        "p1_important": {
+          "type": "array",
+          "description": "Important flows — should work but degraded experience is acceptable",
+          "items": {
+            "type": "object",
+            "properties": {
+              "flow_name": { "type": "string" },
+              "steps": { "type": "array", "items": { "type": "string" } },
+              "expected_outcome": { "type": "string" },
+              "verify_in": { "type": "array", "items": { "type": "string", "enum": ["staging", "production", "dev"] } }
+            }
+          }
+        },
+        "p2_edge_cases": {
+          "type": "array",
+          "description": "Edge cases and error scenarios",
+          "items": {
+            "type": "object",
+            "properties": {
+              "flow_name": { "type": "string" },
+              "steps": { "type": "array", "items": { "type": "string" } },
+              "expected_outcome": { "type": "string" },
+              "verify_in": { "type": "array", "items": { "type": "string", "enum": ["staging", "production", "dev"] } }
+            }
+          }
+        }
+      }
+    },
+    "deployment_verification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check", "how_to_verify", "priority"],
+        "properties": {
+          "check": { "type": "string" },
+          "how_to_verify": { "type": "string" },
+          "environment": { "type": "string", "enum": ["staging", "production", "both"] },
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2"] }
+        }
+      }
+    },
+    "confluence_url": { "type": ["string", "null"] },
+    "generated_at": { "type": "string", "format": "date-time" }
+  }
+}

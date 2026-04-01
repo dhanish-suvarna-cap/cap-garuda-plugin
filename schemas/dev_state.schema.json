@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Pipeline State",
+  "description": "Tracks the state of the dev pipeline for a single session",
+  "type": "object",
+  "required": ["session_id", "pipeline", "status", "created_at", "updated_at", "phases"],
+  "properties": {
+    "session_id": { "type": "string", "description": "Unique session identifier" },
+    "pipeline": { "type": "string", "const": "dev" },
+    "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "lld_source": { "type": "string", "description": "Confluence page ID or local file path" },
+        "figma_ref": { "type": ["string", "null"], "description": "Figma fileId:frameId" },
+        "extra_context": { "type": "array", "items": { "type": "string" }, "description": "Additional .md/.json file paths" },
+        "target_organism": { "type": ["string", "null"], "description": "Target organism path" }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "properties": {
+        "context_loading": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "codebase_comprehension": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "planning": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "awaiting_approval"] },
+            "approved": { "type": "boolean", "default": false },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "code_generation": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "partial"] },
+            "files_completed": { "type": "integer", "default": 0 },
+            "files_total": { "type": "integer", "default": 0 },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "visual_qa": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "skipped"] },
+            "iteration": { "type": "integer", "default": 0, "maximum": 3 },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "test_writing": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed", "skipped"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        },
+        "test_evaluation": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "failed"] },
+            "coverage_percent": { "type": ["number", "null"] },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" },
+            "error": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "properties": {
+        "last_successful_phase": { "type": ["string", "null"] },
+        "can_resume_from": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

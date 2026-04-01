@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLD Artifact",
+  "description": "Structured Low Level Design output from lld-generator agent",
+  "type": "object",
+  "required": ["component_design", "api_handling", "state_management", "version", "generated_at"],
+  "properties": {
+    "component_design": {
+      "type": "object",
+      "properties": {
+        "atoms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "cap_component": { "type": "string", "description": "Cap* component from cap-ui-library" },
+              "usage": { "type": "string" }
+            }
+          }
+        },
+        "molecules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "path": { "type": "string" },
+              "props": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "type": { "type": "string" },
+                    "required": { "type": "boolean" }
+                  }
+                }
+              },
+              "renders": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "organisms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "path", "redux_slice_key"],
+            "properties": {
+              "name": { "type": "string" },
+              "path": { "type": "string" },
+              "redux_slice_key": { "type": "string" },
+              "initial_state": { "type": "object" },
+              "action_types": { "type": "array", "items": { "type": "string" } },
+              "saga_workers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "api_call": { "type": "string" },
+                    "trigger": { "type": "string", "enum": ["takeLatest", "takeEvery", "takeLeading"] }
+                  }
+                }
+              },
+              "selectors": { "type": "array", "items": { "type": "string" } },
+              "cap_components_used": { "type": "array", "items": { "type": "string" } },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "purpose": { "type": "string" },
+                    "params": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "files": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Must list all 10 standard organism files",
+                "minItems": 10
+              }
+            }
+          }
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "route": { "type": "string" },
+              "organisms_rendered": { "type": "array", "items": { "type": "string" } },
+              "page_level_state": { "type": "object" }
+            }
+          }
+        }
+      }
+    },
+    "api_handling": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "endpoint_key": { "type": "string" },
+          "url": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+          "request_builder": { "type": "string", "enum": ["getAryaAPICallObject", "getIRISAPICallObject", "getEMFAPICallObject", "getBiAPICallObject"] },
+          "request_payload": { "type": "object" },
+          "response_shape": { "type": "object" },
+          "error_handling": { "type": "string" }
+        }
+      }
+    },
+    "state_management": {
+      "type": "object",
+      "properties": {
+        "new_slices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "initial_state": { "type": "object" }
+            }
+          }
+        },
+        "modified_slices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "changes": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "data_flow": { "type": "string", "description": "Textual description of data flow between components" },
+    "confluence_url": { "type": ["string", "null"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "generated_at": { "type": "string", "format": "date-time" }
+  }
+}
