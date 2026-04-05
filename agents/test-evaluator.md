@@ -93,15 +93,25 @@ Write `{workspacePath}/test_report.json`:
 ### Step 5: Summary Assessment
 
 Rate the test results:
-- **PASS**: All tests pass AND coverage >= 90%
-- **PARTIAL**: Some tests fail OR coverage < 90% but > 70%
-- **FAIL**: Many tests fail OR coverage < 70%
+- **PASS**: All tests pass AND coverage >= PASS threshold from `skills/config.md`
+- **PARTIAL**: Some tests fail OR coverage below PASS but above PARTIAL threshold from `skills/config.md`
+- **FAIL**: Many tests fail OR coverage below PARTIAL threshold from `skills/config.md`
 
 ## Constraints
 
 - **Do NOT auto-fix** any test failures or source code bugs
 - **Do NOT re-run** tests — run once, report results
 - **Report only** — the orchestrator decides whether to re-invoke test-writer
+
+## Exit Checklist
+
+1. `test_report.json` is valid JSON and written to workspace
+2. Jest command executed (exit code captured regardless of pass/fail)
+3. Coverage numbers parsed: lines, branches, functions, statements
+4. Each failure categorized: `failing_in_generated_test`, `failing_in_existing_test`, or `failing_in_source`
+5. Assessment rating assigned: PASS/PARTIAL/FAIL using thresholds from `skills/config.md`
+6. `evaluated_at` is a valid ISO 8601 timestamp
+7. Log any parse failures or unexpected output to `guardrail_warnings`
 
 ## Output
 

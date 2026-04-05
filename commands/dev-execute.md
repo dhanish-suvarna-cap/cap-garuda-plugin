@@ -51,16 +51,41 @@ Parse `$ARGUMENTS`:
 }
 ```
 
-4. If `--from` is specified:
-   - Validate the phase name is valid
-   - Check prerequisite files exist:
-     - `code_generation` requires: `plan.json`, `comprehension.json`, `dev_context.json`
-     - `planning` requires: `comprehension.json`, `dev_context.json`
-     - `visual_qa` requires: `generation_report.json`, `dev_context.json`
-     - `test_writing` requires: `generation_report.json`
-     - `test_evaluation` requires: test files in organism/tests/
-   - If prerequisites missing: report which phase needs to run first and STOP
-   - If prerequisites present: skip to that phase
+4. Initialize session journal: Write `{workspacePath}/session_journal.md`:
+   ```markdown
+   # Dev Session Journal: <session-id>
+   
+   > This file is auto-updated after each phase. If a session is interrupted,
+   > a new Claude session can read this file to resume from where it stopped.
+   
+   **Inputs:**
+   - LLD source: <lldSource>
+   - Figma: <figmaRef or "none">
+   - Target organism: <targetOrganism or "to be determined">
+   - Extra context: <extraContext or "none">
+   
+   ---
+   ```
+
+5. If `--from` is specified:
+   a. Validate the phase name is one of: context_loading, codebase_comprehension, planning, code_generation, visual_qa, test_writing, test_evaluation
+   b. Read `{workspacePath}/session_journal.md` if it exists — print it so context is restored
+   c. Read `{workspacePath}/dev_state.json` — verify the prerequisite phases are completed
+   d. Check prerequisite files:
+      - `context_loading` requires: nothing (entry point)
+      - `codebase_comprehension` requires: `dev_context.json`
+      - `planning` requires: `comprehension.json`, `dev_context.json`
+      - `code_generation` requires: `plan.json`, `comprehension.json`, `dev_context.json`
+      - `visual_qa` requires: `generation_report.json`, `dev_context.json`
+      - `test_writing` requires: `generation_report.json`
+      - `test_evaluation` requires: test files in organism/tests/
+   e. If prerequisites missing: report which file is missing and which phase needs to run first, then STOP
+   f. If prerequisites present: print "Resuming from <phase>. Skipping completed phases." and jump to that phase
+
+   If `--from` is NOT specified but a `dev_state.json` already exists in the workspace:
+   - Read it and check if pipeline was interrupted (status = "in_progress" but some phases completed)
+   - If interrupted: read session_journal.md, print it, and ask user: "Previous session was interrupted at <phase>. Resume? (yes/no)"
+   - If yes: set fromPhase to the next incomplete phase
 
 ---
 
@@ -78,9 +103,35 @@ Pass:
 
 Wait for `dev_context.json` to be written.
 
-Update `dev_state.json`: set `context_loading.status = "completed"`.
+**Gate Check**:
+- Read `{workspacePath}/dev_context.json`
+- Verify `lld_content` is non-empty (not null, not empty object)
+- If figma was requested: verify `figma_data` has content
+- If `guardrail_warnings` exist: print them as warnings
+- If lld_content is empty: STOP with "Failed to load LLD — check source"
+
+Update `dev_state.json`: set `context_loading.status = "completed"`, set `phases.context_loading.summary = "<one-line summary>"`, `phases.context_loading.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "context_loading"`, `recovery.can_resume_from = "codebase_comprehension"`.
 
 Print: `Phase 1 complete — dev context loaded (LLD + Figma + extra context)`
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 1: Context Loading — COMPLETED at <timestamp>
+- LLD loaded from: <source type>
+- Figma: <loaded/unavailable>
+- Extra context files: <count>
+- Output: dev_context.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace if exists, append if not):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=codebase_comprehension`
+4. Next action: Run codebase comprehension on target organism
+```
 
 ---
 
@@ -106,7 +157,14 @@ Pass:
 
 Wait for `comprehension.json` to be written.
 
-Update `dev_state.json`: set `codebase_comprehension.status = "completed"`.
+**Gate Check**:
+- Read `{workspacePath}/comprehension.json`
+- For UPDATE: verify `target_path` exists on disk via Bash `test -d`
+- For CREATE: verify `target_path` does NOT exist on disk
+- Verify no source files changed: `git diff --name-only` should show no organism files
+- If `guardrail_warnings` exist: print them
+
+Update `dev_state.json`: set `codebase_comprehension.status = "completed"`, set `phases.codebase_comprehension.summary = "<one-line summary>"`, `phases.codebase_comprehension.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "codebase_comprehension"`, `recovery.can_resume_from = "planning"`.
 
 Print:
 ```
@@ -115,6 +173,26 @@ Phase 2 complete — codebase comprehension
   Target: <path>
   Files mapped: <count>
   Redux slice: <key or "new">
+```
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 2: Codebase Comprehension — COMPLETED at <timestamp>
+- Intent: <CREATE/UPDATE>
+- Target: <path>
+- Files mapped: <count>
+- Redux slice: <key or "new">
+- Output: comprehension.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=planning`
+4. Next action: Generate implementation plan from comprehension + context
 ```
 
 ---
@@ -129,6 +207,13 @@ Pass:
 - `workspacePath`: session workspace (contains dev_context.json and comprehension.json)
 
 Wait for `plan.json` to be written.
+
+**Gate Check**:
+- Read `{workspacePath}/plan.json`
+- Verify `files` array has entries (>= 10 for CREATE, >= 1 for UPDATE)
+- Verify `intent` matches comprehension.json intent
+- If `uncertain_items` has > 3 entries: WARN user about high uncertainty
+- If `guardrail_warnings` exist: print them
 
 Read `plan.json` and display plan summary:
 
@@ -159,7 +244,27 @@ Type "no" to abort or request changes.
 
 If "no" or change requested: ask what to change, re-run planner. Do NOT proceed to Phase 4.
 
-Update `dev_state.json`: set `planning.status = "completed"`, `planning.approved = true`.
+Update `dev_state.json`: set `planning.status = "completed"`, `planning.approved = true`, `phases.planning.summary = "<one-line summary>"`, `phases.planning.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "planning"`, `recovery.can_resume_from = "code_generation"`.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 3: Planning — <APPROVED/REJECTED> at <timestamp>
+- Files planned: <count>
+- Risk items: <count>
+- Uncertain items: <count>
+- User decision: <approved/rejected>
+- Output: plan.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=code_generation`
+4. Next action: Generate code from approved plan
+```
 
 ---
 
@@ -177,9 +282,20 @@ Wait for source files to be generated and `generation_report.json` to be written
 2. If partial (some files created but not all):
    - Log: "Code generation partially completed (<N>/<total> files)"
    - Spawn a NEW code-generator instance with instructions to generate only the remaining files
-   - Repeat until all files are done or 3 attempts fail
+   - Repeat until all files are done or `max_code_gen_retries` attempts fail (see `skills/config.md`)
 
-Update `dev_state.json`: set `code_generation.status = "completed"`.
+**Gate Check**:
+- Read `{workspacePath}/generation_report.json`
+- Count `files_created` + `files_modified` vs plan.json total
+- Quick grep on all generated files for banned patterns:
+  - `from '@capillarytech/cap-ui-library'` (barrel import — NOT individual file imports)
+  - `import axios` (banned)
+  - `from '@testing-library/react'` (wrong import)
+- If banned patterns found: print warnings with file:line
+- If `guardrail_warnings` exist: print them
+- If file count mismatch: check if partial (attempt recovery) or failed
+
+Update `dev_state.json`: set `code_generation.status = "completed"`, set `phases.code_generation.summary = "<one-line summary>"`, `phases.code_generation.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "code_generation"`, `recovery.can_resume_from = "visual_qa"`.
 
 Print:
 ```
@@ -188,6 +304,26 @@ Phase 4 complete — Code generation finished
   Files modified: <list>
   Plan deviations: <list or "none">
   Unresolved items: <list or "none">
+```
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 4: Code Generation — COMPLETED at <timestamp>
+- Files created: <list>
+- Files modified: <list>
+- Plan deviations: <count>
+- Unresolved items: <count>
+- Output: generation_report.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=visual_qa`
+4. Next action: Run visual QA comparing generated code to Figma designs
 ```
 
 ---
@@ -203,11 +339,16 @@ Spawn agent: `visual-qa`
 
 Pass:
 - `workspacePath`: session workspace
-- `maxIterations`: 3
+- `maxIterations`: per `skills/config.md` `max_qa_iterations`
 
 Wait for `visual_qa_report.json` to be written.
 
-Update `dev_state.json`: set `visual_qa.status = "completed"`.
+**Gate Check**:
+- Read `{workspacePath}/visual_qa_report.json`
+- If fidelity is LOW: WARN "Significant visual differences remain — manual review recommended"
+- If `guardrail_warnings` exist: print them
+
+Update `dev_state.json`: set `visual_qa.status = "completed"`, set `phases.visual_qa.summary = "<one-line summary>"`, `phases.visual_qa.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "visual_qa"`, `recovery.can_resume_from = "test_writing"`.
 
 Print visual QA summary:
 ```
@@ -222,6 +363,25 @@ Phase 5 — Visual QA <status>
 If discrepancies remain after max iterations:
 ```
 Some visual discrepancies remain. Review visual_qa_report.json for details.
+```
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 5: Visual QA — COMPLETED at <timestamp>
+- Fidelity: <HIGH/MEDIUM/LOW>
+- Iterations: <count>
+- Remaining discrepancies: <count>
+- Output: visual_qa_report.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_writing`
+4. Next action: Write unit tests for generated code
 ```
 
 ---
@@ -246,9 +406,25 @@ Pass:
 
 Wait for test files to be written.
 
-Update `dev_state.json`: set `test_writing.status = "completed"`.
+Update `dev_state.json`: set `test_writing.status = "completed"`, set `phases.test_writing.summary = "<one-line summary>"`, `phases.test_writing.guardrail_result = "PASS"`, `recovery.last_successful_phase = "test_writing"`, `recovery.can_resume_from = "test_evaluation"`.
 
 Print: `Phase 6 complete — test files written`
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 6: Test Writing — <COMPLETED/SKIPPED> at <timestamp>
+- Test files written: <list or "skipped by user">
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_evaluation`
+4. Next action: Evaluate test coverage and results
+```
 
 ---
 
@@ -263,7 +439,12 @@ Pass:
 
 Wait for `test_report.json` to be written.
 
-Update `dev_state.json`: set `test_evaluation.status = "completed"`.
+**Gate Check**:
+- Read `{workspacePath}/test_report.json`
+- Verify assessment is PASS, PARTIAL, or FAIL
+- If `guardrail_warnings` exist: print them
+
+Update `dev_state.json`: set `test_evaluation.status = "completed"`, set `phases.test_evaluation.summary = "<one-line summary>"`, `phases.test_evaluation.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "test_evaluation"`, `recovery.can_resume_from = null`.
 
 Print test summary:
 ```
@@ -272,11 +453,30 @@ Phase 7 — Test Results
   Coverage: <lines>% lines, <branches>% branches, <functions>% functions
 ```
 
-**CHECKPOINT if coverage < 90%:**
+**CHECKPOINT if coverage < `coverage_line_target` from `skills/config.md`:**
 ```
-Coverage is below 90% target. Would you like me to write additional tests? (yes/no)
+Coverage is below <coverage_line_target>% target. Would you like me to write additional tests? (yes/no)
 ```
 If yes: re-run test-writer with focus on uncovered lines, then re-run test-evaluator.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 7: Test Evaluation — COMPLETED at <timestamp>
+- Passed: <n> | Failed: <n> | Skipped: <n>
+- Coverage: <lines>% lines, <branches>% branches
+- Assessment: <PASS/PARTIAL/FAIL>
+- Output: test_report.json
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_evaluation`
+4. Next action: Review final summary and address any remaining issues
+```
 
 ---
 
@@ -315,4 +515,13 @@ Next Steps:
 ==========================================
 ```
 
-Update `dev_state.json`: set `status = "completed"`.
+Update `dev_state.json`: set `status = "completed"`, `recovery.last_successful_phase = "final_summary"`, `recovery.can_resume_from = null`.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+---
+## SESSION COMPLETE at <timestamp>
+All phases completed successfully.
+```
+
+Remove the HOW TO RESUME block from session_journal.md (no longer needed — session is complete).

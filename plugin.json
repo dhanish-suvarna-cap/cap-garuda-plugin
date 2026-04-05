@@ -1,10 +1,18 @@
 {
   "name": "cap-garuda-plugin",
-  "version": "1.0.0",
-  "description": "Pre-Dev documentation and Dev execution pipelines for garuda-ui — Capillary Loyalty Frontend",
+  "version": "2.0.0",
+  "description": "Pre-Dev documentation and Dev execution pipelines for garuda-ui — Capillary Loyalty Frontend. Includes guardrails, session journaling, and persistent memory for resume-safe pipelines.",
   "author": "Capillary Frontend Team",
 
   "commands": "./commands/",
   "agents": "./agents/",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "schemas": "./schemas/",
+
+  "features": {
+    "guardrails": "Exit checklists on all 12 agents + gate checks on all 5 commands",
+    "session_journal": "Auto-written after each phase for resume across sessions",
+    "shared_rules": "skills/shared-rules.md — single source for coding patterns",
+    "config": "skills/config.md — centralized configurable values"
+  }
 }

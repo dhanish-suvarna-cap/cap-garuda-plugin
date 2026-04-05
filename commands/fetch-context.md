@@ -19,21 +19,61 @@ Parse `$ARGUMENTS`:
 
 ## Execution
 
-1. Create `.claude/pre-dev-workspace/<jira-id>/` if not exists
+1. Set `workspacePath` = `.claude/pre-dev-workspace/<jira-id>/`
+2. Create `<workspacePath>` if not exists: `mkdir -p <workspacePath>`
+3. Write a minimal state file `<workspacePath>/fetch_context_state.json` (if not exists):
+   ```json
+   {
+     "jiraTicketId": "<jira-id>",
+     "status": "in_progress",
+     "phases": {
+       "prd_ingestion": { "status": "not_started", "guardrail_result": null },
+       "codebase_scout": { "status": "not_started", "guardrail_result": null }
+     },
+     "created_at": "<current ISO timestamp>",
+     "updated_at": "<current ISO timestamp>"
+   }
+   ```
 
-2. Spawn agent: `prd-ingestion`
+4. Spawn the `prd-ingestion` agent (defined in `agents/prd-ingestion.md`) with these inputs:
+   - `jiraTicketId`: `<jiraTicketId>`
+   - `transcriptSource`: `<transcriptSource or "none">`
+   - `figmaRef`: `<figmaRef or "none">`
+   - `confluencePageId`: `<confluencePageId or "none">`
+   - `workspacePath`: `<workspacePath>`
 
-   Pass all parsed arguments and workspace path.
+   Give the Agent these tools: `Read, Write, Bash, WebFetch, mcp__mcp-atlassian__jira_get_issue, mcp__mcp-atlassian__confluence_get_page, mcp__framelink-figma-mcp__get_figma_data, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_fetch`
 
-3. Wait for `context_bundle.json` to be written.
+5. **Gate Check**: Read `<workspacePath>/context_bundle.json`:
+   - Verify `jira.id` matches `<jiraTicketId>`
+   - If `jira.id` is empty or missing: print error and STOP
 
-4. Spawn agent: `codebase-scout`
+6. Update `fetch_context_state.json` — set `phases.prd_ingestion.status` = `"completed"`, update `updated_at`.
 
-   Pass workspace path.
+7. Spawn the `codebase-scout` agent (defined in `agents/codebase-scout.md`) with these inputs:
+   - `workspacePath`: `<workspacePath>`
+   - Context bundle at: `<workspacePath>/context_bundle.json`
+   - Codebase root: current working directory
 
-5. Wait for `context_bundle.json` to be updated with `codebase_context`.
+   Give the Agent these tools: `Read, Bash, Grep, Glob`
 
-6. Print summary:
+8. **Gate Check**: Read updated `<workspacePath>/context_bundle.json`:
+   - Verify `codebase_context` key exists
+   - If codebase_context is missing: print error and STOP
+
+9. Update `fetch_context_state.json` — set `phases.codebase_scout.status` = `"completed"`, set `status` = `"completed"`, update `updated_at`.
+
+10. **Journal Update**: Write `<workspacePath>/session_journal.md` (append if exists):
+    ```markdown
+    ## Context Fetch — COMPLETED at <ISO timestamp>
+    - Jira: <summary from context_bundle.json>
+    - PRD source: <google_doc|confluence|jira_fallback>
+    - Transcript: <processed|not provided>
+    - Figma: <fetched|partial|unavailable>
+    - Codebase: <N> organisms, <N> pages, <N> endpoints
+    ```
+
+11. Print summary:
 ```
 Context fetched for <jira-id>
 ================================

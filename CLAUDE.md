@@ -64,3 +64,29 @@ Every organism: constants.js, actions.js, reducer.js, saga.js, selectors.js, sty
 - Imports: Cap* components from individual file paths only
 - Tests: Always from `app/utils/test-utils.js`, never `@testing-library/react`
 - Auth: Never manually add — injected by `requestConstructor.js`
+
+## 9. Shared Rules & Config
+
+- **`skills/shared-rules.md`** — Single source of truth for all non-negotiable coding patterns (organism anatomy, compose chain, action types, Cap* imports, ImmutableJS, bugsnag, test imports, coverage targets, etc.). Agents reference this instead of embedding rules inline.
+- **`skills/config.md`** — All configurable values (ports, URLs, Confluence space, coverage thresholds, retry limits, chunk sizes, etc.). Never hardcode these in agent or command files.
+
+## 10. Guardrails
+
+Every agent has an **Exit Checklist** — a set of conditions it MUST verify before writing its final output. If any check fails, the agent fixes the issue before proceeding. Unresolvable issues are logged to a `guardrail_warnings` array in the output JSON.
+
+Every command has a **Gate Check** after each agent completes — the orchestrator validates the output before spawning the next agent. If validation fails, the orchestrator reports the issue and offers to re-run the failed phase.
+
+## 11. Session Journal & Persistent Memory
+
+Each pipeline writes a **session journal** (`session_journal.md` in the workspace) that records what happened in each phase. This enables:
+
+- **Resume after quota/disconnect**: A new Claude session reads the journal to restore full context
+- **Resume after terminal close**: All state is on disk (JSON + journal), nothing in-memory
+- **Audit trail**: Human-readable log of every decision and artifact
+
+State files (`pre_dev_state.json`, `dev_state.json`) track:
+- Phase status, summaries, guardrail results
+- `recovery.last_successful_phase` and `recovery.can_resume_from`
+- `resume_instructions` — exact text for what to do next
+
+To resume: just re-run the command (e.g., `/pre-dev CAP-12345`) — it detects existing state and picks up where it stopped.

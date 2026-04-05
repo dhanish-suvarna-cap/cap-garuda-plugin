@@ -146,24 +146,38 @@ Write structured data to `{workspacePath}/hld_artifact.json`:
 }
 ```
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult these skills for Capillary coding standards when generating the HLD:
+Consult `skills/shared-rules.md` for all non-negotiable coding patterns. Consult `skills/config.md` for bandwidth defaults and limits. Additionally consult these domain-specific skills:
+- **coding-dna-architecture** — for assessing feasibility, identifying components, and checking approved libraries
+- **coding-dna-state-and-api** — for designing state management sections and API handling patterns
 
-- **coding-dna-architecture** — Tech stack, banned packages, file structure conventions. Use when assessing feasibility and identifying components needed. Check ref-stack.md for which libraries are approved.
-- **coding-dna-state-and-api** — Redux patterns, API client setup, auth flow. Use when designing state management sections and API handling. The three-state pattern (REQUEST/SUCCESS/FAILURE) is mandatory for every async operation.
+## Guardrail Warnings
 
-## Quality Checks
+If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
 
-Before writing output, verify:
-1. Every requirement from PRD is addressed in tech_impact or open_questions
-2. Every component in components_needed has a clear purpose
-3. Bandwidth breakdown sums to total_person_days
-4. No organism is listed without a corresponding API (unless pure UI)
-5. Dependencies in epic_breakdown are consistent (no circular deps)
+## Exit Checklist
+
+1. `hld_artifact.json` is valid JSON
+2. `feature_name` is non-empty string
+3. `jira_ticket_id` matches the input ticket
+4. `feasibility.verdict` is one of: `feasible`, `feasible-with-risks`, `not-feasible`
+5. `feasibility.reasoning` is non-empty
+6. `component_breakdown` has >= 1 item, each with: name, layer, action, responsibility
+7. `task_breakdown` has >= 1 item, each with: id, title, effort_hours > 0
+8. `total_bandwidth_hours` equals sum of all `effort_hours` in task_breakdown
+9. `api_integrations`: each item has endpoint, method, request_shape, response_shape
+10. If verdict is `not-feasible`: `open_questions` must explain blockers
+11. Confluence page created OR local markdown fallback written
+12. All values reference `skills/config.md` for bandwidth defaults
+13. Every requirement from PRD is addressed in tech_impact or open_questions
+14. Every component in components_needed has a clear purpose
+15. Bandwidth breakdown sums to total_person_days
+16. No organism is listed without a corresponding API (unless pure UI)
+17. Dependencies in epic_breakdown are consistent (no circular deps)
 
 ## Output
 
 - Confluence page created (or local markdown fallback)
-- `hld_artifact.json` written to workspace
+- `hld_artifact.json` written to workspace with `guardrail_warnings` array (empty if all checks passed)
 - Report: feature name, feasibility verdict, total bandwidth, number of tasks, Confluence URL

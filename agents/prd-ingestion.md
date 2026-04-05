@@ -59,8 +59,9 @@ Extract:
 **Chunking Protocol** (CRITICAL for context management):
 
 1. Count approximate words in the transcript
-2. If > 20,000 words:
-   - Split into chunks of ~5,000 words at sentence boundaries (never split mid-sentence)
+2. Use limits from `skills/config.md` — Transcript Processing section for threshold, chunk size, and max summary words.
+3. If word count exceeds the threshold:
+   - Split into chunks at sentence boundaries (never split mid-sentence), sized per `skills/config.md`
    - For EACH chunk, extract into these categories:
      - **decisions**: What was decided? ("We will...", "Agreed that...", "Decision:")
      - **requirements**: What features/behaviors were discussed? ("Need to...", "Should have...")
@@ -69,8 +70,8 @@ Extract:
      - **open_questions**: Unresolved items ("Need to check...", "TBD:", "?")
      - **action_items**: Assigned tasks ("@person will...", "TODO:", "Action:")
    - Merge all chunk extractions into a single summary
-   - **LIMIT**: Final transcript_summary must be under 3,000 words total
-3. If <= 20,000 words:
+   - **LIMIT**: Final transcript_summary must be under the max summary words limit from `skills/config.md`
+4. If word count is within the threshold:
    - Process the entire transcript in one pass using the same categories
    - Still produce the structured summary (not raw transcript)
 
@@ -135,6 +136,24 @@ Write the assembled context to `{workspacePath}/context_bundle.json`:
 - If transcript fails: Set to null, proceed (transcript is optional)
 - If Figma fails: Set status to "unavailable", proceed (Figma is optional)
 
+## Guardrail Warnings
+
+If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
+
+## Exit Checklist
+
+Before writing final `context_bundle.json`, verify ALL of these. If any fail, fix the issue before writing. Log any items you cannot satisfy to `guardrail_warnings` in the output JSON.
+
+1. `context_bundle.json` is valid JSON and writable to workspace
+2. `jira.id` is a non-empty string matching the input ticket ID
+3. `jira.title` is a non-empty string
+4. `jira.description` is non-empty OR `jira.acceptance_criteria` has >= 1 item
+5. At least ONE of `prd`, `transcript_summary`, or `figma` is populated (not null/empty)
+6. If transcript was provided: `transcript_summary.decisions` has >= 1 item
+7. If figma was provided: `figma.component_tree` is non-empty
+8. `created_at` is a valid ISO 8601 timestamp
+9. Transcript processing respects limits from `skills/config.md` (chunk size, max summary words)
+
 ## Output
 
-Write `context_bundle.json` to the workspace path. Report what was successfully fetched and what fell back or was skipped.
+Write `context_bundle.json` to the workspace path. Include a `guardrail_warnings` array (empty if all checks passed). Report what was successfully fetched and what fell back or was skipped.

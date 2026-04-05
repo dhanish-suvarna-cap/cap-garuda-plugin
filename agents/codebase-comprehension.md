@@ -14,7 +14,7 @@ You are a READ-ONLY analysis agent. You deep-read the target organism (or refere
 |-----------|------|----------|-------------|
 | `targetOrganismPath` | string | YES | Relative path to organism (e.g. `app/components/organisms/MyFeature`) |
 | `intent` | string | YES | `CREATE` (new organism) or `UPDATE` (modify existing) |
-| `workspacePath` | string | YES | Path to `.claude/sprint-workspace/` directory |
+| `workspacePath` | string | YES | Path to `.claude/dev-workspace/` directory (see `skills/config.md`) |
 
 The project root is the garuda-ui repository root. All relative paths resolve from there.
 
@@ -28,9 +28,7 @@ When modifying an existing organism, perform a deep structural analysis.
 
 ### Step 1: Enumerate Organism Files
 
-Use `Glob` to list all files in `{targetOrganismPath}/`. Confirm presence of the 10 standard files:
-- `constants.js`, `actions.js`, `reducer.js`, `saga.js`, `selectors.js`
-- `styles.js`, `messages.js`, `Component.js`, `index.js`, `Loadable.js`
+Use `Glob` to list all files in `{targetOrganismPath}/`. Confirm presence of the 10 standard files per `skills/shared-rules.md` Section 1.
 
 Note any missing or extra files.
 
@@ -200,9 +198,7 @@ When building a new organism, analyze reference organisms to understand patterns
 
 ### Step 1: Read Reference Organisms
 
-Read all 10 standard files from TWO reference organisms:
-1. `app/components/organisms/AudienceList/`
-2. `app/components/organisms/EnrolmentConfig/`
+Read all 10 standard files from reference organisms defined in `skills/config.md`.
 
 ### Step 2: Extract Patterns
 
@@ -243,7 +239,21 @@ For each reference organism, extract the same structural information as UPDATE S
 - If targetOrganismPath does not exist for UPDATE intent: STOP with error — cannot comprehend a non-existent organism.
 - If a reference organism does not exist for CREATE intent: WARN and use only the available one.
 - If a standard file is missing: Record in `missing_standard_files`, continue with available files.
-- If `Grep` for parent consumers returns too many results (>50): Narrow search to pages/ and organisms/ directories only.
+- If `Grep` for parent consumers returns too many results: Cap results per `skills/config.md` scout limits and narrow search to pages/ and organisms/ directories only.
+
+## Exit Checklist
+
+1. `comprehension.json` is valid JSON and written to workspace
+2. `intent` is exactly `CREATE` or `UPDATE`
+3. `target_path` is a valid directory path
+4. For UPDATE: `files_found` lists files that actually exist on disk
+5. For UPDATE: `redux_slice` has slice_key, initial_state, action_types populated
+6. For UPDATE: `component` section has type, props_used, cap_components populated
+7. For UPDATE: `compose_chain` is a non-empty array
+8. For CREATE: `reference_organisms` has at least 1 organism analyzed
+9. For CREATE: `patterns` section has all pattern keys populated
+10. ZERO source files were written or modified (READ-ONLY constraint verified)
+11. `analyzed_at` is a valid ISO 8601 timestamp
 
 ## Output
 

@@ -45,7 +45,7 @@ For each organism listed in HLD's `components_needed.organisms`:
 - Use Glob to find a reference organism (e.g., `AudienceList`) as a structural guide
 - Read its `constants.js` and `reducer.js` (first 50 lines each) to understand the pattern
 
-**For all organisms**: Verify the 10-file anatomy requirement from CLAUDE.md.
+**For all organisms**: Verify the 10-file anatomy per `skills/shared-rules.md` Section 1.
 
 ### Step 3: Generate Component Design
 
@@ -120,24 +120,30 @@ Use `mcp__mcp-atlassian__confluence_create_page`:
 
 Write `{workspacePath}/lld_artifact.json` following the schema in `schemas/lld_artifact.schema.json`.
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult these skills for Capillary coding standards when generating the LLD:
+Consult `skills/shared-rules.md` for all non-negotiable coding patterns. Consult `skills/config.md` for max organisms limit and other constraints. Additionally consult these domain-specific skills:
+- **coding-dna-architecture** — for component paths, file names, import patterns, and import order
+- **coding-dna-components** — for organism structure, props interfaces, HOC composition chain
+- **coding-dna-state-and-api** — for reducers, saga workers, selectors, API functions, and form handling
 
-- **coding-dna-architecture** — Tech stack, file structure, import order, naming conventions. Use when specifying component paths, file names, and import patterns. See ref-file-structure.md and ref-import-order.md.
-- **coding-dna-components** — Component anatomy, HOC composition order, props rules, hooks conventions. Use when designing organism structure, specifying props interfaces, and planning the compose chain. See ref-anatomy.md and ref-composition.md.
-- **coding-dna-state-and-api** — Redux three-state pattern, saga patterns, API request/response handling, form state, auth/RBAC. Use when specifying reducers, saga workers, selectors, API functions, and form handling. See ref-global-state.md and ref-api-request-patterns.md.
+## Guardrail Warnings
 
-## Quality Checks
+If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
 
-1. Every organism specifies all 10 standard files
-2. Every action type follows the `garuda/<Name>/VERB_NOUN` convention
-3. Every saga worker has error handling with `notifyHandledException`
-4. Every selector that returns objects/arrays uses `.toJS()`
-5. Every API endpoint has matching request/response shapes with backend signatures
-6. Request builders match the correct service (Arya, IRIS, EMF, BI)
-7. No barrel imports from cap-ui-library
-8. Reducer uses only ImmutableJS operations (fromJS, set, get, merge, setIn, getIn)
+## Exit Checklist
+
+1. `lld_artifact.json` is valid JSON
+2. Every organism has EXACTLY 10 files per `skills/shared-rules.md` Section 1
+3. Every action type follows pattern from `skills/shared-rules.md` Section 2
+4. Every saga worker specifies error handling per `skills/shared-rules.md` Section 6
+5. Every selector returning objects/arrays calls `.toJS()` per `skills/shared-rules.md` Section 11
+6. Every API endpoint has matching request/response shapes with backend signatures
+7. Request builders match the correct service (Arya, IRIS, EMF, BI)
+8. No barrel imports from cap-ui-library per `skills/shared-rules.md` Section 4
+9. Reducer uses only ImmutableJS operations per `skills/shared-rules.md` Section 5
+10. Max organisms limit respected per `skills/config.md`
+11. Confluence page created OR local markdown fallback written
 
 ## Context Budget Warning
 
@@ -149,5 +155,5 @@ If the feature involves more than 3 new organisms, this agent's context may be s
 ## Output
 
 - Confluence page created (or local markdown fallback)
-- `lld_artifact.json` written to workspace
+- `lld_artifact.json` written to workspace with `guardrail_warnings` array (empty if all checks passed)
 - Report: number of organisms, molecules, pages, APIs designed; Confluence URL

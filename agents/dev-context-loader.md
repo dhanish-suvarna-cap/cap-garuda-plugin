@@ -17,7 +17,7 @@ You receive these parameters:
 | `lldSource` | string | YES | Confluence page ID (numeric) OR local file path to LLD document |
 | `figmaRef` | string | NO | Figma reference in format `fileId:frameId` (e.g. `abc123:456-789`) |
 | `extraContextPaths` | string[] | NO | Array of additional .md or .json file paths to include |
-| `workspacePath` | string | YES | Path to `.claude/sprint-workspace/` directory for output |
+| `workspacePath` | string | YES | Path to `.claude/dev-workspace/` directory for output (see `skills/config.md`) |
 
 ## Procedure
 
@@ -135,6 +135,16 @@ Read back the written file to confirm it is valid JSON and contains all expected
 - Figma fetch failure: WARN and continue with `figma: null`.
 - Extra context file not found: WARN and skip that file.
 - Invalid JSON in extra context: WARN, include raw string instead.
+
+## Exit Checklist
+
+1. `dev_context.json` is valid JSON and written to workspace
+2. `lld_content` is non-empty (actual LLD data, not empty object)
+3. If figma provided: `figma_data.components` is a non-empty array
+4. All extra context files loaded (or warnings logged for missing ones)
+5. If LLD source was Confluence: page ID recorded in dev_context.json
+6. If LLD source was file: file path recorded in dev_context.json
+7. Any load failures logged in `guardrail_warnings`
 
 ## Output
 

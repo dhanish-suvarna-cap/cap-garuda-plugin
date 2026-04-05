@@ -1,0 +1,83 @@
+# Pipeline Configuration — Single Source of Truth
+
+> All agents and commands MUST read values from this file.
+> NEVER hardcode these values in agent or command files.
+
+## Application Config
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `app_name` | garuda-ui | All agents |
+| `dev_port` | 8000 | visual-qa, dev-execute |
+| `url_prefix` | /loyalty/ui/v3 | visual-qa, dev-execute |
+| `dev_url` | http://localhost:8000/loyalty/ui/v3 | visual-qa |
+
+## Confluence Config
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `default_confluence_space` | GARUDA | pre-dev, generate-hld, generate-lld |
+| `hld_page_title_format` | [HLD] {feature_name} - {jira_id} | hld-generator |
+| `lld_page_title_format` | [LLD] {feature_name} - {jira_id} | lld-generator |
+| `testcase_page_title_format` | [Tests] {feature_name} - {jira_id} | testcase-generator |
+
+## Pipeline Limits
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `max_qa_iterations` | 3 | visual-qa, dev-execute |
+| `max_code_gen_retries` | 3 | dev-execute |
+| `max_organisms_per_lld` | 3 | lld-generator |
+| `dev_server_startup_wait_seconds` | 60 | visual-qa |
+
+## Transcript Processing
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `transcript_chunk_threshold_words` | 20000 | prd-ingestion |
+| `transcript_chunk_size_words` | 5000 | prd-ingestion |
+| `transcript_max_summary_words` | 3000 | prd-ingestion |
+
+## Coverage Targets
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `coverage_line_target` | 90 | testcase-generator, test-writer, test-evaluator, dev-execute |
+| `coverage_branch_reducer_target` | 100 | testcase-generator, test-writer |
+| `coverage_worker_saga_target` | 100 | testcase-generator, test-writer |
+| `coverage_component_target` | 80 | testcase-generator, test-writer |
+| `coverage_partial_threshold` | 70 | test-evaluator |
+
+## Codebase Scout Limits
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `scout_max_lines_per_file` | 50 | codebase-scout |
+| `scout_max_lines_endpoints` | 200 | codebase-scout |
+| `scout_max_grep_results` | 50 | codebase-scout, codebase-comprehension |
+| `scout_target_seconds` | 30 | codebase-scout |
+
+## Bandwidth Estimate Defaults
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `bandwidth_simple_organism_days` | 2-3 | hld-generator |
+| `bandwidth_medium_organism_days` | 4-5 | hld-generator |
+| `bandwidth_complex_organism_days` | 6-8 | hld-generator |
+| `bandwidth_page_days` | 1-2 | hld-generator |
+| `bandwidth_buffer_percent` | 20 | hld-generator |
+| `bandwidth_test_buffer_percent` | 30 | hld-generator |
+
+## Workspace Paths
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `pre_dev_workspace` | .claude/pre-dev-workspace/{jiraTicketId}/ | pre-dev commands |
+| `dev_workspace` | .claude/dev-workspace/dev-{timestamp}/ | dev-execute |
+
+## Reference Organisms (for CREATE intent)
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `reference_organism_1` | app/components/organisms/AudienceList | codebase-comprehension |
+| `reference_organism_2` | app/components/organisms/EnrolmentConfig | codebase-comprehension |

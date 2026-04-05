@@ -193,12 +193,37 @@ echo "  Note: MCP servers must be configured in your Claude Code settings."
 echo "  The installer cannot verify MCP availability — check manually."
 echo ""
 
+# 8. Validate key files exist
+echo "--- Validation ---"
+MISSING=0
+for f in "$SKILLS_DIR/shared-rules/SKILL.md" "$SKILLS_DIR/config/SKILL.md"; do
+  if [ -f "$f" ]; then
+    echo "  [+] Found: $f"
+  else
+    echo "  [!] Missing: $f"
+    MISSING=$((MISSING + 1))
+  fi
+done
+if [ $MISSING -gt 0 ]; then
+  echo "  [!] WARNING: Some key files missing. Plugin may not work correctly."
+fi
+echo ""
+
 echo "===================================="
-echo "  Installation complete!"
+echo "  Installation complete! (v2.0.0)"
+echo ""
+echo "  New in v2:"
+echo "    - Guardrails: exit checklists on all agents + gate checks on commands"
+echo "    - Session journal: auto-resume across sessions"
+echo "    - Shared rules: skills/shared-rules.md (single source of truth)"
+echo "    - Config: skills/config.md (all configurable values)"
 echo ""
 echo "  Reload Claude Code to pick up new commands, agents, and skills."
 echo ""
 echo "  Quick start:"
 echo "    Pre-Dev: /pre-dev CAP-12345 --transcript=/path/to/transcript.txt"
 echo "    Dev:     /dev-execute --lld=<confluence-id> --figma=fileId:frameId"
+echo ""
+echo "  Resume interrupted pipeline:"
+echo "    Just re-run the same command — it auto-detects existing state"
 echo "===================================="

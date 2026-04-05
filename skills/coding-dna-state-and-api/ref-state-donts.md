@@ -14,12 +14,6 @@
 - **Why**: Reducers use Immutable.js. Direct mutation breaks the Redux contract.
 - **Instead**: Always return: `return state.set('field', value)`
 
-## Do Not Use useSelector/useDispatch Hooks
-
-- **Anti-pattern**: `const data = useSelector(selectData)` in a component also using `connect`
-- **Why**: The codebase consistently uses `connect` + `mapStateToProps` pattern.
-- **Instead**: `connect(mapStateToProps, mapDispatchToProps)` via `createStructuredSelector`.
-
 ## Do Not Create Global State for Single-Component Data
 
 - **Anti-pattern**: Redux reducer + saga for data used by only one component
@@ -43,3 +37,7 @@
 - **Anti-pattern**: `createSlice`, `createAsyncThunk`, RTK Query
 - **Why**: The codebase uses vanilla Redux + Immutable.js + Redux-Saga. RTK is a different paradigm.
 - **Instead**: Follow the existing `constants.js` + `actions.js` + `reducer.js` + `saga.js` + `selectors.js` pattern.
+
+---
+
+> useSelector/useDispatch rule: see `coding-dna-components/ref-component-donts.md`

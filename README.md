@@ -161,6 +161,75 @@ The script is idempotent — safe to run multiple times. It copies commands, age
 
 Both workspaces are gitignored and safe to delete between runs.
 
+### Session Journal (NEW in v2)
+
+Each workspace also contains a `session_journal.md` — a human-readable log updated after every phase:
+
+```
+.claude/pre-dev-workspace/CAP-12345/
+  session_journal.md            # Auto-updated phase-by-phase log
+  ...
+
+.claude/dev-workspace/dev-20260331-143022/
+  session_journal.md            # Auto-updated phase-by-phase log
+  ...
+```
+
+The journal enables **resume across sessions** — if Claude's quota runs out, terminal closes, or you need to pick up tomorrow, just re-run the command. It reads the journal and state file to restore context.
+
+---
+
+## Guardrails
+
+Every agent has an **Exit Checklist** — validation checks it must pass before writing output. Every command has **Gate Checks** — the orchestrator validates agent output before proceeding to the next phase.
+
+If guardrails detect issues:
+- Fixable issues: agent fixes them automatically before writing output
+- Unfixable issues: logged to `guardrail_warnings` in the output JSON and printed to user
+- Critical failures: pipeline stops with clear error message
+
+---
+
+## Resume & Recovery
+
+### Automatic Resume
+
+All pipelines support resume. Just re-run the same command:
+
+```bash
+# Re-run after interruption — auto-detects existing state and resumes
+/pre-dev CAP-12345
+
+# Or explicitly resume from a specific phase
+/dev-execute --from=code_generation
+```
+
+### What Survives Interruptions
+
+| Scenario | What's Preserved | How to Resume |
+|----------|-----------------|---------------|
+| Context overflow mid-agent | State JSON + completed files | Orchestrator auto-retries |
+| Quota limit hit | State JSON + journal + all disk files | Re-run command |
+| Terminal closed | State JSON + journal + all disk files | Re-run command |
+| Computer restart | State JSON + journal + all disk files | Re-run command |
+
+### How It Works
+
+1. **State files** (`pre_dev_state.json`, `dev_state.json`) track phase status, summaries, and `recovery.can_resume_from`
+2. **Session journal** (`session_journal.md`) provides human-readable context for the next Claude session
+3. **Incremental writes** (code-generator saves after each file via `generation_report.json`)
+4. On resume: command reads state + journal, prints history, skips completed phases
+
+---
+
+## Shared Rules & Config
+
+### `skills/shared-rules.md`
+Single source of truth for all non-negotiable coding patterns. Agents reference this instead of embedding rules inline. Covers: organism anatomy, compose chain, action types, Cap* imports, ImmutableJS, bugsnag, test imports, coverage targets, etc.
+
+### `skills/config.md`
+All configurable values in one place. Change a value here and all agents/commands pick it up. Covers: ports, URLs, Confluence space, coverage thresholds, retry limits, chunk sizes, bandwidth defaults, etc.
+
 ---
 
 ## Context Overflow Protection

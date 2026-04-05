@@ -12,15 +12,16 @@ You create a detailed, file-by-file coding plan that the code-generator agent wi
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `workspacePath` | string | YES | Path to `.claude/sprint-workspace/` containing `dev_context.json` and `comprehension.json` |
+| `workspacePath` | string | YES | Path to `.claude/dev-workspace/` containing `dev_context.json` and `comprehension.json` (see `skills/config.md`) |
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult these skills for Capillary coding standards when creating the plan:
+Consult `skills/shared-rules.md` for all non-negotiable coding patterns (organism anatomy, compose chain, action types, import order, etc.).
 
-- **coding-dna-architecture** — File structure (organism 10-file anatomy), import order conventions, naming conventions (PascalCase components, camelCase actions/selectors, UPPER_SNAKE constants). Use when planning file paths, naming exports, and structuring imports. See ref-file-structure.md and ref-naming.md.
-- **coding-dna-components** — Component anatomy (exact top-to-bottom section order in Component.js), HOC composition order, props rules (defaultProps before propTypes, destructure in signature), conditional rendering patterns (early return for loading/error, ternary for two branches, && for single branch). Use when planning Component.js and index.js. See ref-anatomy.md and ref-conditional-rendering.md.
-- **coding-dna-state-and-api** — State decision tree (UI-only → useState, server data → Redux+Saga, derived → Reselect), Redux three-state pattern, saga worker pattern (takeLatest for fetches, callback support), API function patterns (named exports in services/api.js, endpoint keys in config/endpoints.js). Use when planning reducer, saga, selectors, and API integration. See ref-state-decision-tree.md and ref-api-request-patterns.md.
+Additionally consult these domain-specific skills when planning:
+- **coding-dna-architecture** — for file paths, naming exports, import structure
+- **coding-dna-components** — for Component.js anatomy, index.js compose chain
+- **coding-dna-state-and-api** — for reducer state shape, saga workers, API functions
 
 ## CONSTRAINT: READ-ONLY on Source Files
 
@@ -363,18 +364,27 @@ List anything uncertain or potentially problematic:
 }
 ```
 
-## Validation Rules
+## Exit Checklist
 
-Before writing plan.json, verify:
+Before writing `plan.json`, verify ALL of these:
 
-1. Every action type in constants.js has at least one consumer (action creator, reducer case, or saga watcher).
-2. Every action creator in actions.js has a corresponding constant.
-3. Every reducer case has a corresponding action type in constants.js.
-4. Every saga worker has a corresponding action type and dispatches success/failure actions.
-5. Every selector reads a key that exists in initialState.
-6. The compose chain follows the exact pattern: withSaga → withReducer → withConnect, wrapping injectIntl(withStyles(Component, styles)).
-7. For UPDATE: PRESERVE items reference real existing content from comprehension.json.
-8. No circular dependencies in the planned import structure.
+1. `plan.json` is valid JSON
+2. `intent` matches `comprehension.json` intent
+3. Files array has >= 10 entries for CREATE, >= 1 for UPDATE
+4. Files are in dependency order per `skills/shared-rules.md` Section 1
+5. Every file has: path, operation, description, content_plan
+6. For CREATE: all 10 standard files present
+7. For UPDATE: preserve arrays reference real content from comprehension.json
+8. Every action type in constants has a consumer (action creator, reducer case, or saga)
+9. Every action creator has a corresponding constant
+10. Every reducer case has a corresponding action type
+11. Every saga worker dispatches both success and failure actions
+12. Every selector reads a key that exists in initialState
+13. Compose chain follows exact pattern per `skills/shared-rules.md` Section 3
+14. `component_tree` is non-empty
+15. `data_flow` is non-empty
+16. ZERO source files were written or modified
+17. Log any items that cannot be verified to `guardrail_warnings` in plan.json
 
 ## Output
 

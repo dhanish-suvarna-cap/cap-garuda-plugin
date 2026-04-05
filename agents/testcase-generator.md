@@ -14,11 +14,10 @@ You are the test case generator for the garuda-ui pre-dev pipeline. You take the
 - `confluenceSpaceKey` — Confluence space key
 - `parentPageId` — the LLD Confluence page ID (test cases are a child page)
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult this skill for Capillary testing standards when generating test cases:
-
-- **coding-dna-testing** — Testing approach, test types (unit via *.test.js, integration via *.integration.test.js), what gets tested (component renders/interactions, every reducer switch case, every saga worker with success/failure/error paths, selectors, utils), mocking strategies (renderWithProvider, expectSaga with matchers.call.fn, jest.mock for bugsnag), coverage thresholds. See ref-approach.md and ref-test-data.md.
+Consult `skills/shared-rules.md` for all non-negotiable coding patterns (especially Section 8 for test imports and Section 9 for test patterns). Consult `skills/config.md` for coverage targets and limits. Additionally consult these domain-specific skills:
+- **coding-dna-testing** — for testing approach, test types, mocking strategies, and coverage thresholds
 
 ## Steps
 
@@ -131,14 +130,26 @@ Write `{workspacePath}/testcase_sheet.json` following the schema in `schemas/tes
 
 ## Coverage Target
 
-The unit test plan should target:
-- **>90% line coverage** for all new organisms
-- **100% branch coverage** for reducers (every switch case)
-- **100% worker coverage** for sagas (every saga worker)
-- **>80% coverage** for Component.js (render + key interactions)
+Use coverage targets from `skills/config.md` — Testing section. The unit test plan should meet or exceed those thresholds for organisms, reducers, sagas, and Component.js files.
+
+## Guardrail Warnings
+
+If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
+
+## Exit Checklist
+
+1. `testcase_sheet.json` is valid JSON
+2. Every organism from the LLD has test cases
+3. Every reducer has test cases for: every switch case + default + initial state return
+4. Every saga worker has test cases for: success, failure (success:false), error (exception)
+5. P0 tests cover all happy paths and all error states
+6. P1 tests cover edge cases and boundary conditions
+7. Coverage targets match values from `skills/config.md`
+8. Confluence page created OR local markdown fallback written
+9. Test import rule references `skills/shared-rules.md` Section 8
 
 ## Output
 
 - Confluence page created (child of LLD page)
-- `testcase_sheet.json` written to workspace
+- `testcase_sheet.json` written to workspace with `guardrail_warnings` array (empty if all checks passed)
 - Report: total test case count by priority (P0/P1/P2), number of usecase flows, coverage target

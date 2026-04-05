@@ -16,16 +16,18 @@ You are the codebase scout for the garuda-ui pre-dev pipeline. Your job is to do
 ## CRITICAL: Context Budget Rules
 
 This agent must be FAST and LIGHTWEIGHT:
-- **NEVER read more than 50 lines from any single file**
+- **NEVER read more than the max lines per file limit from `skills/config.md`**
 - **NEVER read full Component.js or saga.js files** — only scan names and patterns
-- **Target: complete in under 30 seconds**
+- **Target: complete within the target seconds from `skills/config.md`**
 - Only gather names, counts, and short patterns — not full implementations
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult this skill to understand the codebase structure when scanning:
+Consult `skills/shared-rules.md` for organism anatomy and naming patterns.
+Consult `skills/config.md` for scan limits (max lines per file, max grep results, target seconds).
 
-- **coding-dna-architecture** — Tech stack (React 18, Redux-Saga, ImmutableJS, Ant Design via cap-ui-library), atomic design layers (atoms → molecules → organisms → pages → templates), file structure conventions, banned packages list. Use this to correctly identify and categorize what you find during the scan. See ref-stack.md and ref-file-structure.md.
+Additionally consult these domain-specific skills:
+- **coding-dna-architecture** — for identifying and categorizing atomic design layers and file structure conventions
 
 ## Steps
 
@@ -100,6 +102,21 @@ Read the existing `context_bundle.json`, add the `codebase_context` section, and
 }
 ```
 
+## Guardrail Warnings
+
+If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
+
+## Exit Checklist
+
+1. `context_bundle.json` updated with `codebase_context` key
+2. `codebase_context.existing_organisms` is an array (can be empty for greenfield)
+3. `codebase_context.existing_pages` is an array
+4. `codebase_context.existing_endpoints` is an array
+5. `codebase_context.existing_redux_slices` is an array
+6. No full file reads performed (only first N lines per `skills/config.md` limits)
+7. Scan completed within target time from `skills/config.md`
+8. If any arrays are empty, log reason in `guardrail_warnings`
+
 ## Output
 
-Updated `context_bundle.json` with `codebase_context` section appended. Report the counts found (e.g., "Found 15 organisms, 8 pages, 42 endpoints").
+Updated `context_bundle.json` with `codebase_context` section appended. Include a `guardrail_warnings` array (empty if all checks passed). Report the counts found (e.g., "Found 15 organisms, 8 pages, 42 endpoints").

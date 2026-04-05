@@ -26,12 +26,6 @@
 - **Why**: The library is designed for sub-module imports to enable tree-shaking.
 - **Instead**: `import CapButton from '@capillarytech/cap-ui-library/CapButton'`
 
-## Do Not Skip PropTypes
-
-- **Anti-pattern**: Components without `Component.propTypes = { ... }`
-- **Why**: PropTypes serve as the only type documentation in this JS codebase.
-- **Instead**: Always define propTypes AND defaultProps for every component.
-
 ## Do Not Use Console.log in Production Code
 
 - **Anti-pattern**: `console.log(data)` left in committed code
@@ -45,14 +39,14 @@
 - **Instead**: `const handleSearchChange = () => { ... }`
 - **Note**: This convention is inconsistently applied; the dominant pattern mixes both. Prefer `handle` for new code.
 
-## Do Not Create Top-Level index.js with Logic
-
-- **Anti-pattern**: Barrel files (`index.js`) that contain component logic
-- **Why**: Barrel files should ONLY re-export. Logic makes debugging harder.
-- **Instead**: `export { default } from './ComponentName'` — nothing else.
-
 ## Do Not Use `var` or Unscoped Declarations
 
 - **Anti-pattern**: `var x = 1`
 - **Why**: ESLint enforces `const`/`let` via Airbnb config.
 - **Instead**: `const` by default, `let` only when reassignment is needed.
+
+---
+
+> PropTypes rule: see `coding-dna-components/ref-component-donts.md`
+
+> index.js rule: see `coding-dna-components/ref-component-donts.md`

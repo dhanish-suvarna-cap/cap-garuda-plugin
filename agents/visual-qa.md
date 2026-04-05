@@ -11,7 +11,7 @@ You are the visual QA agent for the garuda-ui dev pipeline. You compare the runn
 ## Inputs (provided via prompt)
 
 - `workspacePath` — session workspace (contains `dev_context.json`, `generation_report.json`)
-- `maxIterations` — maximum fix iterations (default: 3)
+- `maxIterations` — maximum fix iterations (use `max_qa_iterations` from `skills/config.md`)
 
 ## Coding DNA Skills Reference
 
@@ -30,7 +30,7 @@ Consult this skill for Capillary styling standards when comparing and fixing vis
 ### Step 1: Determine Route URL
 
 From the generated organism/page path, determine the URL:
-- Pattern: `http://localhost:8000/loyalty/ui/v3/<route>`
+- Use dev URL from `skills/config.md` (pattern: `http://localhost:<port>/<url_prefix>/<route>`)
 - If the organism is rendered by a page, use the page's route
 - If route cannot be determined: ask the orchestrator to provide it, or skip
 
@@ -38,10 +38,10 @@ From the generated organism/page path, determine the URL:
 
 Use `mcp__Claude_Preview__preview_start` to start the dev server:
 - Command: `npm start`
-- Port: 8000
+- Port: per `skills/config.md` dev_port
 - Wait for server to be ready (check for "Compiled successfully" or similar)
 
-If dev server fails to start within 60 seconds:
+If dev server fails to start within the timeout from `skills/config.md` (`dev_server_startup_wait_seconds`):
 - Write report with `status: "skipped"`, `skip_reason: "Dev server failed to start"`
 - Do NOT attempt to fix build errors — that's not this agent's job
 
@@ -175,6 +175,17 @@ Write `{workspacePath}/visual_qa_report.json`:
 - **HIGH**: No CRITICAL or MAJOR discrepancies remaining
 - **MEDIUM**: No CRITICAL remaining, some MAJOR remaining
 - **LOW**: CRITICAL discrepancies remaining, or page doesn't render
+
+## Exit Checklist
+
+1. `visual_qa_report.json` is valid JSON and written to workspace
+2. At least 1 screenshot captured OR skip reason logged with explanation
+3. If Figma available: comparison performed with reference image
+4. Each discrepancy has: element, expected, actual, severity (CRITICAL/MAJOR/MINOR), fix_applied
+5. Fidelity rating assigned: HIGH (no CRITICAL/MAJOR), MEDIUM (no CRITICAL), LOW (CRITICAL remaining)
+6. If fixes applied: ONLY CSS/styling changes (no logic or state changes)
+7. Iteration count <= max from `skills/config.md`
+8. Log any unfixable discrepancies to `guardrail_warnings`
 
 ## Output
 

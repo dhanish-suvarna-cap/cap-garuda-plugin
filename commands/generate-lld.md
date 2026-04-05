@@ -14,7 +14,7 @@ You are the **LLD and test case generation orchestrator**. You generate a Low-Le
 Parse `$ARGUMENTS` to extract:
 - `jiraTicketId` — the first positional argument (required). If missing, print: `Usage: /generate-lld <jira-ticket-id> [--backend-hld=<confluence-page-id-or-file>] [--confluence-space=<SPACE>]` and stop.
 - `backendHld` — value of `--backend-hld` flag (optional). Can be a Confluence page ID or a local file path.
-- `confluenceSpaceKey` — value of `--confluence-space` flag (optional, default: `GARUDA`)
+- `confluenceSpaceKey` — value of `--confluence-space` flag (optional, default: `default_confluence_space` from `skills/config.md`)
 
 ## Step 2 — Validate Workspace and Prerequisites
 
@@ -23,7 +23,9 @@ Parse `$ARGUMENTS` to extract:
 2. Use Read to check if `<workspacePath>/pre_dev_state.json` exists.
    - If it does not exist, print: `Error: No workspace found for <jiraTicketId>. Run /pre-dev <jiraTicketId> first.` and **STOP**.
 
-3. Read `pre_dev_state.json` and check the HLD phase status.
+3. Read `<workspacePath>/session_journal.md` if it exists — print it so context is restored from any previous session.
+
+4. Read `pre_dev_state.json` and check the HLD phase status.
    - If `phases.hld_generation` is `"not_started"` or `"in_progress"`, print:
      ```
      Error: HLD has not been completed. Run /pre-dev <jiraTicketId> first, or /generate-hld <jiraTicketId> to generate the HLD.
@@ -35,10 +37,10 @@ Parse `$ARGUMENTS` to extract:
      Proceeding anyway — if the HLD needs changes, re-run /generate-hld with feedback and then re-run /generate-lld.
      ```
 
-4. Use Read to check if `<workspacePath>/hld_artifact.json` exists.
+5. Use Read to check if `<workspacePath>/hld_artifact.json` exists.
    - If it does not exist, print: `Error: HLD artifact not found. Run /generate-hld <jiraTicketId> first.` and **STOP**.
 
-5. Check backend inputs:
+6. Check backend inputs:
    - If `backendHld` argument is provided:
      - If it looks like a file path (contains `/` or `.md`), use Read to check if the file exists. If not found, print error and **STOP**.
      - If it looks like a Confluence page ID (numeric or alphanumeric), note it for the agent to fetch.
@@ -58,92 +60,44 @@ Parse `$ARGUMENTS` to extract:
 
 1. Update `pre_dev_state.json` — set `phases.lld_generation` to `"in_progress"`, update `updated_at`.
 2. Print: `[LLD] Generating Low-Level Design...`
-3. Spawn an Agent with this prompt:
-
-   > You are the **lld-generator** agent. Your job is to produce a detailed Low-Level Design document for frontend implementation, incorporating both the frontend HLD and any available backend context.
-   >
-   > **Inputs:**
-   > - Workspace path: `<workspacePath>`
-   > - HLD artifact: `<workspacePath>/hld_artifact.json`
-   > - Context bundle: `<workspacePath>/context_bundle.json`
-   > - Backend HLD source: `<backendHld or "none — check workspace for backend_hld.md">`
-   > - API signatures file: `<workspacePath>/api_signatures.json` (if exists)
-   > - Confluence space key: `<confluenceSpaceKey>`
-   >
-   > **Tasks:**
-   > 1. Read the HLD artifact and context bundle.
-   > 2. If a backend HLD source is provided:
-   >    - If it is a file path, read the file.
-   >    - If it is a Confluence page ID, fetch it using `mcp__mcp-atlassian__confluence_get_page`.
-   > 3. If `api_signatures.json` exists in the workspace, read it for API contract details.
-   > 4. Generate a Low-Level Design covering:
-   >    - **Component Specifications**: For each component in the HLD:
-   >      - Full file list per organism anatomy (Component.js, actions.js, constants.js, reducer.js, saga.js, selectors.js, styles.js, messages.js, index.js, Loadable.js)
-   >      - Props interface and prop types
-   >      - Internal state (if any local state beyond Redux)
-   >      - Key methods / event handlers with pseudocode
-   >      - Render structure (JSX tree outline)
-   >    - **Redux Store Design**: For each slice:
-   >      - Full initial state shape (ImmutableJS)
-   >      - All action types with payload schemas
-   >      - Reducer case logic
-   >      - Saga flows (sequence diagrams as text)
-   >      - Selector definitions
-   >    - **API Contract Details**: For each endpoint:
-   >      - Full request/response schemas (aligned with backend HLD if available)
-   >      - Error handling strategy
-   >      - Loading/retry logic
-   >    - **Routing Plan**: Exact route paths, lazy loading setup, guards
-   >    - **Shared Utilities**: Any new utils, hooks, or HOCs needed
-   >    - **Migration Notes**: If modifying existing code, exact files and changes needed
-   >    - **Integration Points with Backend**: How frontend APIs map to backend endpoints, any middleware or transformation needed
-   > 5. Write the LLD to `<workspacePath>/lld_artifact.json` with schema:
-   >    ```json
-   >    {
-   >      "feature_name": "",
-   >      "jira_ticket_id": "",
-   >      "component_specifications": [{
-   >        "name": "",
-   >        "layer": "",
-   >        "action": "create|modify",
-   >        "file_list": [],
-   >        "props_interface": {},
-   >        "internal_state": {},
-   >        "key_methods": [{ "name": "", "pseudocode": "" }],
-   >        "render_structure": "",
-   >        "notes": ""
-   >      }],
-   >      "redux_store_design": [{
-   >        "slice_key": "",
-   >        "initial_state": {},
-   >        "action_types": [{ "type": "", "payload_schema": {} }],
-   >        "reducer_logic": "",
-   >        "saga_flows": [{ "trigger": "", "steps": [] }],
-   >        "selectors": [{ "name": "", "path": "" }]
-   >      }],
-   >      "api_contracts": [{
-   >        "endpoint": "",
-   >        "method": "",
-   >        "request_schema": {},
-   >        "response_schema": {},
-   >        "error_handling": "",
-   >        "service_function_name": ""
-   >      }],
-   >      "routing_plan": [{ "path": "", "component": "", "lazy_loaded": true, "guards": [] }],
-   >      "shared_utilities": [{ "name": "", "type": "util|hook|hoc", "description": "" }],
-   >      "migration_notes": [{ "file": "", "changes": "" }],
-   >      "backend_integration_notes": "",
-   >      "confluence_url": "",
-   >      "created_at": ""
-   >    }
-   >    ```
-   > 6. If Confluence space key is provided, create a Confluence page with the LLD content and save the URL.
-   > 7. Print a summary of the LLD.
+3. Spawn the `lld-generator` agent (defined in `agents/lld-generator.md`) with these inputs:
+   - `workspacePath`: `<workspacePath>`
+   - `confluenceSpaceKey`: `<confluenceSpaceKey>`
+   - `backendHldSource`: `<backendHld source path or Confluence ID>`
+   - `apiSignaturesSource`: `<workspacePath>/api_signatures.json` (if exists)
+   - `feedback`: none (or feedback if re-generating)
 
    Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_get_page, mcp__mcp-atlassian__confluence_create_page`
 
 4. After the agent completes, use Read to load `<workspacePath>/lld_artifact.json`.
-5. Update `pre_dev_state.json` — set `phases.lld_generation` to `"completed"`, add `artifacts.lld_artifact` = `"lld_artifact.json"`, update `updated_at`.
+
+**Gate Check**: Read `<workspacePath>/lld_artifact.json`:
+- Verify `component_specifications` has >= 1 item
+- Verify every organism component has a `file_list` with >= 10 entries
+- Cross-check: every API endpoint in LLD exists in api_contracts
+- If `guardrail_warnings` exist: print them
+- If critical fields missing: offer to re-run
+
+5. Update `pre_dev_state.json` — set `phases.lld_generation` to `"completed"`, add `artifacts.lld_artifact` = `"lld_artifact.json"`, set `phases.lld_generation.summary = "<one-line summary>"`, `phases.lld_generation.guardrail_result = "PASS" or "PASS with N warnings"`, update `updated_at`.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## LLD Generation — COMPLETED at <timestamp>
+- Components: <count>
+- Redux slices: <count>
+- API contracts: <count>
+- Confluence: <url>
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace if exists, append if not):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory
+2. Start Claude Code
+3. Run: `/generate-lld <jiraTicketId>` — LLD is complete, test case generation will proceed next
+4. Next action: Generate test cases from LLD
+```
 
 ### LLD Checkpoint
 
@@ -172,75 +126,38 @@ Parse `$ARGUMENTS` to extract:
 
 1. Update `pre_dev_state.json` — set `phases.testcase_generation` to `"in_progress"`, update `updated_at`.
 2. Print: `[Tests] Generating test cases...`
-3. Spawn an Agent with this prompt:
-
-   > You are the **testcase-generator** agent. Your job is to produce a comprehensive test case sheet based on the HLD, LLD, and original requirements.
-   >
-   > **Inputs:**
-   > - Workspace path: `<workspacePath>`
-   > - Context bundle: `<workspacePath>/context_bundle.json`
-   > - HLD artifact: `<workspacePath>/hld_artifact.json`
-   > - LLD artifact: `<workspacePath>/lld_artifact.json`
-   > - Confluence space key: `<confluenceSpaceKey>`
-   >
-   > **Tasks:**
-   > 1. Read the context bundle, HLD, and LLD artifacts.
-   > 2. Generate test cases covering:
-   >    - **Unit Tests**: For each component, reducer, saga, and selector
-   >      - Component rendering tests
-   >      - Prop variation tests
-   >      - Event handler tests
-   >      - Reducer state transition tests
-   >      - Saga flow tests (success, failure, edge cases)
-   >      - Selector output tests
-   >    - **Integration Tests**: Cross-component interactions, Redux flow end-to-end
-   >    - **Use Case Flows**: End-to-end user journeys derived from acceptance criteria
-   >      - Happy path flows
-   >      - Error/edge case flows
-   >      - Permission/role-based flows
-   >    - **API Tests**: Mock API response handling, error states, loading states
-   > 3. Assign priority to each test case: P0 (critical), P1 (important), P2 (nice-to-have)
-   > 4. Write the test cases to `<workspacePath>/testcase_sheet.json` with schema:
-   >    ```json
-   >    {
-   >      "feature_name": "",
-   >      "jira_ticket_id": "",
-   >      "test_cases": [{
-   >        "id": "TC-001",
-   >        "category": "unit|integration|usecase|api",
-   >        "target_component": "",
-   >        "title": "",
-   >        "description": "",
-   >        "priority": "P0|P1|P2",
-   >        "preconditions": [],
-   >        "steps": [],
-   >        "expected_result": "",
-   >        "test_file_path": ""
-   >      }],
-   >      "usecase_flows": [{
-   >        "id": "UC-001",
-   >        "title": "",
-   >        "description": "",
-   >        "steps": [{ "action": "", "expected": "" }],
-   >        "acceptance_criteria_ref": ""
-   >      }],
-   >      "summary": {
-   >        "total_test_cases": 0,
-   >        "by_priority": { "P0": 0, "P1": 0, "P2": 0 },
-   >        "by_category": { "unit": 0, "integration": 0, "usecase": 0, "api": 0 },
-   >        "usecase_flows_count": 0
-   >      },
-   >      "confluence_url": "",
-   >      "created_at": ""
-   >    }
-   >    ```
-   > 5. If Confluence space key is provided, create a Confluence page with the test cases and save the URL.
-   > 6. Print a summary.
+3. Spawn the `testcase-generator` agent (defined in `agents/testcase-generator.md`) with these inputs:
+   - `workspacePath`: `<workspacePath>`
+   - `confluenceSpaceKey`: `<confluenceSpaceKey>`
 
    Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page`
 
 4. After the agent completes, use Read to load `<workspacePath>/testcase_sheet.json`.
-5. Update `pre_dev_state.json` — set `phases.testcase_generation` to `"completed"`, add `artifacts.testcase_sheet` = `"testcase_sheet.json"`, update `updated_at`.
+
+**Gate Check**: Read `<workspacePath>/testcase_sheet.json`:
+- Verify `test_cases` array is non-empty
+- Verify every organism from LLD has test cases
+- If `guardrail_warnings` exist: print them
+
+5. Update `pre_dev_state.json` — set `phases.testcase_generation` to `"completed"`, add `artifacts.testcase_sheet` = `"testcase_sheet.json"`, set `phases.testcase_generation.summary = "<one-line summary>"`, `phases.testcase_generation.guardrail_result = "PASS" or "PASS with N warnings"`, update `updated_at`.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Test Case Generation — COMPLETED at <timestamp>
+- Total cases: <count>
+- P0: <count>, P1: <count>, P2: <count>
+- Confluence: <url>
+```
+
+Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in garuda-ui repo directory
+2. Start Claude Code
+3. Run: `/generate-lld <jiraTicketId>` — both LLD and test cases are complete
+4. Next action: Review artifacts and proceed to dev pipeline
+```
 
 ### Test Case Checkpoint
 
@@ -293,3 +210,12 @@ Next Steps:
 ```
 
 Update `pre_dev_state.json` with all phases marked as completed and `updated_at` set to current timestamp.
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+---
+## SESSION COMPLETE at <timestamp>
+All pre-dev phases completed successfully. Artifacts ready for review and dev pipeline.
+```
+
+Remove the HOW TO RESUME block from session_journal.md (no longer needed — session is complete).

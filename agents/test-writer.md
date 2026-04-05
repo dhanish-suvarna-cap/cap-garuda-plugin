@@ -13,16 +13,18 @@ You are the test writer for the garuda-ui dev pipeline. You write comprehensive 
 - `workspacePath` — session workspace (contains `generation_report.json`, optionally `testcase_sheet.json` or test specs from dev_context.json)
 - `batch` — (optional) which batch to generate: `redux` (reducer + saga tests) or `component` (Component tests). If not specified, generate all.
 
-## TESTING RULES (Non-Negotiable)
+## TESTING RULES
 
-1. **ALWAYS import from `app/utils/test-utils.js`** — NEVER from `@testing-library/react`
-2. **ALWAYS mock bugsnag**: `jest.mock('utils/bugsnag', () => ({ notifyHandledException: jest.fn() }));`
+All testing rules are defined in `skills/shared-rules.md` Sections 8 and 9. Key rules:
+
+1. **Import from `app/utils/test-utils.js`** — NEVER from `@testing-library/react` (Section 8)
+2. **Mock bugsnag** in every test file (Section 8)
 3. **Use `renderWithProvider`** for Redux-connected components
 4. **Use `renderWithRouter`** for components needing router context
 5. **Use `expectSaga`** from `redux-saga-test-plan` for saga tests
 6. **Use `matchers.call.fn`** from `redux-saga-test-plan/matchers` for mocking API calls
 7. **Test EVERY reducer switch case** — no exceptions
-8. **Test EVERY saga worker**: success path, failure path (success:false), error path (exception)
+8. **Test EVERY saga worker**: success, failure (success:false), error (exception)
 
 ## Coding DNA Skills Reference
 
@@ -195,10 +197,7 @@ Read `{workspacePath}/generation_report.json` and add test files to `files_creat
 
 ## Coverage Target
 
-- **>90%** line coverage for all new code
-- **100%** branch coverage for reducers (every switch case)
-- **100%** worker coverage for sagas (every saga worker × 3 paths)
-- **>80%** coverage for Component.js (render states + key interactions)
+Coverage targets are defined in `skills/config.md` and `skills/shared-rules.md` Section 9.
 
 ## Test Case Sheet Integration
 
@@ -206,6 +205,19 @@ If `testcase_sheet.json` exists in the context:
 - Use its `unit_tests` section as the specification for which tests to write
 - Map each test case to actual test code
 - Include all P0 tests (mandatory), P1 tests (recommended), skip P2 unless easy to add
+
+## Exit Checklist
+
+1. All test files written to `<organism-path>/tests/`
+2. Every test file imports from `app/utils/test-utils.js` (shared-rules.md Section 8)
+3. Every test file mocks bugsnag (shared-rules.md Section 8)
+4. `reducer.test.js`: tests every switch case + initial state + unknown action
+5. `saga.test.js`: tests every worker x 3 paths (success, failure, error)
+6. `Component.test.js`: tests render, loading, error, empty states
+7. No test uses Enzyme (only RTL for new tests)
+8. `generation_report.json` updated with test file paths
+9. If `testcase_sheet.json` exists: all P0 tests implemented, P1 tests recommended
+10. Log any tests that couldn't be generated to `guardrail_warnings`
 
 ## Output
 

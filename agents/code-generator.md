@@ -13,37 +13,26 @@ You are the code generator for the garuda-ui dev pipeline. You read the plan and
 - `workspacePath` — session workspace (contains `plan.json`, `comprehension.json`, `dev_context.json`)
 - `resumeFrom` — (optional) file index to resume from if recovering from partial generation
 
-## HARD RULES (Non-Negotiable)
+## HARD RULES
+
+All non-negotiable coding rules are defined in `skills/shared-rules.md`. The following are CRITICAL for code generation:
 
 1. **Only modify files listed in plan.json** — no other files
-2. **Cap* imports: individual file paths ONLY**
-   ```js
-   // CORRECT
-   import CapButton from '@capillarytech/cap-ui-library/CapButton';
-   // WRONG
-   import { CapButton } from '@capillarytech/cap-ui-library';
-   ```
-3. **Reducer: ImmutableJS ONLY** — `fromJS`, `set`, `get`, `merge`, `setIn`, `getIn`, `toJS`
-4. **Saga catch blocks MUST include bugsnag**:
-   ```js
-   catch (error) {
-     notifyHandledException(error);
-     yield put(failureAction(error));
-   }
-   ```
-5. **Compose chain follows EXACT pattern from CLAUDE.md** — withSaga, withReducer, withConnect, injectIntl, withStyles
-6. **Never manually add Authorization headers** — injected by requestConstructor.js
-7. **PRESERVE items copied character-for-character** (UPDATE mode) — do not modify preserved code
+2. **Cap* imports**: individual file paths ONLY (shared-rules.md Section 4)
+3. **Reducer**: ImmutableJS ONLY (shared-rules.md Section 5)
+4. **Saga catch blocks**: MUST include bugsnag (shared-rules.md Section 6)
+5. **Compose chain**: EXACT pattern (shared-rules.md Section 3)
+6. **No manual auth headers** (shared-rules.md Section 7)
+7. **PRESERVE items copied character-for-character** (UPDATE mode)
 
-## Coding DNA Skills Reference
+## Rules Reference
 
-Consult these skills for Capillary coding standards during code generation:
-
-- **coding-dna-architecture** — Import order (React → third-party → Cap-UI → internal → utils → local), path resolution (`@capillarytech/` prefix), naming conventions (PascalCase components, camelCase functions, UPPER_SNAKE constants, kebab-case CSS). See ref-import-order.md and ref-naming.md.
-- **coding-dna-components** — Component anatomy (exact top-to-bottom order), HOC composition order (withSaga → withReducer → withConnect wrapping injectIntl(withStyles(Component, styles))), props rules (destructure in signature, defaultProps before propTypes, every component accepts className), conditional rendering patterns. See ref-anatomy.md and ref-props.md.
-- **coding-dna-styling** — Design tokens (CAP_SPACE_*, CAP_G*, FONT_SIZE_*, FONT_WEIGHT_*), styled-components patterns (css template default export + named styled exports), class naming (kebab-case, component-prefixed), Ant Design overrides via nested selectors. When token doesn't exist: use rem at base 14 with comment. See ref-tokens-and-theme.md.
-- **coding-dna-state-and-api** — Redux three-state pattern (REQUEST/SUCCESS/FAILURE mandatory), saga pattern (takeLatest for fetches, ALWAYS try-catch with notifyHandledException, check res?.success), API client (native fetch, never axios, use getAryaAPICallObject), form state (manual useState, NO Formik/React Hook Form). See ref-global-state.md and ref-server-state.md.
-- **coding-dna-quality** — Error handling (4 layers: API client → saga → component → global), Bugsnag integration (notifyHandledException in every saga catch), error boundary wrapping, code splitting (loadable() for pages, React.lazy for heavy components), per-method lodash/antd imports. See ref-error-strategy.md and ref-perf-patterns.md.
+Consult `skills/shared-rules.md` for all non-negotiable patterns. Additionally:
+- **coding-dna-architecture** — ref-import-order.md, ref-naming.md
+- **coding-dna-components** — ref-anatomy.md, ref-props.md
+- **coding-dna-styling** — ref-tokens-and-theme.md
+- **coding-dna-state-and-api** — ref-global-state.md, ref-server-state.md
+- **coding-dna-quality** — ref-error-strategy.md, ref-perf-patterns.md
 
 ## Steps
 
@@ -89,76 +78,17 @@ Process files from plan.json in this exact order:
 
 #### 3a. Generate the file content
 
-Follow the patterns from the Coding DNA skills (see above) and CLAUDE.md:
-
-**constants.js:**
-```js
-export const ACTION_TYPE = 'garuda/OrganismName/ACTION_TYPE';
-```
-
-**actions.js:**
-```js
-import { ACTION_TYPE } from './constants';
-export const actionCreator = (payload, callback) => ({ type: ACTION_TYPE, payload, callback });
-```
-
-**reducer.js:**
-```js
-import { fromJS } from 'immutable';
-import { SUCCESS, FAILURE, CLEAR } from './constants';
-export const initialState = fromJS({ /* from LLD */ });
-function reducer(state = initialState, action) {
-  switch (action.type) { /* cases from plan */ }
-}
-export default reducer;
-```
-
-**saga.js:**
-```js
-import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { REQUEST } from './constants';
-import { successAction, failureAction } from './actions';
-import * as Api from 'services/api';
-import { notifyHandledException } from 'utils/bugsnag';
-// workers + watchers
-```
-
-**selectors.js:**
-```js
-import { createSelector } from 'reselect';
-import { initialState } from './reducer';
-const selectDomain = state => state.get('sliceKey', initialState);
-export const makeSelectField = () => createSelector(selectDomain, substate => substate.get('field'));
-```
-
-**styles.js:**
-```js
-import { css } from 'styled-components';
-import { TOKEN } from '@capillarytech/cap-ui-library/styled/variables';
-export default css`...`;
-```
-
-**messages.js:**
-```js
-import { defineMessages } from 'react-intl';
-export const scope = 'garuda.components.organisms.OrganismName';
-export default defineMessages({ /* messages */ });
-```
-
-**Component.js:**
-- Use Cap* components from LLD
-- Implement methods from plan.content_plan
-- Use formatMessage for all user-visible text
-- Destructure props from Redux connect
-
-**index.js:**
-- Exact compose chain pattern
-- Import all local files
-- createStructuredSelector with all selectors
-- connect with action dispatchers
-
-**Loadable.js:**
-- Standard React.lazy + loadable wrapper
+For each file, follow the patterns from `skills/shared-rules.md` and the Coding DNA skills. The key patterns per file:
+- **constants.js**: Action type format from shared-rules.md Section 2
+- **actions.js**: Import constants, export creators with (payload, callback) signature
+- **reducer.js**: ImmutableJS pattern from shared-rules.md Section 5
+- **saga.js**: Error handling from shared-rules.md Section 6
+- **selectors.js**: Selector pattern from shared-rules.md Section 11
+- **styles.js**: CSS naming from shared-rules.md Section 12
+- **messages.js**: Scope format from shared-rules.md Section 10
+- **Component.js**: Use Cap* components, formatMessage for text, destructure props
+- **index.js**: Compose chain from shared-rules.md Section 3
+- **Loadable.js**: Standard React.lazy + loadable wrapper
 
 #### 3b. Write to disk IMMEDIATELY
 
@@ -208,6 +138,28 @@ When modifying existing files:
 3. Use Edit tool for surgical changes (not full file rewrites)
 4. Preserve all code marked as PRESERVE in the plan
 5. Test that imports remain consistent after modifications
+
+## Exit Checklist — Per File
+
+After generating EACH file, verify before writing to disk:
+
+1. File written to correct path from plan.json
+2. `generation_report.json` updated with this file
+3. No barrel imports from cap-ui-library (shared-rules.md Section 4)
+4. If reducer: uses ImmutableJS only (shared-rules.md Section 5)
+5. If saga: every catch has notifyHandledException (shared-rules.md Section 6)
+6. If saga: checks res?.success before success dispatch
+7. If index.js: compose chain matches exact pattern (shared-rules.md Section 3)
+8. If Component.js: has PropTypes and defaultProps defined
+9. All imports reference files that exist or are being created in plan
+
+## Exit Checklist — Final
+
+1. All files from plan.json are created/modified
+2. `generation_report.json` has `generated_at` timestamp
+3. `plan_deviations` logged for any differences from plan
+4. No HIGH severity deviations without explanation
+5. Log any unresolved items to `guardrail_warnings`
 
 ## Output
 
