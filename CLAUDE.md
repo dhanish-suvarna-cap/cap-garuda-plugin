@@ -78,11 +78,21 @@ Every command has a **Gate Check** after each agent completes — the orchestrat
 
 ## 11. Session Journal & Persistent Memory
 
-Each pipeline writes a **session journal** (`session_journal.md` in the workspace) that records what happened in each phase. This enables:
+Each pipeline writes two persistence files in the workspace:
+
+- **`requirements_context.md`** — captures the user's original prompt, functional requirements, use cases, and all checkpoint decisions. This ensures Claude understands WHAT is being built across sessions.
+- **`session_journal.md`** — records what happened in each phase (execution log).
+
+Together these enable:
 
 - **Resume after quota/disconnect**: A new Claude session reads the journal to restore full context
 - **Resume after terminal close**: All state is on disk (JSON + journal), nothing in-memory
 - **Audit trail**: Human-readable log of every decision and artifact
+
+On resume, commands read THREE files:
+1. `pre_dev_state.json` / `dev_state.json` — WHERE to resume (which phase)
+2. `session_journal.md` — WHAT happened (phase-by-phase execution log)
+3. `requirements_context.md` — WHY we're doing this (user's requirements + decisions)
 
 State files (`pre_dev_state.json`, `dev_state.json`) track:
 - Phase status, summaries, guardrail results

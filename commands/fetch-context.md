@@ -63,7 +63,28 @@ Parse `$ARGUMENTS`:
 
 9. Update `fetch_context_state.json` — set `phases.codebase_scout.status` = `"completed"`, set `status` = `"completed"`, update `updated_at`.
 
-10. **Journal Update**: Write `<workspacePath>/session_journal.md` (append if exists):
+10. Write `<workspacePath>/requirements_context.md` (if not exists):
+    ```markdown
+    # Requirements Context: <jira-id>
+
+    > This file captures the user's requirements and decisions.
+
+    ## Original Request
+    - Command: `/fetch-context <full $ARGUMENTS as typed>`
+    - Jira Ticket: <jira-id>
+    - Confluence: <confluencePageId or "not provided">
+    - Figma: <figmaRef or "not provided">
+    - Transcript: <transcriptSource or "not provided">
+    - Started: <current ISO timestamp>
+
+    ## Functional Requirements
+    Context-only fetch — requirements will be captured when pipeline starts.
+
+    ## Decisions & Notes
+    <updated by pipeline commands>
+    ```
+
+11. **Journal Update**: Write `<workspacePath>/session_journal.md` (append if exists):
     ```markdown
     ## Context Fetch — COMPLETED at <ISO timestamp>
     - Jira: <summary from context_bundle.json>
@@ -73,7 +94,7 @@ Parse `$ARGUMENTS`:
     - Codebase: <N> organisms, <N> pages, <N> endpoints
     ```
 
-11. Print summary:
+12. Print summary:
 ```
 Context fetched for <jira-id>
 ================================

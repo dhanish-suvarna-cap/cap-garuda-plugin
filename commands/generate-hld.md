@@ -27,6 +27,7 @@ Parse `$ARGUMENTS` to extract:
    - If missing, print: `Warning: Codebase scout has not been run. The HLD will be generated without codebase context. Consider running /pre-dev first for better results.`
 5. Read `pre_dev_state.json` to get the current state.
 6. Read `<workspacePath>/session_journal.md` if it exists and print its content so context is restored.
+7. Read `<workspacePath>/requirements_context.md` if it exists and print it — this restores Claude's understanding of WHAT the user is building and WHY.
 
 ## Step 3 — Generate HLD
 

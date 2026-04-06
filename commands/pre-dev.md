@@ -24,8 +24,8 @@ Parse `$ARGUMENTS` to extract:
 3. Use Read to check if `<workspacePath>/pre_dev_state.json` already exists.
    - If it exists:
      - Read it and print: `Resuming pipeline for <jiraTicketId>. Current state:` followed by the phase statuses.
-     - Read `<workspacePath>/session_journal.md` if it exists
-     - Print the journal content so context is restored
+     - Read `<workspacePath>/session_journal.md` if it exists — print it so execution history is restored
+     - Read `<workspacePath>/requirements_context.md` if it exists — print it so Claude understands WHAT is being built and WHY
      - Identify the next action from `pre_dev_state.json` using `recovery.can_resume_from`
      - Print: `Resuming from: <next phase>. Last completed: <recovery.last_successful_phase>`
      - Skip to the appropriate phase
@@ -60,6 +60,45 @@ Parse `$ARGUMENTS` to extract:
    
    ---
    ```
+
+## Step 2b — Capture Requirements Context
+
+1. Check if `<workspacePath>/requirements_context.md` exists.
+   - If it exists (resume scenario): Read and print it — this restores Claude's understanding of WHAT the user is building.
+   - If it does NOT exist (new pipeline): Write `<workspacePath>/requirements_context.md`:
+
+     ```markdown
+     # Requirements Context: <jiraTicketId>
+
+     > This file captures the user's requirements, use cases, and decisions.
+     > It is read on resume so Claude understands WHAT is being built, not just WHERE the pipeline stopped.
+
+     ## Original Request
+     - Command: `/pre-dev <full $ARGUMENTS as typed>`
+     - Jira Ticket: <jiraTicketId>
+     - Transcript: <transcriptSource or "not provided">
+     - Figma: <figmaRef or "not provided">
+     - Started: <current ISO timestamp>
+
+     ## Functional Requirements
+     <to be filled>
+
+     ## Use Cases
+     <to be filled>
+
+     ## Decisions & Notes
+     <updated at each checkpoint>
+     ```
+
+2. Ask the user:
+   > **Before starting the pipeline, briefly describe what you're building and any key requirements or use cases not captured in the Jira ticket.**
+   > Type `skip` if everything is already in the Jira ticket.
+
+3. Wait for the user's response:
+   - If the user provides requirements: Update `requirements_context.md` — fill in the **Functional Requirements** and **Use Cases** sections with the user's response.
+   - If the user types `skip`: Update **Functional Requirements** to `See Jira ticket — no additional context provided.` and **Use Cases** to `See Jira ticket acceptance criteria.`
+
+4. Print: `[Phase 0] Requirements captured. Starting pipeline...`
 
 ## Step 3 — Phase 1: PRD Ingestion
 
@@ -197,21 +236,38 @@ Parse `$ARGUMENTS` to extract:
    > - `abort` — to stop the pipeline
 
 9. Wait for the user's response.
-   - If `approved`: Print `[Phase 3] HLD approved. Proceeding...`. Append to `<workspacePath>/session_journal.md`:
+   - If `approved`: Print `[Phase 3] HLD approved. Proceeding...`. Append to `<workspacePath>/requirements_context.md` under **Decisions & Notes**:
+     ```markdown
+     ### HLD Review — <ISO timestamp>
+     - Decision: approved
+     ```
+     Append to `<workspacePath>/session_journal.md`:
      ```markdown
      ## Phase 3: HLD Review — APPROVED at <ISO timestamp>
      - User decision: approved
      - Confluence: <url or "Not published">
      ```
      Continue to Step 6.
-   - If starts with `feedback:`: Extract the feedback text. Append to `<workspacePath>/session_journal.md`:
+   - If starts with `feedback:`: Extract the feedback text. Append to `<workspacePath>/requirements_context.md` under **Decisions & Notes**:
+     ```markdown
+     ### HLD Review — <ISO timestamp>
+     - Decision: feedback
+     - Feedback: <feedback text>
+     ```
+     Append to `<workspacePath>/session_journal.md`:
      ```markdown
      ## Phase 3: HLD Review — FEEDBACK at <ISO timestamp>
      - User decision: <feedback text>
      - Confluence: <url or "Not published">
      ```
      Re-run this Phase 3 from step 3, passing the feedback to the hld-generator agent. Append the feedback to `hld_artifact.json`'s `feedback_history` array.
-   - If `abort`: Update `pre_dev_state.json` with `phases.hld_generation.status` = `"aborted"`. Append to `<workspacePath>/session_journal.md`:
+   - If `abort`: Update `pre_dev_state.json` with `phases.hld_generation.status` = `"aborted"`. Append to `<workspacePath>/requirements_context.md` under **Decisions & Notes**:
+     ```markdown
+     ### HLD Review — <ISO timestamp>
+     - Decision: abort
+     - Reason: <user's reason if provided>
+     ```
+     Append to `<workspacePath>/session_journal.md`:
      ```markdown
      ## Phase 3: HLD Review — ABORTED at <ISO timestamp>
      - User decision: abort

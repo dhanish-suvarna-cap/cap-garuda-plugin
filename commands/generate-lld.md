@@ -24,6 +24,7 @@ Parse `$ARGUMENTS` to extract:
    - If it does not exist, print: `Error: No workspace found for <jiraTicketId>. Run /pre-dev <jiraTicketId> first.` and **STOP**.
 
 3. Read `<workspacePath>/session_journal.md` if it exists — print it so context is restored from any previous session.
+   Read `<workspacePath>/requirements_context.md` if it exists — print it so Claude understands WHAT is being built and WHY.
 
 4. Read `pre_dev_state.json` and check the HLD phase status.
    - If `phases.hld_generation` is `"not_started"` or `"in_progress"`, print:

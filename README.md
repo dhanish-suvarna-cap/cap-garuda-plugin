@@ -167,15 +167,17 @@ Each workspace also contains a `session_journal.md` — a human-readable log upd
 
 ```
 .claude/pre-dev-workspace/CAP-12345/
-  session_journal.md            # Auto-updated phase-by-phase log
+  requirements_context.md       # User's requirements, use cases, decisions
+  session_journal.md            # Auto-updated phase-by-phase execution log
   ...
 
 .claude/dev-workspace/dev-20260331-143022/
-  session_journal.md            # Auto-updated phase-by-phase log
+  requirements_context.md       # Feature description, key decisions
+  session_journal.md            # Auto-updated phase-by-phase execution log
   ...
 ```
 
-The journal enables **resume across sessions** — if Claude's quota runs out, terminal closes, or you need to pick up tomorrow, just re-run the command. It reads the journal and state file to restore context.
+These files enable **resume across sessions** — if Claude's quota runs out, terminal closes, or you need to pick up tomorrow, just re-run the command. It reads the journal and state file to restore context.
 
 ---
 
@@ -216,9 +218,10 @@ All pipelines support resume. Just re-run the same command:
 ### How It Works
 
 1. **State files** (`pre_dev_state.json`, `dev_state.json`) track phase status, summaries, and `recovery.can_resume_from`
-2. **Session journal** (`session_journal.md`) provides human-readable context for the next Claude session
-3. **Incremental writes** (code-generator saves after each file via `generation_report.json`)
-4. On resume: command reads state + journal, prints history, skips completed phases
+2. **Requirements context** (`requirements_context.md`) captures the user's original prompt, functional requirements, use cases, and checkpoint decisions — so Claude knows WHAT is being built
+3. **Session journal** (`session_journal.md`) provides phase-by-phase execution history — so Claude knows WHAT happened
+4. **Incremental writes** (code-generator saves after each file via `generation_report.json`)
+5. On resume: command reads state + requirements + journal, prints all three, skips completed phases
 
 ---
 

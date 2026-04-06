@@ -67,10 +67,46 @@ Parse `$ARGUMENTS`:
    ---
    ```
 
-5. If `--from` is specified:
+5. Capture Requirements Context:
+   a. Check if `{workspacePath}/requirements_context.md` exists.
+      - If it exists (resume scenario): Read and print it — this restores Claude's understanding of WHAT the user is building.
+      - If it does NOT exist (new session): Write `{workspacePath}/requirements_context.md`:
+
+        ```markdown
+        # Requirements Context: <session-id>
+
+        > This file captures the user's requirements and decisions for this dev session.
+        > It is read on resume so Claude understands WHAT is being built, not just WHERE the pipeline stopped.
+
+        ## Original Request
+        - Command: `/dev-execute <full $ARGUMENTS as typed>`
+        - LLD Source: <lldSource>
+        - Figma: <figmaRef or "not provided">
+        - Target Organism: <targetOrganism or "to be determined">
+        - Extra Context: <extraContext or "none">
+        - Started: <current ISO timestamp>
+
+        ## Feature Description
+        <to be filled>
+
+        ## Key Decisions
+        <updated at each checkpoint>
+        ```
+
+   b. Ask the user:
+      > **Briefly describe what this feature does and any specific requirements. Type `skip` if the LLD covers everything.**
+
+   c. Wait for the user's response:
+      - If the user provides a description: Update `requirements_context.md` — fill in the **Feature Description** section.
+      - If the user types `skip`: Update **Feature Description** to `See LLD — no additional context provided.`
+
+   d. Print: `Requirements captured. Starting pipeline...`
+
+6. If `--from` is specified:
    a. Validate the phase name is one of: context_loading, codebase_comprehension, planning, code_generation, visual_qa, test_writing, test_evaluation
    b. Read `{workspacePath}/session_journal.md` if it exists — print it so context is restored
-   c. Read `{workspacePath}/dev_state.json` — verify the prerequisite phases are completed
+   c. Read `{workspacePath}/requirements_context.md` if it exists — print it so feature context is restored
+   d. Read `{workspacePath}/dev_state.json` — verify the prerequisite phases are completed
    d. Check prerequisite files:
       - `context_loading` requires: nothing (entry point)
       - `codebase_comprehension` requires: `dev_context.json`
@@ -242,7 +278,20 @@ Type "no" to abort or request changes.
 
 **PAUSE CHECKPOINT — wait for explicit "yes" before Phase 4.**
 
-If "no" or change requested: ask what to change, re-run planner. Do NOT proceed to Phase 4.
+If "yes": Append to `{workspacePath}/requirements_context.md` under **Key Decisions**:
+```markdown
+### Plan Review — <ISO timestamp>
+- Decision: approved
+- Files planned: <count>
+```
+
+If "no" or change requested: Append to `{workspacePath}/requirements_context.md` under **Key Decisions**:
+```markdown
+### Plan Review — <ISO timestamp>
+- Decision: rejected / changes requested
+- Notes: <what the user asked to change>
+```
+Ask what to change, re-run planner. Do NOT proceed to Phase 4.
 
 Update `dev_state.json`: set `planning.status = "completed"`, `planning.approved = true`, `phases.planning.summary = "<one-line summary>"`, `phases.planning.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "planning"`, `recovery.can_resume_from = "code_generation"`.
 
@@ -395,6 +444,12 @@ Would you like me to write unit tests? (yes/no)
 
 **PAUSE — wait for user response.**
 
+Append to `{workspacePath}/requirements_context.md` under **Key Decisions**:
+```markdown
+### Test Decision — <ISO timestamp>
+- Write tests: <yes/no>
+```
+
 If "no": skip, set `test_writing.status = "skipped"`.
 
 If "yes":
@@ -456,6 +511,12 @@ Phase 7 — Test Results
 **CHECKPOINT if coverage < `coverage_line_target` from `skills/config.md`:**
 ```
 Coverage is below <coverage_line_target>% target. Would you like me to write additional tests? (yes/no)
+```
+Append to `{workspacePath}/requirements_context.md` under **Key Decisions**:
+```markdown
+### Coverage Review — <ISO timestamp>
+- Coverage: <lines>%
+- Decision: <accept / write more tests>
 ```
 If yes: re-run test-writer with focus on uncovered lines, then re-run test-evaluator.
 
