@@ -1,7 +1,7 @@
 {
   "name": "cap-garuda-plugin",
-  "version": "2.0.0",
-  "description": "Pre-Dev documentation and Dev execution pipelines for garuda-ui — Capillary Loyalty Frontend. Includes guardrails, session journaling, and persistent memory for resume-safe pipelines.",
+  "version": "3.0.0",
+  "description": "GIX — Unified AI pipeline for Capillary Loyalty Frontend. Single command from Jira ticket to verified, tested code. Includes ProductEx verification, build verification, visual self-evaluation, Figma-to-component mapping, 131 Cap UI Library specs, frontend guardrails, session memory, and rework loops.",
   "author": "Capillary Frontend Team",
 
   "commands": "./commands/",
@@ -10,7 +10,23 @@
   "schemas": "./schemas/",
 
   "features": {
-    "guardrails": "Exit checklists on all 12 agents + gate checks on all 5 commands",
+    "unified_pipeline": "/gix command — Garuda Intelligent eXecution, single pipeline from Jira ticket to tested code (15 phases, interactive menu)",
+    "cross_repo_tracing": "Traces patterns across target repo, cap-loyalty-ui, and other repos to find existing implementations",
+    "productex": "PRD alignment verification after HLD, LLD, planning, and code generation",
+    "build_verification": "Compile check with 3-retry auto-fix after code generation",
+    "visual_self_evaluation": "Browser screenshot + Figma comparison + auto-fix (3 iterations)",
+    "cap_ui_specs": "131 Cap UI Library component specs as skill-based markdown",
+    "figma_mapping": "Automatic Figma element → Cap UI Library component mapping",
+    "fe_guardrails": "12 guardrail categories (FG-01 through FG-12) with CRITICAL/HIGH severity",
+    "session_memory": "Shared context across all phases (decisions, constraints, risks, terminology)",
+    "rework_loops": "Downstream phases can send blockers upstream, circuit breaker after 3 rounds",
+    "confidence_levels": "C1-C7 calibrated confidence on uncertain agent decisions",
+    "live_dashboard": "HTML dashboard updating after each phase (dark theme, progress bar, Mermaid diagrams)",
+    "git_snapshots": "Phase-level git tags (gix/<ticket>/phase-NN) for safe rollback",
+    "tutor": "Read-only codebase teaching skill using Feynman+Socratic method",
+    "debug": "Root cause analysis skill with session memory context awareness",
+    "knowledge_bank": "Human-populated pre-session context that persists across pipeline runs",
+    "guardrails": "Exit checklists on all 15 agents + gate checks on all 6 commands",
     "session_journal": "Auto-written after each phase for resume across sessions",
     "shared_rules": "skills/shared-rules.md — single source for coding patterns",
     "config": "skills/config.md — centralized configurable values"

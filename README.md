@@ -1,114 +1,546 @@
-# cap-garuda-plugin
+# cap-garuda-plugin (v3.0.0)
 
-AI-powered Pre-Dev documentation and Dev execution pipelines for **garuda-ui** (Capillary Loyalty Frontend).
+AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket to verified, tested code in a single command.
 
-This plugin provides two fully independent pipelines:
+---
 
-- **Pre-Dev**: AI-generated HLD and LLD documents, written directly to Confluence
-- **Dev**: AI-driven code generation with visual QA and test writing
+## Pipeline Flow
+
+```
+                                /gix
+                                 |
+                    ┌────────────┴────────────┐
+                    |     MODE SELECTION       |
+                    |  [1] Full  [2] Resume    |
+                    |  [3] Pre   [4] Dev       |
+                    |  [5] Status              |
+                    └────────────┬─────────────┘
+                                 |
+                    ┌────────────┴────────────┐
+                    |  INTERACTIVE INPUTS      |
+                    |  Step 1: Jira ticket ID  |
+                    |  Step 2: Transcript?     |
+                    |  Step 3: Figma?          |
+                    |  Step 4: Confluence?     |
+                    |  Step 5: Extra context?  |
+                    └────────────┬─────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       |                                                    |
+       |              PHASE 0: WORKSPACE INIT               |
+       |  pipeline_state.json | session_memory.md           |
+       |  session_journal.md  | requirements_context.md     |
+       |  live-dashboard.html | knowledge-bank.md           |
+       |  Git branch: gix/<ticket>                          |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+  ╔══════════════════════════════╧══════════════════════════════╗
+  ║                    PRE-DEV PHASES (1-6)                     ║
+  ╚══════════════════════════════╤══════════════════════════════╝
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 1: PRD INGESTION                             |
+       | Jira ──► PRD ──► Transcript ──► Figma              |
+       |                   (5k chunks)                      |
+       | → context_bundle.json                              |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 2: CODEBASE SCOUT + CROSS-REPO TRACE         |
+       | Scan target repo: organisms, pages, endpoints, slices |
+       | Scan cap-loyalty-ui: existing implementations       |
+       | → context_bundle.json (updated)                    |
+       | → cross_repo_trace.json                            |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 3: HLD GENERATION                            |
+       | Feasibility, bandwidth, epic breakdown, components  |
+       | → hld_artifact.json + Confluence page              |
+       |                                                    |
+       | ┌─ ProductEx ──┐  Verify HLD vs PRD               |
+       | └──────────────┘  → verify-hld.json               |
+       |                                                    |
+       | ╔═════════════════════════════════════════════╗    |
+       | ║ CHECKPOINT: approve | feedback | abort       ║    |
+       | ╚═════════════════════════════════════════════╝    |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 4: BACKEND HANDOFF                           |
+       | ╔═════════════════════════════════════════════╗    |
+       | ║ CHECKPOINT: Provide backend HLD + API sigs   ║    |
+       | ║ Type "ready" or "skip"                       ║    |
+       | ╚═════════════════════════════════════════════╝    |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 5: LLD GENERATION                            |
+       | Organisms (10 files), API contracts, state design   |
+       | → lld_artifact.json + Confluence                   |
+       | ┌─ ProductEx ──┐ → verify-lld.json                |
+       | ╔═ CHECKPOINT: approve | feedback ═╗               |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 6: TEST CASE GENERATION                      |
+       | P0/P1/P2 test cases, unit test plans               |
+       | → testcase_sheet.json + Confluence                 |
+       | ╔═ CHECKPOINT: review test cases ═╗                |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+  ╔══════════════════════════════╧══════════════════════════════╗
+  ║                     DEV PHASES (7-15)                       ║
+  ╚══════════════════════════════╤══════════════════════════════╝
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 7: DEV CONTEXT LOADING                       |
+       | LLD ──► Figma ──► Extras ──► Figma-to-Component   |
+       |                              Mapping               |
+       | Button → CapButton | Select → CapSelect            |
+       | Table → CapTable   | Input → CapInput              |
+       | → dev_context.json (with component_mapping)        |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 8: CODEBASE COMPREHENSION                    |
+       | Intent: CREATE or UPDATE                           |
+       | Deep-read: 10 files, compose chain, Redux shape    |
+       | → comprehension.json                               |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 9: PLANNING                                  |
+       | File-by-file plan in dependency order              |
+       | constants → actions → reducer → saga → selectors  |
+       | → styles → messages → Component → index → Loadable |
+       | ┌─ ProductEx ──┐ → verify-plan.json               |
+       | ╔═══════════════════════════════════════════╗      |
+       | ║ CHECKPOINT: "yes" to approve plan         ║      |
+       | ╚═══════════════════════════════════════════╝      |
+       | → plan.json                                        |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 10: CODE GENERATION                          |
+       | 10 organism files in dependency order              |
+       | Each file: generate → guardrail check → write      |
+       |                                                    |
+       | ┌──────────── Per-File Guardrail Check ──────────┐ |
+       | | [FG-01] No barrel imports?              ✓       | |
+       | | [FG-03] ImmutableJS only in reducer?    ✓       | |
+       | | [FG-04] bugsnag in saga catch?          ✓       | |
+       | | [FG-05] No banned packages?             ✓       | |
+       | | [FG-07] Compose chain correct?          ✓       | |
+       | └────────────────────────────────────────────────┘ |
+       |                                                    |
+       | ┌─ Guardrail Checker ─┐ CRITICAL → block & fix    |
+       | └────────────────────┘ HIGH → warn                |
+       | ┌─ ProductEx ──┐ → verify-code.json               |
+       | → source files + generation_report.json            |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 11: BUILD VERIFICATION                       |
+       |                                                    |
+       | npm start (compile check)                          |
+       |    |                                               |
+       |    ├── PASS ──────────────────► continue           |
+       |    |                                               |
+       |    └── FAIL                                        |
+       |         | Parse errors                             |
+       |         | Categorize: import | syntax | module     |
+       |         | Generated code? or Environment?          |
+       |         |                                          |
+       |         ├── Generated → auto-fix → retry           |
+       |         |    (max 3 attempts)                      |
+       |         |                                          |
+       |         └── Environment → warn (non-blocking)      |
+       |                                                    |
+       | → build_report.json                                |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 12: VISUAL SELF-EVALUATION                   |
+       | (skip if no Figma or build failed)                 |
+       |                                                    |
+       |  ┌──────────── Iteration Loop (max 3) ──────────┐ |
+       |  | Start dev server (port 8000)                  | |
+       |  | Screenshot app ◄──► Download Figma frame      | |
+       |  |       |                   |                   | |
+       |  |       └──── Compare ──────┘                   | |
+       |  |              |                                | |
+       |  |    CRITICAL/MAJOR         MINOR only          | |
+       |  |       |                     |                 | |
+       |  |    Fix CSS/layout       DONE (HIGH fidelity)  | |
+       |  |    (Cap UI tokens)                            | |
+       |  |       |                                       | |
+       |  |    Re-screenshot → Re-compare                 | |
+       |  └───────────────────────────────────────────────┘ |
+       |                                                    |
+       | Fidelity: HIGH | MEDIUM | LOW                      |
+       | → visual_qa_report.json (with iterations[])        |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 13: TEST WRITING                             |
+       | ╔═ CHECKPOINT: Write tests? (Y/N) ═╗              |
+       | Batch 1: reducer + saga tests                      |
+       | Batch 2: Component tests                           |
+       | Target: >90% lines, 100% reducer branches          |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 14: TEST EVALUATION                          |
+       | Run Jest → parse coverage → categorize failures    |
+       | ╔═ CHECKPOINT (if coverage < target) ═╗           |
+       | → test_report.json                                |
+       └─────────────────────────┬─────────────────────────┘
+                                 |
+       ┌─────────────────────────┴─────────────────────────┐
+       | PHASE 15: FINAL SUMMARY                            |
+       |                                                    |
+       | GIX Pipeline Complete — CAP-12345                  |
+       | Target: organisms/MyFeature (CREATE)               |
+       | Files: 10 created | Build: PASS                    |
+       | Visual QA: HIGH (2 iterations)                     |
+       | Tests: 24 passed | Coverage: 94%                   |
+       | ProductEx: approved | Guardrails: PASS             |
+       └───────────────────────────────────────────────────┘
+
+  CROSS-CUTTING (runs throughout):
+  ─── session_memory.md ─── read/written by EVERY phase
+  ─── live-dashboard.html ─── updated after EVERY phase
+  ─── Git tags ─── gix/<ticket>/phase-NN after each phase
+  ─── Rework loops ─── downstream blocker → re-run upstream (max 3)
+  ─── C1-C7 confidence ─── on all uncertain agent claims
+```
 
 ---
 
 ## Quick Install
 
-From the garuda-ui repo root:
+From the target repo root:
 
 ```bash
 ./cap-garuda-plugin/install.sh .
 ```
 
-The script is idempotent — safe to run multiple times. It copies commands, agents, skills, and schemas into your repo's `.claude/` directory.
+The script is idempotent — safe to run multiple times. It copies commands, agents, skills (including 131 Cap UI Library component specs), schemas, and creates the workspace directory.
 
 ---
 
-## Pipeline 1: Pre-Dev
+## GIX Pipeline (Recommended)
 
-### Full Pipeline
+### Start the Pipeline
 
 ```bash
-/pre-dev CAP-12345 --transcript=/path/to/grooming-transcript.txt --figma=fileId:frameId --confluence-space=LOYALTY
+/gix
 ```
 
-**What happens:**
+An interactive menu appears:
 
-1. Fetches Jira ticket, PRD (Google Doc/Confluence/Jira), transcript, Figma design
-2. Scans codebase for existing components, endpoints, Redux slices
-3. Generates HLD and writes to Confluence
-4. **Pauses for human review** — review on Confluence, provide feedback or approve
-5. Stops — awaiting backend team's HLD and API signatures
-6. Run `/generate-lld` when backend inputs are ready
-7. Generates LLD and test case sheet, writes both to Confluence
+```
+🚀 GIX — Garuda Intelligent eXecution
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-### Standalone Commands
+Select a mode:
+
+[1] Full Pipeline
+    Run all 15 phases from Jira ticket to tested code.
+    PRD → HLD → LLD → Plan → Code → Build → Visual QA → Tests
+
+[2] Resume
+    Continue from where you left off.
+
+[3] Pre-Dev Only
+    Run just PRD → Codebase Scout → HLD → LLD → Test Cases.
+
+[4] Dev Only
+    Run just Context → Plan → Code → Build → Visual QA → Tests.
+
+[5] Status
+    Show current pipeline progress for a ticket.
+
+Enter your choice (1-5):
+```
+
+### Input Collection (Step-by-Step)
+
+After selecting a mode, inputs are collected one at a time:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1 of 5: Jira Ticket ID (required)
+  Enter ticket ID: CAP-12345
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 2 of 5: Grooming Transcript
+  Do you have a grooming transcript? (Y/N): Y
+  Enter path or URL: /path/to/transcript.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 3 of 5: Figma Design
+  Do you have a Figma design? (Y/N): Y
+  Enter Figma fileId:frameId: abc123:frame456
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 4 of 5: Confluence Space
+  Do you have a specific Confluence space? (Y/N): N
+  Using default from config.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 5 of 5: Additional Context
+  Do you have any additional context files? (Y/N): N
+  No additional context.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Starting GIX Pipeline with:
+  Ticket:     CAP-12345
+  Transcript: /path/to/transcript.txt
+  Figma:      abc123:frame456
+  Confluence: LOYALTY
+  Context:    none
+
+Proceed? (Y/N):
+```
+
+Or skip the menu with a direct ticket ID:
 
 ```bash
-# Regenerate HLD with feedback
-/generate-hld CAP-12345 --feedback="Split the config task into two parallel tasks"
-
-# Generate LLD after backend provides inputs
-/generate-lld CAP-12345 --backend-hld=<confluence-page-id> --confluence-space=LOYALTY
-
-# Just fetch context without starting pipeline
-/fetch-context CAP-12345 --transcript=/path/to/transcript.txt
+/gix CAP-12345
 ```
 
 ### Human Checkpoints
 
-| When                       | What You Do                                    |
-| -------------------------- | ---------------------------------------------- |
-| After HLD generation       | Review on Confluence, approve or give feedback |
-| After Phase 4              | Provide backend HLD + API signatures           |
-| After LLD generation       | Review on Confluence, approve or give feedback |
-| After test case generation | Review test cases, add/remove as needed        |
+The pipeline pauses at these points for your input:
+
+| Phase | When | What You Do |
+|-------|------|-------------|
+| 3 | After HLD | Review on Confluence. Type `approved`, `feedback: <text>`, or `abort` |
+| 4 | Backend handoff | Provide backend HLD + API signatures. Type `ready` or `skip` |
+| 5 | After LLD | Review on Confluence. Approve or give feedback |
+| 6 | After test cases | Review test case sheet |
+| 9 | After planning | Review file plan. Type `yes` to approve |
+| 13 | Before tests | Type `yes` to write tests or `no` to skip |
+| 14 | After tests | Accept coverage or request more tests |
+
+### Resume After Interruption
+
+Just run `/gix` and select mode **[2] Resume**. Or re-run `/gix CAP-12345` — it auto-detects existing state.
+
+| Scenario | What Survives | How to Resume |
+|----------|--------------|---------------|
+| Context overflow | State + completed files | Orchestrator auto-retries agent |
+| Quota limit | State + journal + memory + all files | `/gix` → Resume |
+| Terminal closed | State + journal + memory + all files | `/gix` → Resume |
+| Computer restart | State + journal + memory + all files | `/gix` → Resume |
 
 ---
 
-## Pipeline 2: Dev
+## Live Dashboard
 
-### Full Pipeline
+When starting a pipeline, GIX asks if you want a live HTML dashboard. If yes, it creates `live-dashboard.html` in the workspace:
+
+- Dark theme with sidebar navigation
+- Progress bar showing phase completion
+- Updates after every phase with summaries, key numbers, and Mermaid diagrams
+- Open in any browser at any time to check progress
+
+```
+.claude/workspace/CAP-12345/live-dashboard.html
+```
+
+Phase-specific dashboard content:
+
+| Phase | Dashboard Shows |
+|-------|----------------|
+| PRD Ingestion | Context sources (Jira, PRD, Transcript, Figma — loaded/skipped) |
+| Codebase Scout | Scan results + cross-repo trace findings |
+| HLD | Feasibility, bandwidth, component breakdown, Confluence link |
+| LLD | Organism designs, API contracts, state design |
+| Planning | File plan table, risk items, uncertain items |
+| Code Generation | Files created/modified, guardrail results, ProductEx verification |
+| Build Verification | Build status, attempt count, errors fixed |
+| Visual QA | Fidelity rating, iteration count, discrepancy chart |
+| Test Evaluation | Pass/fail/skip counts, coverage chart |
+
+---
+
+## Standalone Pipelines (Still Available)
+
+The original separate pipelines still work for targeted use:
+
+### Pre-Dev Only
+
+```bash
+/pre-dev CAP-12345 --transcript=/path/to/transcript.txt --figma=fileId:frameId
+```
+
+### Dev Only
 
 ```bash
 /dev-execute --lld=<confluence-page-id> --figma=fileId:frameId --organism=app/components/organisms/MyFeature
 ```
 
-**What happens:**
-
-1. Loads LLD from Confluence (or local file), Figma data, extra context
-2. Deep-reads target organism structure (or reference organisms if creating new)
-3. Creates file-by-file coding plan
-4. **Pauses for plan approval** — review and approve
-5. Generates source code (10 organism files in dependency order)
-6. Visual QA: screenshots app, compares with Figma, auto-fixes up to 3 iterations
-7. Writes unit tests (if requested) targeting >90% coverage
-8. Runs tests and reports coverage
-
-### Resume from a Specific Phase
+### Standalone Commands
 
 ```bash
-# Resume from code generation (skips context loading, comprehension, planning)
-/dev-execute --from=code_generation
-
-# Resume from visual QA only
-/dev-execute --from=visual_qa
+/generate-hld CAP-12345 --feedback="Split into two parallel tasks"
+/generate-lld CAP-12345 --backend-hld=<page-id>
+/fetch-context CAP-12345 --transcript=/path/to/transcript.txt
 ```
 
-### Input Options
+---
 
-| Flag           | Description                           | Example                                           |
-| -------------- | ------------------------------------- | ------------------------------------------------- |
-| `--lld`      | Confluence page ID or local file path | `--lld=123456` or `--lld=./lld.json`          |
-| `--figma`    | Figma file and frame IDs              | `--figma=abcdef:12345`                          |
-| `--context`  | Extra .md or .json files              | `--context=./notes.md,./api-spec.json`          |
-| `--organism` | Target organism path                  | `--organism=app/components/organisms/MyFeature` |
-| `--from`     | Resume from phase                     | `--from=visual_qa`                              |
+## Verification & Quality Gates
 
-### Human Checkpoints
+### Frontend Guardrails (FG-01 through FG-12)
 
-| When                  | What You Do                                |
-| --------------------- | ------------------------------------------ |
-| After planning        | Review plan summary, type "yes" to approve |
-| After visual QA       | Review discrepancy report                  |
-| After test evaluation | Accept coverage or request more tests      |
+Every code-producing agent checks these rules. CRITICAL violations block the pipeline.
+
+| ID | Rule | Priority |
+|----|------|----------|
+| FG-01 | Cap UI imports: individual file paths only, never barrel | CRITICAL |
+| FG-02 | Organism anatomy: exactly 10 files in dependency order | CRITICAL |
+| FG-03 | ImmutableJS: fromJS/set/get only, no direct mutation | CRITICAL |
+| FG-04 | Saga error handling: every catch has notifyHandledException | CRITICAL |
+| FG-05 | Banned packages: no TypeScript, Redux Toolkit, Zustand, Tailwind, axios, Enzyme | CRITICAL |
+| FG-06 | Auth headers: never manual, injected by requestConstructor.js | HIGH |
+| FG-07 | Compose chain: exact order withSaga → withReducer → withConnect | HIGH |
+| FG-08 | Test imports: from app/utils/test-utils.js only | HIGH |
+| FG-09 | Action naming: garuda/Organism/VERB_NOUN_REQUEST\|SUCCESS\|FAILURE | HIGH |
+| FG-10 | i18n: all user-facing text via formatMessage | HIGH |
+| FG-11 | CSS: Cap UI tokens, no hardcoded pixels or hex colors | HIGH |
+| FG-12 | AI-specific: read before write, verify imports exist | CRITICAL |
+
+### ProductEx Verification
+
+After phases 3 (HLD), 5 (LLD), 9 (Plan), and 10 (Code), ProductEx automatically verifies the output against the PRD:
+
+- **Fulfilled** — requirement addressed with evidence
+- **Missing** — requirement not found in artifact
+- **Conflict** — artifact contradicts requirement
+
+If issues found, the pipeline offers to re-run the phase.
+
+### Build Verification
+
+After code generation, the build verifier:
+1. Compiles the project
+2. Categorizes errors (generated code vs environment)
+3. Auto-fixes generated-code errors (wrong imports, missing files)
+4. Retries up to 3 times
+5. Reports pass/fail with full error details
+
+### Rework Loops
+
+If a downstream phase detects a problem with an upstream artifact:
+1. The orchestrator re-runs the upstream phase with the blocker context
+2. Cascades through intermediate phases
+3. Circuit breaker: max 3 rounds, then escalates to developer
+
+---
+
+## Workspace Structure
+
+All artifacts for a ticket live in a single workspace:
+
+```
+.claude/workspace/CAP-12345/
+├── pipeline_state.json          # Phase status + recovery info
+├── session_journal.md           # Phase-by-phase execution log
+├── session_memory.md            # Shared context (decisions, risks, terms)
+├── requirements_context.md      # User's requirements + checkpoint decisions
+├── live-dashboard.html          # Visual progress dashboard (optional)
+├── context_bundle.json          # PRD + transcript + Figma + codebase scan
+├── cross_repo_trace.json        # Cross-repo pattern trace results
+├── hld_artifact.json            # High-level design
+├── lld_artifact.json            # Low-level design
+├── testcase_sheet.json          # Test cases
+├── dev_context.json             # LLD + Figma + component mapping
+├── comprehension.json           # Codebase analysis
+├── plan.json                    # File-by-file coding plan
+├── generation_report.json       # Generated files tracking
+├── build_report.json            # Build verification results
+├── visual_qa_report.json        # Figma comparison + iterations
+├── test_report.json             # Jest results + coverage
+└── verification_reports/        # ProductEx + guardrail reports
+    ├── verify-hld.json
+    ├── verify-lld.json
+    ├── verify-plan.json
+    └── verify-code.json
+```
+
+The workspace is gitignored. Safe to delete between runs.
+
+---
+
+## Skills Reference
+
+### Cap UI Library (131 Components)
+
+Full component reference at `skills/cap-ui-library/SKILL.md`. Each component has a dedicated spec file (`ref-<ComponentName>.md`) with props, sub-components, and usage examples.
+
+Agents look up components via the index, then read the detailed spec before generating code. This replaces the previous MCP-based component documentation.
+
+### Figma-to-Component Mapping
+
+`skills/figma-component-map/SKILL.md` maps Figma design elements to Cap UI Library components automatically during Phase 7 (Dev Context Loading):
+
+| Figma Element | Cap Component |
+|--------------|---------------|
+| Button | CapButton |
+| Text Input | CapInput (.Search, .TextArea, .Number) |
+| Dropdown | CapSelect (.CapCustomSelect) |
+| Table | CapTable |
+| Modal | CapModal |
+| Date Picker | CapDatePicker, CapDateRangePicker |
+| Checkbox | CapCheckbox |
+| Toggle | CapSwitch |
+| Tag | CapTag, CapColoredTag |
+| ... | (60+ mappings total) |
+
+### Coding DNA Skills
+
+Comprehensive coding standards extracted from Capillary UI team documentation:
+
+| Skill | Coverage |
+|-------|----------|
+| coding-dna-architecture | Tech stack, banned packages, file structure, imports, naming |
+| coding-dna-components | Component anatomy, HOC composition, hooks, memoization |
+| coding-dna-state-and-api | Redux patterns, saga patterns, API client, auth/RBAC |
+| coding-dna-styling | Design tokens, styled-components, class naming |
+| coding-dna-testing | Jest/RTL/MSW, test patterns, mocking strategies |
+| coding-dna-quality | Error handling, Bugsnag, accessibility, bundle optimization |
+
+### Standalone Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `/tutor` | Read-only codebase teaching. Explains codebase patterns without modifying code. |
+| `/debug` | Root cause analysis. Traces errors through Redux/saga/component chain. |
+| `knowledge-bank.md` | Human-populated pre-session context (epic info, team decisions, constraints). |
+| `fe-principles.md` | C1-C7 calibrated confidence framework for agent reasoning. |
+
+---
+
+## Git Integration
+
+### Branch & Tag Protocol
+
+- Pipeline creates branch: `gix/<ticket-id>`
+- After each phase: tags `gix/<ticket-id>/phase-<NN>`
+- Before code generation: commits all artifacts
+- After code generation: commits code + artifacts together
+
+### Safe Rollback
+
+Git tags enable rolling back to any phase:
+
+```bash
+git reset --hard gix/CAP-12345/phase-09   # Roll back to planning
+```
 
 ---
 
@@ -116,174 +548,70 @@ The script is idempotent — safe to run multiple times. It copies commands, age
 
 ### Required
 
-| MCP                 | Purpose                              |
-| ------------------- | ------------------------------------ |
-| mcp-atlassian       | Jira tickets + Confluence read/write |
-| framelink-figma-mcp | Figma design data + image export     |
-| cap-ui-library-mcp  | Cap* component documentation         |
-| Claude Preview      | Visual QA (dev server screenshots)   |
+| MCP | Purpose |
+|-----|---------|
+| mcp-atlassian | Jira tickets + Confluence read/write |
+| framelink-figma-mcp | Figma design data + image export |
+| Claude Preview | Visual QA (dev server screenshots) |
+
+### Built-in (No MCP Needed)
+
+| Skill | Purpose |
+|-------|---------|
+| cap-ui-library (131 specs) | Component documentation (replaces cap-ui-library-mcp) |
 
 ### Optional
 
-| MCP          | Purpose                                                 |
-| ------------ | ------------------------------------------------------- |
+| MCP | Purpose |
+|-----|---------|
 | Google Drive | Fetch PRD from Google Docs (fallback: Jira description) |
-
----
-
-## Workspace Structure
-
-### Pre-Dev (per ticket)
-
-```
-.claude/pre-dev-workspace/CAP-12345/
-  pre_dev_state.json          # Pipeline state
-  context_bundle.json         # Fetched inputs
-  hld_artifact.json           # HLD (local copy)
-  lld_artifact.json           # LLD (local copy)
-  testcase_sheet.json         # Test cases
-  backend_hld.md              # User-placed backend docs
-  api_signatures.json         # User-placed API specs
-```
-
-### Dev (per session)
-
-```
-.claude/dev-workspace/dev-20260331-143022/
-  dev_state.json              # Pipeline state
-  dev_context.json            # Loaded LLD + Figma + context
-  comprehension.json          # Codebase analysis
-  plan.json                   # Coding plan
-  generation_report.json      # Files created/modified
-  visual_qa_report.json       # Figma comparison
-  test_report.json            # Jest results
-```
-
-Both workspaces are gitignored and safe to delete between runs.
-
-### Session Journal (NEW in v2)
-
-Each workspace also contains a `session_journal.md` — a human-readable log updated after every phase:
-
-```
-.claude/pre-dev-workspace/CAP-12345/
-  requirements_context.md       # User's requirements, use cases, decisions
-  session_journal.md            # Auto-updated phase-by-phase execution log
-  ...
-
-.claude/dev-workspace/dev-20260331-143022/
-  requirements_context.md       # Feature description, key decisions
-  session_journal.md            # Auto-updated phase-by-phase execution log
-  ...
-```
-
-These files enable **resume across sessions** — if Claude's quota runs out, terminal closes, or you need to pick up tomorrow, just re-run the command. It reads the journal and state file to restore context.
-
----
-
-## Guardrails
-
-Every agent has an **Exit Checklist** — validation checks it must pass before writing output. Every command has **Gate Checks** — the orchestrator validates agent output before proceeding to the next phase.
-
-If guardrails detect issues:
-- Fixable issues: agent fixes them automatically before writing output
-- Unfixable issues: logged to `guardrail_warnings` in the output JSON and printed to user
-- Critical failures: pipeline stops with clear error message
-
----
-
-## Resume & Recovery
-
-### Automatic Resume
-
-All pipelines support resume. Just re-run the same command:
-
-```bash
-# Re-run after interruption — auto-detects existing state and resumes
-/pre-dev CAP-12345
-
-# Or explicitly resume from a specific phase
-/dev-execute --from=code_generation
-```
-
-### What Survives Interruptions
-
-| Scenario | What's Preserved | How to Resume |
-|----------|-----------------|---------------|
-| Context overflow mid-agent | State JSON + completed files | Orchestrator auto-retries |
-| Quota limit hit | State JSON + journal + all disk files | Re-run command |
-| Terminal closed | State JSON + journal + all disk files | Re-run command |
-| Computer restart | State JSON + journal + all disk files | Re-run command |
-
-### How It Works
-
-1. **State files** (`pre_dev_state.json`, `dev_state.json`) track phase status, summaries, and `recovery.can_resume_from`
-2. **Requirements context** (`requirements_context.md`) captures the user's original prompt, functional requirements, use cases, and checkpoint decisions — so Claude knows WHAT is being built
-3. **Session journal** (`session_journal.md`) provides phase-by-phase execution history — so Claude knows WHAT happened
-4. **Incremental writes** (code-generator saves after each file via `generation_report.json`)
-5. On resume: command reads state + requirements + journal, prints all three, skips completed phases
-
----
-
-## Shared Rules & Config
-
-### `skills/shared-rules.md`
-Single source of truth for all non-negotiable coding patterns. Agents reference this instead of embedding rules inline. Covers: organism anatomy, compose chain, action types, Cap* imports, ImmutableJS, bugsnag, test imports, coverage targets, etc.
-
-### `skills/config.md`
-All configurable values in one place. Change a value here and all agents/commands pick it up. Covers: ports, URLs, Confluence space, coverage thresholds, retry limits, chunk sizes, bandwidth defaults, etc.
-
----
-
-## Context Overflow Protection
-
-The plugin is designed to handle Claude's context window limits:
-
-1. **Small focused agents** — each does one thing, fresh context per agent
-2. **Incremental file writes** — code-generator saves after each file, enabling recovery
-3. **Transcript chunking** — 30k+ word transcripts processed in 5k-word chunks
-4. **State file recovery** — orchestrators detect partial outputs and resume
-
----
-
-## Skills (Auto-Triggered)
-
-These skills are automatically loaded when relevant topics come up.
-
-### Utility Skills
-
-| Skill               | Triggers On                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
-| cap-ui-components   | "CapSelect", "CapButton", "cap-ui-library" — Top-15 Cap* component usage guide with prop examples |
-| atomic-design-rules | "which layer", "atom molecule organism" — Decision flowchart for atom/molecule/organism/page      |
-| hld-template        | "create HLD", "HLD template" — Confluence page structure for HLD                                  |
-| lld-template        | "create LLD", "LLD template" — Confluence page structure for LLD                                  |
-
-### Coding DNA Skills (Capillary Standards)
-
-These are comprehensive coding standards extracted from the Capillary UI team's coding-dna documentation. Each skill has a SKILL.md summary and detailed reference files (ref-*.md) for deep dives.
-
-| Skill                    | Coverage                                                                                                  | Used By Agents                                                            |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| coding-dna-architecture  | Tech stack, banned packages, file structure, import order, naming conventions                             | codebase-scout, hld-generator, lld-generator, dev-planner, code-generator |
-| coding-dna-components    | Component anatomy, HOC composition, props rules, hooks, conditional rendering, memoization                | lld-generator, dev-planner, code-generator                                |
-| coding-dna-styling       | Design tokens (CAP_SPACE/CAP_G/FONT_SIZE), styled-components patterns, class naming, Ant Design overrides | visual-qa, code-generator                                                 |
-| coding-dna-state-and-api | State decision tree, Redux three-state pattern, saga patterns, API client, form handling, auth/RBAC       | hld-generator, lld-generator, dev-planner, code-generator                 |
-| coding-dna-testing       | Testing stack (Jest/RTL/MSW/saga-test-plan), test patterns, mocking strategies, test data organization    | testcase-generator, test-writer                                           |
-| coding-dna-quality       | Error handling (4 layers), Bugsnag, git workflow, accessibility, code splitting, bundle optimization      | code-generator                                                            |
 
 ---
 
 ## Plugin Architecture
 
 ```
-Pre-Dev Pipeline:
-  /pre-dev → prd-ingestion → codebase-scout → hld-generator → [REVIEW] → STOP
-  /generate-lld → lld-generator → testcase-generator → [REVIEW] → DONE
+Commands (6):
+  /gix ─────────── Unified pipeline (15 phases, interactive menu)
+  /pre-dev ──────── Pre-Dev only (phases 1-6)
+  /dev-execute ──── Dev only (phases 7-15)
+  /generate-hld ─── Standalone HLD
+  /generate-lld ─── Standalone LLD
+  /fetch-context ── Standalone context fetch
 
-Dev Pipeline:
-  /dev-execute → dev-context-loader → codebase-comprehension → dev-planner → [APPROVE]
-    → code-generator → visual-qa (3x loop) → test-writer → test-evaluator → DONE
+Agents (16):
+  prd-ingestion ──────── Fetch Jira + PRD + transcript + Figma
+  codebase-scout ─────── Lightweight codebase scan
+  cross-repo-tracer ──── Trace patterns across repos
+  hld-generator ──────── High-level design → Confluence
+  lld-generator ──────── Low-level design → Confluence
+  testcase-generator ─── Test case sheet
+  dev-context-loader ─── Load LLD + Figma + component mapping
+  codebase-comprehension Deep-read existing organism
+  dev-planner ─────────── File-by-file implementation plan
+  code-generator ──────── Generate 10 organism files
+  build-verifier ──────── Compile check + 3x auto-fix
+  visual-qa ────────────── Screenshot + Figma compare + 3x fix
+  test-writer ──────────── Unit tests (>90% coverage)
+  test-evaluator ────────── Jest results + coverage
+  productex-verifier ───── PRD alignment check
+  guardrail-checker ────── FG-01..FG-12 violation scan
+
+Skills (20+):
+  cap-ui-library/ ──────── 131 component specs
+  fe-guardrails/ ─────── 12 guardrail categories
+  figma-component-map/ ── Figma → Cap component mapping
+  coding-dna-*/ ────────── 6 coding standard domains
+  tutor/ ──────────────── Codebase teaching
+  debug/ ──────────────── Root cause analysis
+  + shared-rules, config, fe-principles, session-memory-template,
+    live-dashboard-template, knowledge-bank, atomic-design-rules,
+    hld-template, lld-template
+
+Schemas (10):
+  pipeline_state, verification_report, build_report,
+  context_bundle, hld_artifact, lld_artifact, plan,
+  pre_dev_state, dev_state, testcase_sheet
 ```
 
 ---
@@ -293,22 +621,24 @@ Dev Pipeline:
 After install, verify the plugin:
 
 ```bash
-# 1. Check skills load
+# 1. Check GIX command
+/gix
+# Expected: Interactive menu appears
+
+# 2. Check component specs
 # Ask: "how do I import a CapSelect?"
-# Expected: cap-ui-components skill triggers
+# Expected: cap-ui-library skill triggers with import path + props
 
-# 2. Check commands exist
-# Type: /pre-dev
-# Expected: Command recognized with argument hint
+# 3. Check workspace
+ls .claude/workspace/
+# Expected: directory exists
 
-# 3. Check workspace created
-ls .claude/pre-dev-workspace/
-ls .claude/dev-workspace/
-# Expected: directories exist
+# 4. Test full pipeline
+/gix
+# Select [1], enter a test ticket ID, follow prompts
 
-# 4. Test Pre-Dev pipeline
-/pre-dev CAP-12345 --transcript=./sample-transcript.txt
-
-# 5. Test Dev pipeline
-/dev-execute --lld=./sample-lld.json --organism=app/components/organisms/TestFeature
+# 5. Test resume
+# Interrupt mid-run, then:
+/gix
+# Select [2] Resume — should pick up where it stopped
 ```

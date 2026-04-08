@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pipeline State",
+  "description": "Unified pipeline state tracking for the /garuda command",
+  "type": "object",
+  "required": ["jira_ticket_id", "status", "phases", "recovery", "created_at", "updated_at"],
+  "properties": {
+    "jira_ticket_id": { "type": "string" },
+    "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "aborted"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "jira_ticket_id": { "type": "string" },
+        "transcript_source": { "type": ["string", "null"] },
+        "figma_ref": { "type": ["string", "null"] },
+        "confluence_space_key": { "type": "string" },
+        "backend_hld_source": { "type": ["string", "null"] },
+        "api_signatures_source": { "type": ["string", "null"] }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not_started", "in_progress", "completed", "approved", "skipped", "failed"] },
+            "summary": { "type": ["string", "null"] },
+            "guardrail_result": { "type": ["string", "null"] },
+            "verification_result": { "type": ["string", "null"] },
+            "artifacts": { "type": "array", "items": { "type": "string" } },
+            "started_at": { "type": ["string", "null"], "format": "date-time" },
+            "completed_at": { "type": ["string", "null"], "format": "date-time" }
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "properties": {
+        "last_successful_phase": { "type": ["string", "null"] },
+        "can_resume_from": { "type": ["string", "null"] },
+        "interrupted_phase": { "type": ["string", "null"] },
+        "rework_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target_phase": { "type": "string" },
+              "triggered_by": { "type": "string" },
+              "reason": { "type": "string" },
+              "round": { "type": "integer", "minimum": 1, "maximum": 3 },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "resolution": { "type": "string", "enum": ["resolved", "escalated_to_human", "circuit_breaker"] }
+            }
+          }
+        }
+      }
+    },
+    "resume_instructions": { "type": ["string", "null"] }
+  }
+}

@@ -8,7 +8,7 @@ triggers:
   - "generate HLD"
 ---
 
-# HLD Template — garuda-ui
+# HLD Template
 
 Use this template when generating High Level Design documents for Confluence.
 

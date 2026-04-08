@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Build Report",
+  "description": "Output from build verification agent",
+  "type": "object",
+  "required": ["status", "attempts", "build_command", "timestamp"],
+  "properties": {
+    "status": { "type": "string", "enum": ["pass", "fail"] },
+    "attempts": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "line": { "type": "integer" },
+          "message": { "type": "string" },
+          "category": { "type": "string", "enum": ["import_resolution", "syntax", "type_error", "module_not_found", "other"] },
+          "is_generated_code": { "type": "boolean" }
+        }
+      }
+    },
+    "fixes_applied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "error": { "type": "string" },
+          "fix_description": { "type": "string" },
+          "attempt": { "type": "integer" }
+        }
+      }
+    },
+    "environment_warnings": { "type": "array", "items": { "type": "string" } },
+    "build_command": { "type": "string" },
+    "build_duration_ms": { "type": "integer" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "guardrail_warnings": { "type": "array", "items": { "type": "string" } }
+  }
+}

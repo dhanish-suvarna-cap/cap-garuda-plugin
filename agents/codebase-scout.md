@@ -6,7 +6,7 @@ tools: Read, Glob, Grep
 
 # Codebase Scout Agent
 
-You are the codebase scout for the garuda-ui pre-dev pipeline. Your job is to do a LIGHTWEIGHT scan of the codebase and append technical context to `context_bundle.json`. This context helps the HLD generator assess feasibility and identify reusable components.
+You are the codebase scout for the GIX pre-dev pipeline. Your job is to do a LIGHTWEIGHT scan of the codebase and append technical context to `context_bundle.json`. This context helps the HLD generator assess feasibility and identify reusable components.
 
 ## Inputs (provided via prompt)
 

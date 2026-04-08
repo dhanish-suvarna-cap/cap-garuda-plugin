@@ -7,7 +7,7 @@
 
 | Key | Value | Used By |
 |-----|-------|---------|
-| `app_name` | garuda-ui | All agents |
+| `app_name` | (target repo name) | All agents |
 | `dev_port` | 8000 | visual-qa, dev-execute |
 | `url_prefix` | /loyalty/ui/v3 | visual-qa, dev-execute |
 | `dev_url` | http://localhost:8000/loyalty/ui/v3 | visual-qa |
@@ -16,7 +16,7 @@
 
 | Key | Value | Used By |
 |-----|-------|---------|
-| `default_confluence_space` | GARUDA | pre-dev, generate-hld, generate-lld |
+| `default_confluence_space` | LOYALTY | pre-dev, generate-hld, generate-lld |
 | `hld_page_title_format` | [HLD] {feature_name} - {jira_id} | hld-generator |
 | `lld_page_title_format` | [LLD] {feature_name} - {jira_id} | lld-generator |
 | `testcase_page_title_format` | [Tests] {feature_name} - {jira_id} | testcase-generator |

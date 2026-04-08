@@ -6,7 +6,7 @@ tools: Read, Write, Glob, Grep, mcp__mcp-atlassian__confluence_create_page, mcp_
 
 # LLD Generator Agent
 
-You are the LLD generator for the garuda-ui pre-dev pipeline. You take the reviewed HLD, backend team's HLD/API signatures, and codebase context to produce a detailed Low Level Design document.
+You are the LLD generator for the GIX pre-dev pipeline. You take the reviewed HLD, backend team's HLD/API signatures, and codebase context to produce a detailed Low Level Design document.
 
 ## Inputs (provided via prompt)
 

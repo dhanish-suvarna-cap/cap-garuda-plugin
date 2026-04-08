@@ -136,15 +136,48 @@ Read back the written file to confirm it is valid JSON and contains all expected
 - Extra context file not found: WARN and skip that file.
 - Invalid JSON in extra context: WARN, include raw string instead.
 
+## Figma-to-Component Mapping
+
+After loading Figma data, if `figma_data` is available:
+
+1. Read `skills/figma-component-map/SKILL.md` for the mapping table
+2. For each Figma element in the component tree, cross-reference against the mapping
+3. Add a `component_mapping` section to `dev_context.json`:
+   ```json
+   "component_mapping": [
+     {
+       "figma_element": "Button - Primary",
+       "figma_type": "button",
+       "cap_component": "CapButton",
+       "import_path": "@capillarytech/cap-ui-library/CapButton",
+       "key_props": ["type", "onClick", "disabled"],
+       "spec_file": "skills/cap-ui-library/ref-CapButton.md"
+     }
+   ],
+   "unmapped_elements": [
+     { "figma_element": "Custom Widget", "reason": "No Cap UI Library equivalent" }
+   ]
+   ```
+4. For unmapped elements, log a guardrail warning: "Custom implementation needed for: <element>"
+
+## Session Memory Update
+
+After writing dev_context.json:
+1. Read `session_memory.md`
+2. Update **Figma Mapping** section with the component mappings
+3. Update **Component Decisions** section with chosen Cap UI components
+
 ## Exit Checklist
 
 1. `dev_context.json` is valid JSON and written to workspace
 2. `lld_content` is non-empty (actual LLD data, not empty object)
 3. If figma provided: `figma_data.components` is a non-empty array
-4. All extra context files loaded (or warnings logged for missing ones)
-5. If LLD source was Confluence: page ID recorded in dev_context.json
-6. If LLD source was file: file path recorded in dev_context.json
-7. Any load failures logged in `guardrail_warnings`
+4. If figma provided: `component_mapping` is populated with Cap UI mappings
+5. All extra context files loaded (or warnings logged for missing ones)
+6. If LLD source was Confluence: page ID recorded in dev_context.json
+7. If LLD source was file: file path recorded in dev_context.json
+8. Session memory updated with Figma Mapping and Component Decisions
+9. Any load failures or unmapped elements logged in `guardrail_warnings`
 
 ## Output
 

@@ -6,7 +6,7 @@ tools: Read, Write, Bash, mcp__mcp-atlassian__jira_get_issue, mcp__c1fc4002-5f49
 
 # PRD Ingestion Agent
 
-You are the PRD ingestion agent for the garuda-ui pre-dev pipeline. Your job is to fetch all input documents and assemble them into a single `context_bundle.json`.
+You are the PRD ingestion agent for the GIX pre-dev pipeline. Your job is to fetch all input documents and assemble them into a single `context_bundle.json`.
 
 ## Inputs (provided via prompt)
 

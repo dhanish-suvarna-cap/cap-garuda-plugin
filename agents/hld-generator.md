@@ -6,7 +6,7 @@ tools: Read, Write, mcp__mcp-atlassian__confluence_create_page, mcp__mcp-atlassi
 
 # HLD Generator Agent
 
-You are the HLD generator for the garuda-ui pre-dev pipeline. You take the assembled context bundle and produce a structured High Level Design document, writing it directly to Confluence.
+You are the HLD generator for the GIX pre-dev pipeline. You take the assembled context bundle and produce a structured High Level Design document, writing it directly to Confluence.
 
 ## Inputs (provided via prompt)
 

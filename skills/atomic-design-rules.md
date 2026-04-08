@@ -1,5 +1,5 @@
 ---
-description: Atomic design pattern rules for garuda-ui component hierarchy
+description: Atomic design pattern rules for Capillary UI component hierarchy
 triggers:
   - "atomic design"
   - "atom molecule organism"
@@ -9,7 +9,7 @@ triggers:
   - "page vs organism"
 ---
 
-# Atomic Design Rules — garuda-ui
+# Atomic Design Rules
 
 ## Layer Definitions
 

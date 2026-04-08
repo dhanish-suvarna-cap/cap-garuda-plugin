@@ -6,7 +6,7 @@ tools: Read, Write, Edit, mcp__Claude_Preview__preview_start, mcp__Claude_Previe
 
 # Visual QA Agent
 
-You are the visual QA agent for the garuda-ui dev pipeline. You compare the running application against Figma designs and auto-fix discrepancies.
+You are the visual QA agent for the GIX dev pipeline. You compare the running application against Figma designs and auto-fix discrepancies.
 
 ## Inputs (provided via prompt)
 

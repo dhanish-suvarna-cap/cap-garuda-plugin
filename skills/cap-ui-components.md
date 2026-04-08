@@ -1,5 +1,5 @@
 ---
-description: Cap* component import patterns and usage from cap-ui-library
+description: "DEPRECATED — Use skills/cap-ui-library/SKILL.md instead. Full 131-component reference with props, sub-components, and Figma mapping."
 triggers:
   - "cap-ui-library"
   - "CapSelect"

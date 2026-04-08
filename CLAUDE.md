@@ -3,7 +3,7 @@
 ## 1. Project Identity
 
 - **Plugin name:** cap-garuda-plugin
-- **Target app:** garuda-ui (Capillary Loyalty Frontend)
+- **Target app:** Capillary Loyalty Frontend
 - **Stack:** React 18, Redux + Redux-Saga, ImmutableJS, Ant Design via `@capillarytech/cap-ui-library`
 - **URL prefix:** `/loyalty/ui/v3`
 - **Dev port:** 8000

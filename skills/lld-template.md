@@ -9,7 +9,7 @@ triggers:
   - "tech detailing"
 ---
 
-# LLD Template — garuda-ui
+# LLD Template
 
 Use this template when generating Low Level Design documents for Confluence.
 

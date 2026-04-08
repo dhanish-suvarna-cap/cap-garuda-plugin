@@ -163,7 +163,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace if e
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=codebase_comprehension`
 4. Next action: Run codebase comprehension on target organism
@@ -225,7 +225,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=planning`
 4. Next action: Generate implementation plan from comprehension + context
@@ -309,7 +309,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=code_generation`
 4. Next action: Generate code from approved plan
@@ -369,7 +369,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=visual_qa`
 4. Next action: Run visual QA comparing generated code to Figma designs
@@ -427,7 +427,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_writing`
 4. Next action: Write unit tests for generated code
@@ -475,7 +475,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_evaluation`
 4. Next action: Evaluate test coverage and results
@@ -533,7 +533,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory  
+1. Open terminal in the target repo directory  
 2. Start Claude Code
 3. Say: "Resume dev pipeline" or run: `/dev-execute --from=test_evaluation`
 4. Next action: Review final summary and address any remaining issues

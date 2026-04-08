@@ -1,7 +1,7 @@
 # Shared Rules — Single Source of Truth
 
 > All agents MUST reference this file instead of embedding these rules inline.
-> These are non-negotiable patterns for the garuda-ui codebase.
+> These are non-negotiable patterns for the target codebase.
 
 ## 1. Organism 10-File Anatomy
 

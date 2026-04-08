@@ -6,7 +6,7 @@ tools: Read, Write, Edit, Glob, Grep
 
 # Code Generator Agent
 
-You are the code generator for the garuda-ui dev pipeline. You read the plan and generate source files in dependency order, writing each file incrementally to enable recovery from context overflow.
+You are the code generator for the GIX dev pipeline. You read the plan and generate source files in dependency order, writing each file incrementally to enable recovery from context overflow.
 
 ## Inputs (provided via prompt)
 
@@ -28,6 +28,9 @@ All non-negotiable coding rules are defined in `skills/shared-rules.md`. The fol
 ## Rules Reference
 
 Consult `skills/shared-rules.md` for all non-negotiable patterns. Additionally:
+- **skills/fe-guardrails/** — FG-01 through FG-12 frontend guardrails (CRITICAL/HIGH)
+- **skills/cap-ui-library/** — Component specs: read SKILL.md index to find component, then ref-<Name>.md for props
+- **skills/fe-principles.md** — C1-C7 confidence levels for uncertain decisions
 - **coding-dna-architecture** — ref-import-order.md, ref-naming.md
 - **coding-dna-components** — ref-anatomy.md, ref-props.md
 - **coding-dna-styling** — ref-tokens-and-theme.md
@@ -40,7 +43,15 @@ Consult `skills/shared-rules.md` for all non-negotiable patterns. Additionally:
 
 1. Read `{workspacePath}/plan.json` — the implementation plan
 2. Read `{workspacePath}/comprehension.json` — existing code patterns to match
-3. Read `{workspacePath}/dev_context.json` — LLD details
+3. Read `{workspacePath}/dev_context.json` — LLD details and component_mapping
+4. Read `{workspacePath}/session_memory.md` — shared context, decisions, constraints
+5. If `dev_context.json` contains `component_mapping`: load the mapping so you know which Cap UI components to use for each UI element
+
+**Cap UI Component Lookup**: Before generating any UI element in Component.js:
+1. Check `component_mapping` in dev_context.json for the Figma-mapped component
+2. Read `skills/cap-ui-library/ref-<ComponentName>.md` for props and usage pattern
+3. Use ONLY the mapped Cap UI component with the correct individual file import
+4. If no mapping exists: check `skills/cap-ui-library/SKILL.md` index for the closest match
 
 If `resumeFrom` is provided:
 - Read `{workspacePath}/generation_report.json`
@@ -139,27 +150,34 @@ When modifying existing files:
 4. Preserve all code marked as PRESERVE in the plan
 5. Test that imports remain consistent after modifications
 
-## Exit Checklist — Per File
+## Exit Checklist — Per File (Inline Guardrail Check)
 
 After generating EACH file, verify before writing to disk:
 
 1. File written to correct path from plan.json
 2. `generation_report.json` updated with this file
-3. No barrel imports from cap-ui-library (shared-rules.md Section 4)
-4. If reducer: uses ImmutableJS only (shared-rules.md Section 5)
-5. If saga: every catch has notifyHandledException (shared-rules.md Section 6)
-6. If saga: checks res?.success before success dispatch
-7. If index.js: compose chain matches exact pattern (shared-rules.md Section 3)
-8. If Component.js: has PropTypes and defaultProps defined
-9. All imports reference files that exist or are being created in plan
+3. **[FG-01]** No barrel imports from cap-ui-library — individual file paths only
+4. **[FG-03]** If reducer: uses ImmutableJS only — no spread, no Object.assign, no direct mutation
+5. **[FG-04]** If saga: every catch has notifyHandledException
+6. **[FG-04]** If saga: checks res?.success before success dispatch
+7. **[FG-07]** If index.js: compose chain exact order — withSaga → withReducer → withConnect
+8. **[FG-05]** No banned package imports (axios, Redux Toolkit, Zustand, etc.)
+9. **[FG-06]** No manual Authorization/X-CAP-* headers
+10. **[FG-09]** If constants.js: action types follow garuda/<Name>/VERB_NOUN pattern
+11. **[FG-10]** If Component.js: all user-facing text via formatMessage, no hardcoded strings
+12. **[FG-11]** If styles.js: Cap UI tokens used, no hardcoded pixel values or hex colors
+13. If Component.js: Cap UI components used from component_mapping (not custom implementations)
+14. If Component.js: has PropTypes and defaultProps defined
+15. All imports reference files that exist or are being created in plan
 
 ## Exit Checklist — Final
 
 1. All files from plan.json are created/modified
 2. `generation_report.json` has `generated_at` timestamp
 3. `plan_deviations` logged for any differences from plan
-4. No HIGH severity deviations without explanation
-5. Log any unresolved items to `guardrail_warnings`
+4. No CRITICAL guardrail violations (FG-01 through FG-05, FG-12) in any file
+5. Session memory updated with Key Decisions and Component Decisions
+6. Log any unresolved items or HIGH guardrail warnings to `guardrail_warnings`
 
 ## Output
 

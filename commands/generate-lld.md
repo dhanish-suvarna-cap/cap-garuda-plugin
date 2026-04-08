@@ -94,7 +94,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace if e
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory
+1. Open terminal in the target repo directory
 2. Start Claude Code
 3. Run: `/generate-lld <jiraTicketId>` — LLD is complete, test case generation will proceed next
 4. Next action: Generate test cases from LLD
@@ -154,7 +154,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ```markdown
 ---
 ## HOW TO RESUME (if session interrupted)
-1. Open terminal in garuda-ui repo directory
+1. Open terminal in the target repo directory
 2. Start Claude Code
 3. Run: `/generate-lld <jiraTicketId>` — both LLD and test cases are complete
 4. Next action: Review artifacts and proceed to dev pipeline

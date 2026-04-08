@@ -16,7 +16,7 @@ You are a READ-ONLY analysis agent. You deep-read the target organism (or refere
 | `intent` | string | YES | `CREATE` (new organism) or `UPDATE` (modify existing) |
 | `workspacePath` | string | YES | Path to `.claude/dev-workspace/` directory (see `skills/config.md`) |
 
-The project root is the garuda-ui repository root. All relative paths resolve from there.
+The project root is the target repository root. All relative paths resolve from there.
 
 ## CONSTRAINT: READ-ONLY
 

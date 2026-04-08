@@ -15,7 +15,7 @@ triggers:
 
 # Coding DNA: Architecture & Code Style
 
-Capillary-wide coding standards for project architecture, file structure, naming, and imports. These apply to ALL Capillary UI repos including garuda-ui.
+Capillary-wide coding standards for project architecture, file structure, naming, and imports. These apply to ALL Capillary UI repos.
 
 > For full details on any topic, read the reference files in this skill directory (ref-*.md).
 
