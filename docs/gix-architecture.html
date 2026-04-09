@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GIX Architecture — Complete Technical Documentation</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg:#0f0f1a; --bg2:#161625; --bg3:#1c1c30; --card:#1e1e35;
+      --text:#e2e2ef; --muted:#8888a8; --accent:#00d4ff; --accent2:#7c4dff;
+      --ok:#00e676; --warn:#ffab00; --err:#ff5252; --border:#2a2a45;
+      --code-bg:#12121f;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+
+    /* Layout */
+    .sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--border);position:fixed;height:100vh;overflow-y:auto;padding:24px 0;z-index:10;}
+    .sidebar h1{padding:0 20px;color:var(--accent);font-size:18px;margin-bottom:4px;letter-spacing:1px;}
+    .sidebar .sub{padding:0 20px;color:var(--muted);font-size:12px;margin-bottom:24px;}
+    .sidebar h3{padding:8px 20px 4px;color:var(--accent2);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;}
+    .sidebar a{display:block;padding:6px 20px 6px 28px;color:var(--muted);text-decoration:none;font-size:13px;transition:all 0.15s;}
+    .sidebar a:hover{color:var(--text);background:var(--bg3);}
+    .main{margin-left:280px;padding:40px 48px;max-width:1100px;}
+
+    /* Typography */
+    h2{color:var(--accent);font-size:24px;margin:48px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+    h3{color:var(--accent2);font-size:18px;margin:32px 0 12px;}
+    h4{color:var(--text);font-size:15px;margin:24px 0 8px;}
+    p{margin:8px 0;color:var(--text);}
+
+    /* Components */
+    .hero{background:linear-gradient(135deg,var(--bg2),var(--card));border:1px solid var(--border);border-radius:12px;padding:32px;margin-bottom:40px;}
+    .hero h2{margin:0 0 8px;border:none;font-size:28px;}
+    .hero p{color:var(--muted);font-size:15px;}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin:12px 0;}
+    .card h4{margin:0 0 8px;color:var(--accent);}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0;}
+
+    table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+    th{background:var(--bg3);padding:10px 12px;text-align:left;color:var(--accent);font-weight:600;border-bottom:2px solid var(--border);}
+    td{padding:10px 12px;border-bottom:1px solid var(--border);}
+    tr:hover td{background:var(--bg2);}
+
+    code{background:var(--code-bg);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--accent);font-family:'JetBrains Mono','Fira Code',monospace;}
+    pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:12px 0;font-size:12px;line-height:1.5;}
+    pre code{background:none;padding:0;color:var(--text);}
+
+    .badge{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;font-weight:600;}
+    .badge.critical{background:var(--err);color:#fff;}
+    .badge.high{background:var(--warn);color:#000;}
+    .badge.pass{background:var(--ok);color:#000;}
+    .badge.info{background:var(--accent);color:#000;}
+
+    .mermaid{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px;margin:16px 0;}
+
+    .callout{border-left:4px solid var(--accent);background:var(--bg2);padding:16px 20px;margin:16px 0;border-radius:0 8px 8px 0;}
+    .callout.warn{border-left-color:var(--warn);}
+    .callout.err{border-left-color:var(--err);}
+    .callout.ok{border-left-color:var(--ok);}
+
+    .flow-step{display:flex;align-items:flex-start;gap:16px;margin:12px 0;}
+    .flow-num{min-width:32px;height:32px;background:var(--accent);color:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+    .flow-content{flex:1;}
+
+    .tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:11px;margin:2px;color:var(--muted);}
+
+    @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;padding:24px;}}
+  </style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h1>GIX</h1>
+  <div class="sub">Garuda Intelligent eXecution</div>
+
+  <h3>Overview</h3>
+  <a href="#architecture">Architecture</a>
+  <a href="#pipeline-flow">Pipeline Flow</a>
+  <a href="#modes">Operating Modes</a>
+
+  <h3>Agent System</h3>
+  <a href="#agent-comm">Agent Communication</a>
+  <a href="#agent-lifecycle">Agent Lifecycle</a>
+  <a href="#agent-catalog">Agent Catalog (17)</a>
+  <a href="#parallel">Parallel Execution</a>
+
+  <h3>Skills & Context</h3>
+  <a href="#design-ref">Design Ref (Figma/v0/Image)</a>
+  <a href="#skills">Skill System</a>
+  <a href="#cap-ui">Cap UI Library (131)</a>
+  <a href="#figma-map">Figma Mapping</a>
+  <a href="#coding-dna">Coding DNA</a>
+
+  <h3>State Management</h3>
+  <a href="#state">State Machine</a>
+  <a href="#session-memory">Session Memory</a>
+  <a href="#resume">Resume & Recovery</a>
+  <a href="#workspace">Workspace Layout</a>
+
+  <h3>Quality & Verification</h3>
+  <a href="#guardrails">Guardrails (FG-01..12)</a>
+  <a href="#productex">ProductEx Verification</a>
+  <a href="#build-verify">Build Verification</a>
+  <a href="#visual-qa">Visual Self-Evaluation</a>
+  <a href="#gate-checks">Gate Checks</a>
+
+  <h3>Orchestration</h3>
+  <a href="#checkpoints">Human Checkpoints</a>
+  <a href="#rework">Rework Loops</a>
+  <a href="#consultation">Internal Consultation</a>
+  <a href="#confidence">C1-C7 Confidence</a>
+
+  <h3>Outputs</h3>
+  <a href="#dashboard">Live Dashboard</a>
+  <a href="#blueprint">Blueprint</a>
+  <a href="#confluence">Confluence Publishing</a>
+  <a href="#git">Git Integration</a>
+</nav>
+
+<div class="main">
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <h2>GIX — Complete Technical Architecture</h2>
+  <p>A 15-phase AI pipeline that transforms a Jira ticket into verified, tested React code. 18 specialized agents, 25+ skills, 12 guardrail categories, incremental state management, and multi-layer verification. Accepts Figma, v0.dev prototypes, or screenshots as design input.</p>
+</div>
+
+<!-- ===== ARCHITECTURE ===== -->
+<h2 id="architecture">System Architecture</h2>
+
+<div class="mermaid">
+graph TB
+  subgraph User["Developer"]
+    CLI["/gix command"]
+  end
+
+  subgraph Orchestrator["GIX Orchestrator (commands/gix.md)"]
+    MODE["Mode Selection"]
+    INPUT["Input Collection"]
+    PHASE["Phase Sequencer"]
+    GATE["Gate Checks"]
+    RESUME["Resume Engine"]
+  end
+
+  subgraph Agents["Agent Pool (18 agents)"]
+    A1["prd-ingestion"]
+    A2["codebase-scout"]
+    A3["cross-repo-tracer"]
+    A4["hld-generator"]
+    A5["lld-generator"]
+    A6["testcase-generator"]
+    A7["dev-context-loader"]
+    A8["codebase-comprehension"]
+    A9["dev-planner"]
+    A10["code-generator"]
+    A11["build-verifier"]
+    A12["visual-qa"]
+    A13["test-writer"]
+    A14["test-evaluator"]
+    A15["productex-verifier"]
+    A16["guardrail-checker"]
+    A17["confluence-publisher"]
+    A18["prototype-analyzer"]
+  end
+
+  subgraph Skills["Skill Library (25+ skills)"]
+    S1["cap-ui-library (131 specs)"]
+    S2["fe-guardrails (12 rules)"]
+    S3["figma-component-map"]
+    S4["coding-dna (6 domains)"]
+    S5["shared-rules"]
+    S6["session-memory-template"]
+    S7["fe-principles (C1-C7)"]
+    S8["knowledge-bank"]
+  end
+
+  subgraph State["Workspace State"]
+    ST1["pipeline_state.json"]
+    ST2["session_memory.md"]
+    ST3["session_journal.md"]
+    ST4["approach_log.md"]
+    ST5["Artifact JSONs"]
+  end
+
+  subgraph External["External Services"]
+    JIRA["Jira (MCP)"]
+    CONF["Confluence (MCP)"]
+    FIGMA["Figma (MCP)"]
+    DOCS["docs.capillarytech.com"]
+    PREVIEW["Claude Preview"]
+  end
+
+  CLI --> MODE
+  MODE --> INPUT
+  INPUT --> PHASE
+  PHASE --> GATE
+  GATE --> RESUME
+
+  PHASE -->|spawn| Agents
+  Agents -->|read| Skills
+  Agents -->|read/write| State
+  Agents -->|call| External
+  GATE -->|validate| State
+  RESUME -->|read| State
+</div>
+
+<p>The orchestrator (<code>commands/gix.md</code>) is the brain. It never generates code or reads codebases directly. Instead, it <strong>spawns specialized agents</strong> for each phase, validates their output via <strong>gate checks</strong>, and manages <strong>state</strong> for resume safety. Agents read <strong>skills</strong> for coding patterns and reference data, and communicate through <strong>JSON files</strong> in the workspace.</p>
+
+<!-- ===== PIPELINE FLOW ===== -->
+<h2 id="pipeline-flow">Pipeline Flow — All 15 Phases</h2>
+
+<div class="mermaid">
+flowchart TD
+  START(["/gix"]) --> P0["Phase 0: Init\nWorkspace + state + memory + git branch"]
+
+  P0 --> P1["Phase 1: PRD Ingestion\nJira + PRD + Transcript + Figma + Cap Docs"]
+  P1 -->|parallel| PEX1["ProductEx BRD Review\n(background)"]
+  P1 --> GATE1{"BRD Validation\nGate"}
+  GATE1 -->|"concrete behaviours found"| P2
+  GATE1 -->|"no behaviours"| WARN1["Warn user\nask to continue"]
+  WARN1 --> P2
+
+  P2["Phase 2: Codebase Scout + Cross-Repo Trace\n(parallel agents)"] --> P3
+
+  P3["Phase 3: HLD Generation\n+ Mermaid diagrams"] --> PEX3["ProductEx Verify HLD"]
+  PEX3 --> CP3{"Checkpoint:\napprove / feedback / abort"}
+  CP3 -->|approve| P4
+  CP3 -->|feedback| P3
+  CP3 -->|abort| STOP([Pipeline Aborted])
+
+  P4["Phase 4: Backend Handoff\nWait for backend HLD + API sigs"] --> P5
+
+  P5["Phase 5: LLD Generation\n+ Mermaid diagrams"] --> PEX5["ProductEx Verify LLD"]
+  PEX5 --> CP5{"Checkpoint:\napprove / feedback"}
+  CP5 -->|approve| P6
+  CP5 -->|feedback| P5
+
+  P6["Phase 6: Test Cases\nP0/P1/P2 test cases"] --> CP6{"Checkpoint:\nreview cases"}
+  CP6 --> P7
+
+  P7["Phase 7: Dev Context Loading\nLLD + Figma + Component Mapping"] --> P8
+  P8["Phase 8: Codebase Comprehension\nDeep-read target organism"] --> P9
+
+  P9["Phase 9: Planning\nFile-by-file plan"] --> PEX9["ProductEx Verify Plan"]
+  PEX9 --> CP9{"Checkpoint:\nyes / no"}
+  CP9 -->|yes| P10
+  CP9 -->|no| P9
+
+  P10["Phase 10: Code Generation\n10 files incremental"] --> GC["Guardrail Check"]
+  GC --> PEX10["ProductEx Verify Code"]
+  PEX10 --> P11
+
+  P11["Phase 11: Build Verification\nnpm start + 3x auto-fix"] --> BLD{"Build\npass?"}
+  BLD -->|pass| P12
+  BLD -->|"fail 3x"| BSTOP["Stop: show errors\nask developer"]
+
+  P12["Phase 12: Visual Self-Evaluation\nScreenshot vs Figma (3x loop)"] --> P13
+
+  P13["Phase 13: Test Writing"] --> CP13{"Checkpoint:\nwrite tests?"}
+  CP13 -->|yes| TW["Write tests"] --> P14
+  CP13 -->|no| P15
+
+  P14["Phase 14: Test Evaluation\nJest + coverage"] --> CP14{"Coverage\nok?"}
+  CP14 -->|yes| P15
+  CP14 -->|"below target"| TW
+
+  P15["Phase 15: Final Summary\n+ Blueprint HTML\n+ Confluence publish"]
+
+  style START fill:#00d4ff,color:#000
+  style STOP fill:#ff5252,color:#fff
+  style BSTOP fill:#ff5252,color:#fff
+  style P15 fill:#00e676,color:#000
+  style CP3 fill:#ffab00,color:#000
+  style CP5 fill:#ffab00,color:#000
+  style CP6 fill:#ffab00,color:#000
+  style CP9 fill:#ffab00,color:#000
+  style CP13 fill:#ffab00,color:#000
+  style CP14 fill:#ffab00,color:#000
+  style BLD fill:#ffab00,color:#000
+  style GATE1 fill:#7c4dff,color:#fff
+</div>
+
+<div class="callout">
+  <strong>Legend:</strong>
+  <span class="badge info">Blue</span> = Start/End &nbsp;
+  <span class="badge" style="background:#ffab00;color:#000">Yellow</span> = Human Checkpoint &nbsp;
+  <span class="badge" style="background:#7c4dff;color:#fff">Purple</span> = Validation Gate &nbsp;
+  <span class="badge critical">Red</span> = Stop/Abort
+</div>
+
+<!-- ===== MODES ===== -->
+<h2 id="modes">Operating Modes</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>[1] Full Pipeline</h4>
+    <p>All 15 phases. From Jira ticket to tested code.</p>
+    <span class="tag">Phases 1-15</span>
+  </div>
+  <div class="card">
+    <h4>[2] Resume</h4>
+    <p>Reads pipeline_state.json. Picks up at last completed phase.</p>
+    <span class="tag">Auto-detect</span>
+  </div>
+  <div class="card">
+    <h4>[3] Pre-Dev Only</h4>
+    <p>PRD &rarr; HLD &rarr; LLD &rarr; Test Cases. Stops after docs.</p>
+    <span class="tag">Phases 1-6</span>
+  </div>
+  <div class="card">
+    <h4>[4] Dev Only</h4>
+    <p>Context &rarr; Plan &rarr; Code &rarr; Build &rarr; QA &rarr; Tests.</p>
+    <span class="tag">Phases 7-15</span>
+  </div>
+  <div class="card">
+    <h4>[5] Status</h4>
+    <p>Dashboard of current pipeline progress for a ticket.</p>
+    <span class="tag">Read-only</span>
+  </div>
+</div>
+
+<!-- ===== AGENT COMMUNICATION ===== -->
+<h2 id="agent-comm">Agent Communication Model</h2>
+
+<p>Agents are <strong>isolated</strong> — they don't call each other directly. Communication happens through <strong>JSON files in the workspace</strong>. The orchestrator reads each agent's output and spawns the next agent with the right context.</p>
+
+<div class="mermaid">
+sequenceDiagram
+  participant O as Orchestrator (gix.md)
+  participant A1 as Agent N
+  participant FS as Workspace (filesystem)
+  participant SK as Skills (read-only)
+  participant A2 as Agent N+1
+
+  O->>O: Check prerequisites (artifact exists?)
+  O->>O: Update pipeline_state.json (in_progress)
+  O->>A1: Spawn with: workspacePath, inputs
+  A1->>SK: Read shared-rules, guardrails, cap-ui-library
+  A1->>FS: Read input artifact (JSON)
+  A1->>A1: Process (generate/analyze/verify)
+  A1->>A1: Run exit checklist
+  A1->>FS: Write output artifact (JSON)
+  A1-->>O: Return summary
+  O->>FS: Read output artifact
+  O->>O: Run gate check (validate output)
+  O->>O: Update state, journal, memory, approach log
+  O->>O: Update live dashboard
+  O->>A2: Spawn next agent
+
+  Note over O,A2: This cycle repeats for all 15 phases
+</div>
+
+<h3>Communication Rules</h3>
+<table>
+  <tr><th>Rule</th><th>Description</th></tr>
+  <tr><td>JSON-only communication</td><td>Agents read/write JSON files. No in-memory state passing.</td></tr>
+  <tr><td>No agent-to-agent calls</td><td>Agent A never spawns Agent B. Only the orchestrator spawns agents.</td></tr>
+  <tr><td>Skills are read-only</td><td>Agents read skill files for patterns/rules. Never write to skills.</td></tr>
+  <tr><td>Incremental writes</td><td>Code generator writes each file to disk immediately + updates generation_report.json.</td></tr>
+  <tr><td>Workspace scoped</td><td>All files in <code>.claude/workspace/&lt;ticket&gt;/</code>. Gitignored.</td></tr>
+</table>
+
+<!-- ===== AGENT LIFECYCLE ===== -->
+<h2 id="agent-lifecycle">Agent Lifecycle</h2>
+
+<div class="mermaid">
+stateDiagram-v2
+  [*] --> Spawned: Orchestrator spawns agent
+  Spawned --> ReadSkills: Agent reads skills (guardrails, shared-rules, etc.)
+  ReadSkills --> ReadMemory: Agent reads session_memory.md
+  ReadMemory --> ReadInput: Agent reads input artifacts (JSON)
+  ReadInput --> Process: Agent does its work
+  Process --> ExitChecklist: Agent runs exit checklist
+
+  ExitChecklist --> WriteOutput: All checks pass
+  ExitChecklist --> FixIssue: Check fails (fixable)
+  FixIssue --> ExitChecklist: Re-check
+  ExitChecklist --> LogWarning: Check fails (unfixable)
+  LogWarning --> WriteOutput: Log to guardrail_warnings
+
+  WriteOutput --> UpdateMemory: Write session_memory.md updates
+  UpdateMemory --> Done: Agent returns to orchestrator
+  Done --> [*]
+</div>
+
+<div class="callout">
+  <strong>Key insight:</strong> Every agent follows the same lifecycle — read skills, read memory, read input, process, exit checklist, write output, update memory. This consistency makes the pipeline predictable and debuggable.
+</div>
+
+<!-- ===== AGENT CATALOG ===== -->
+<h2 id="agent-catalog">Agent Catalog</h2>
+
+<table>
+  <tr><th>Agent</th><th>Phase</th><th>Input</th><th>Output</th><th>Tools</th></tr>
+  <tr><td><code>prd-ingestion</code></td><td>1</td><td>Jira ID, transcript, design ref</td><td>context_bundle.json</td><td>Read, Write, Bash, WebFetch, WebSearch, Jira MCP, Figma MCP</td></tr>
+  <tr><td><code>prototype-analyzer</code></td><td>1</td><td>Prototype URL (v0/Vercel/any)</td><td>prototype_analysis.json</td><td>Read, Write, Claude Preview (navigate, screenshot, inspect)</td></tr>
+  <tr><td><code>codebase-scout</code></td><td>2</td><td>context_bundle.json</td><td>context_bundle.json (updated)</td><td>Read, Bash, Grep, Glob</td></tr>
+  <tr><td><code>cross-repo-tracer</code></td><td>2</td><td>feature description, repo paths</td><td>cross_repo_trace.json</td><td>Read, Grep, Glob, Bash</td></tr>
+  <tr><td><code>hld-generator</code></td><td>3</td><td>context_bundle.json</td><td>hld_artifact.json + Confluence</td><td>Read, Write, Bash, Confluence MCP</td></tr>
+  <tr><td><code>lld-generator</code></td><td>5</td><td>hld + backend inputs</td><td>lld_artifact.json + Confluence</td><td>Read, Write, Glob, Grep, Confluence MCP</td></tr>
+  <tr><td><code>testcase-generator</code></td><td>6</td><td>lld_artifact.json</td><td>testcase_sheet.json</td><td>Read, Write, Confluence MCP</td></tr>
+  <tr><td><code>dev-context-loader</code></td><td>7</td><td>LLD source, Figma ref</td><td>dev_context.json</td><td>Read, Write, Glob, Confluence MCP, Figma MCP</td></tr>
+  <tr><td><code>codebase-comprehension</code></td><td>8</td><td>target organism path</td><td>comprehension.json</td><td>Read, Glob, Grep</td></tr>
+  <tr><td><code>dev-planner</code></td><td>9</td><td>dev_context + comprehension</td><td>plan.json</td><td>Read, Write</td></tr>
+  <tr><td><code>code-generator</code></td><td>10</td><td>plan.json</td><td>Source files + generation_report.json</td><td>Read, Write, Edit, Glob, Grep</td></tr>
+  <tr><td><code>build-verifier</code></td><td>11</td><td>generation_report.json</td><td>build_report.json</td><td>Bash, Read, Edit, Write</td></tr>
+  <tr><td><code>visual-qa</code></td><td>12</td><td>dev_context + gen_report</td><td>visual_qa_report.json</td><td>Read, Write, Edit, Claude Preview, Figma MCP</td></tr>
+  <tr><td><code>test-writer</code></td><td>13</td><td>generation_report.json</td><td>Test files (.test.js)</td><td>Read, Write, Glob, Grep</td></tr>
+  <tr><td><code>test-evaluator</code></td><td>14</td><td>Test files</td><td>test_report.json</td><td>Bash, Read, Write</td></tr>
+  <tr><td><code>productex-verifier</code></td><td>3,5,9,10</td><td>artifact + context_bundle</td><td>verify-{phase}.json</td><td>Read, Write, WebFetch, WebSearch</td></tr>
+  <tr><td><code>guardrail-checker</code></td><td>10</td><td>generation_report.json</td><td>verify-code.json</td><td>Read, Grep, Glob</td></tr>
+  <tr><td><code>confluence-publisher</code></td><td>all</td><td>artifact file</td><td>Confluence page ID</td><td>Read, Write, Confluence MCP</td></tr>
+</table>
+
+<!-- ===== PARALLEL ===== -->
+<h2 id="parallel">Parallel Execution</h2>
+
+<div class="mermaid">
+gantt
+  title Phase 1-2 Parallel Execution
+  dateFormat X
+  axisFormat %s
+
+  section Phase 1
+  PRD Ingestion         :a1, 0, 30
+  ProductEx BRD Review  :a2, 0, 25
+  BRD Validation Gate   :a3, 30, 5
+  Merge ProductEx       :a4, 30, 5
+
+  section Phase 2
+  Codebase Scout        :b1, 35, 20
+  Cross-Repo Tracer     :b2, 35, 20
+  Gate Check            :b3, 55, 5
+</div>
+
+<p>Independent agents run simultaneously:</p>
+<ul>
+  <li><strong>Phase 1:</strong> <code>prd-ingestion</code> and <code>productex-verifier</code> (BRD review) run in parallel</li>
+  <li><strong>Phase 2:</strong> <code>codebase-scout</code> and <code>cross-repo-tracer</code> run in parallel</li>
+  <li><strong>Phase 10:</strong> If multiple independent organisms, parallel <code>code-generator</code> agents</li>
+</ul>
+
+<!-- ===== SKILLS ===== -->
+<h2 id="skills">Skill System</h2>
+
+<p>Skills are <strong>read-only reference documents</strong> that agents load when they need coding patterns, component specs, or guardrail rules. They are NOT agents — they don't execute, they inform.</p>
+
+<div class="mermaid">
+graph LR
+  subgraph "Skill Types"
+    REF["Reference Skills\n(read for patterns)"]
+    GUARD["Guardrail Skills\n(read for rules)"]
+    COMP["Component Skills\n(read for props/usage)"]
+    TEMPLATE["Template Skills\n(read for structure)"]
+  end
+
+  subgraph "Agents Read Skills"
+    CG["code-generator"] -->|reads| REF
+    CG -->|reads| GUARD
+    CG -->|reads| COMP
+    HLD["hld-generator"] -->|reads| TEMPLATE
+    GC["guardrail-checker"] -->|reads| GUARD
+    DCL["dev-context-loader"] -->|reads| COMP
+  end
+</div>
+
+<h3>Skill Directory Structure</h3>
+<pre><code>skills/
+├── cap-ui-library/              # 131 component specs
+│   ├── SKILL.md                 # Index with categories + Figma mapping
+│   ├── ref-CapButton.md         # Individual component spec
+│   ├── ref-CapSelect.md
+│   └── ... (131 total)
+├── fe-guardrails/               # Frontend guardrails
+│   ├── SKILL.md                 # Summary + rule index
+│   └── ref-guardrails.md        # Detailed rules with code examples
+├── figma-component-map/         # Figma → Cap component mapping
+│   └── SKILL.md                 # Mapping table + decision flowchart
+├── coding-dna-architecture/     # Tech stack, imports, naming
+├── coding-dna-components/       # Component anatomy, HOCs, hooks
+├── coding-dna-state-and-api/    # Redux, sagas, API patterns
+├── coding-dna-styling/          # Design tokens, styled-components
+├── coding-dna-testing/          # Jest/RTL, mocking patterns
+├── coding-dna-quality/          # Error handling, accessibility
+├── tutor/                       # Codebase teaching (standalone)
+├── debug/                       # Root cause analysis (standalone)
+├── shared-rules.md              # Non-negotiable coding patterns
+├── config.md                    # Centralized config values
+├── fe-principles.md             # C1-C7 confidence framework
+├── session-memory-template.md   # Memory structure template
+├── knowledge-bank.md            # Pre-session context (human-populated)
+├── live-dashboard-template.md   # Dashboard HTML template
+├── blueprint-template.md        # Final blueprint HTML template
+├── hld-template.md              # HLD Confluence structure
+└── lld-template.md              # LLD Confluence structure</code></pre>
+
+<!-- ===== CAP UI ===== -->
+<!-- ===== DESIGN REF ===== -->
+<h2 id="design-ref">Design Reference Handling</h2>
+
+<p>GIX accepts <strong>three types of design references</strong> — not just Figma. All three produce the same downstream data structure (<code>figma</code> section in context_bundle.json) so agents don't need to know the source.</p>
+
+<div class="mermaid">
+flowchart TD
+  INPUT{"Design Reference\nType?"}
+
+  INPUT -->|"Figma\n(fileId:frameId)"| FIGMA["Figma MCP\nget_figma_data\ndownload_figma_images"]
+  INPUT -->|"Prototype URL\n(v0.dev / Vercel / any)"| PROTO["prototype-analyzer agent\n(Claude Preview)"]
+  INPUT -->|"Screenshot\n(local file)"| IMG["Visual Analysis\n(read image)"]
+  INPUT -->|"None"| SKIP["Skip visual features\nUse LLD text only"]
+
+  FIGMA --> TREE["Component Tree\n+ Design Tokens\n+ Dimensions"]
+  PROTO --> TREE
+  IMG --> TREE
+
+  PROTO --> V0{"Is v0.dev?"}
+  V0 -->|yes| SOURCE["Read v0 source code\nTailwind → Cap tokens\nuseState → Redux\nfetch → saga"]
+  V0 -->|no| DOM["Inspect DOM\nIdentify elements"]
+  SOURCE --> MAP
+  DOM --> MAP
+
+  TREE --> MAP["Map to Cap UI Library\n(figma-component-map skill)"]
+  MAP --> CTX["context_bundle.json\nfigma section populated"]
+
+  CTX --> DOWN["All downstream agents\nwork identically"]
+
+  style SKIP fill:#ffab00,color:#000
+</div>
+
+<h3>Prototype URL Flow (v0.dev Example)</h3>
+
+<div class="flow-step"><div class="flow-num">1</div><div class="flow-content"><strong>Navigate</strong> — Claude Preview opens the v0.dev URL, waits for render</div></div>
+<div class="flow-step"><div class="flow-num">2</div><div class="flow-content"><strong>Screenshot</strong> — Full-page screenshot + scroll for below-fold content</div></div>
+<div class="flow-step"><div class="flow-num">3</div><div class="flow-content"><strong>DOM Inspect</strong> — Identify buttons, inputs, tables, selects, modals, tabs from rendered HTML</div></div>
+<div class="flow-step"><div class="flow-num">4</div><div class="flow-content"><strong>v0 Source Code</strong> — If v0.dev, read the generated React+Tailwind code for higher confidence mapping</div></div>
+<div class="flow-step"><div class="flow-num">5</div><div class="flow-content"><strong>Component Map</strong> — Each detected element → Cap UI component (CapButton, CapTable, etc.) with props and import path</div></div>
+<div class="flow-step"><div class="flow-num">6</div><div class="flow-content"><strong>Token Extraction</strong> — Visual colors/spacing/fonts → Cap UI design tokens (CAP_SPACE_*, CAP_G*, FONT_SIZE_*)</div></div>
+<div class="flow-step"><div class="flow-num">7</div><div class="flow-content"><strong>Output</strong> — <code>prototype_analysis.json</code> + context_bundle updated. Downstream agents see same data as Figma flow.</div></div>
+
+<div class="callout ok">
+  <strong>Key insight:</strong> The prototype-analyzer produces output in the same format as Figma MCP. This means HLD generator, LLD generator, dev-context-loader, code-generator, and visual-qa all work identically whether the source was Figma, a v0 URL, or a screenshot.
+</div>
+
+<h3>Visual QA with Prototype URL</h3>
+
+<p>When the design reference is a prototype URL, visual QA compares the <strong>generated app</strong> (localhost:8000) against the <strong>live prototype</strong> (v0.dev URL) side-by-side:</p>
+
+<div class="mermaid">
+flowchart LR
+  GEN["Generated App\n(localhost:8000)"] -->|screenshot| CMP["Side-by-side\nComparison"]
+  PROTO["Prototype URL\n(v0.dev)"] -->|screenshot| CMP
+  CMP --> DISC["Discrepancies:\nCRITICAL / MAJOR / MINOR"]
+  DISC -->|"fix CSS"| GEN
+</div>
+
+<h2 id="cap-ui">Cap UI Library Component System</h2>
+
+<div class="mermaid">
+flowchart LR
+  FIGMA["Figma Frame"] -->|"element type"| MAP["figma-component-map\nSKILL.md"]
+  MAP -->|"CapButton"| INDEX["cap-ui-library\nSKILL.md (index)"]
+  INDEX -->|"lookup"| SPEC["ref-CapButton.md\n(props, usage)"]
+  SPEC -->|"generate import"| CODE["import CapButton from\n'@capillarytech/cap-ui-library/CapButton'"]
+</div>
+
+<h4>Lookup Flow</h4>
+<div class="flow-step"><div class="flow-num">1</div><div class="flow-content"><strong>Figma element detected</strong> (e.g., button in design) &rarr; check <code>figma-component-map/SKILL.md</code></div></div>
+<div class="flow-step"><div class="flow-num">2</div><div class="flow-content"><strong>Map to Cap component</strong> (e.g., Button &rarr; CapButton) &rarr; find in <code>cap-ui-library/SKILL.md</code> index</div></div>
+<div class="flow-step"><div class="flow-num">3</div><div class="flow-content"><strong>Read detailed spec</strong> at <code>ref-CapButton.md</code> &rarr; get props, defaults, sub-components, usage example</div></div>
+<div class="flow-step"><div class="flow-num">4</div><div class="flow-content"><strong>Generate code</strong> with correct individual file import (never barrel import)</div></div>
+
+<p><strong>131 components covered</strong> across categories: Form Controls (34), Data Display (26), Layout (11), Navigation (14), Feedback (14), Typography (8), Specialized (11), Error (5), Auth/System (5), HOCs (3).</p>
+
+<!-- ===== STATE MANAGEMENT ===== -->
+<h2 id="state">State Machine</h2>
+
+<div class="mermaid">
+stateDiagram-v2
+  [*] --> not_started
+  not_started --> in_progress : Phase spawned
+  in_progress --> completed : Gate check passes
+  in_progress --> failed : Gate check fails
+  failed --> in_progress : Retry or re-run
+  completed --> approved : Human approves at checkpoint
+  completed --> in_progress : Feedback loop re-run
+  approved --> in_progress : Rework from downstream blocker
+  completed --> skipped : User skips optional phase
+</div>
+
+<h3>pipeline_state.json Structure</h3>
+<pre><code>{
+  "jira_ticket_id": "CAP-12345",
+  "status": "in_progress",
+  "phases": {
+    "prd_ingestion": {
+      "status": "completed",
+      "summary": "Context gathered from Jira + PRD + Figma",
+      "guardrail_result": "PASS",
+      "verification_result": "approved",
+      "artifacts": ["context_bundle.json"],
+      "started_at": "2026-04-08T10:00:00Z",
+      "completed_at": "2026-04-08T10:05:00Z"
+    },
+    "hld_generation": {
+      "status": "approved",
+      ...
+    }
+  },
+  "recovery": {
+    "last_successful_phase": "hld_generation",
+    "can_resume_from": "backend_handoff",
+    "rework_history": []
+  },
+  "confluence": {
+    "run_page_id": "12345678",
+    "artifact_pages": { "prd_ingestion": "12345679" }
+  }
+}</code></pre>
+
+<!-- ===== SESSION MEMORY ===== -->
+<h2 id="session-memory">Session Memory</h2>
+
+<div class="mermaid">
+flowchart TD
+  subgraph "Session Memory Sections"
+    DT["Domain Terminology\n(agreed terms)"]
+    CB["Codebase Behaviour\n(what exists)"]
+    CD["Component Decisions\n(Cap UI choices)"]
+    FM["Figma Mapping\n(element → component)"]
+    KD["Key Decisions\n(what + why)"]
+    CON["Constraints\n(business + tech)"]
+    RISK["Risks & Concerns\n(tracked to resolution)"]
+    OQ["Open Questions\n([ ] / [x])"]
+    RW["Rework Log\n(cycles tracked)"]
+  end
+
+  P1["Phase 1: PRD"] -->|writes| DT
+  P1 -->|writes| CON
+  P2["Phase 2: Scout"] -->|writes| CB
+  P7["Phase 7: Context"] -->|writes| CD
+  P7 -->|writes| FM
+  P3["Phase 3: HLD"] -->|writes| KD
+  P9["Phase 9: Plan"] -->|writes| KD
+  P15["All phases"] -->|writes| RISK
+  P15 -->|writes| OQ
+</div>
+
+<div class="callout ok">
+  <strong>Incremental writes:</strong> Session memory is updated after EVERY decision — not batched at phase end. This ensures context survives if the context window is compacted mid-phase.
+</div>
+
+<!-- ===== RESUME ===== -->
+<h2 id="resume">Resume & Recovery</h2>
+
+<div class="mermaid">
+flowchart LR
+  INT["Interruption\n(quota/crash/close)"] --> DISK["On disk:\n- pipeline_state.json\n- session_journal.md\n- session_memory.md\n- requirements_context.md\n- approach_log.md\n- All artifact JSONs\n- Generated source files"]
+
+  DISK --> RESUME["/gix → Resume"]
+  RESUME --> READ["Read all 5 state files\nPrint to restore context"]
+  READ --> SKIP["Skip completed phases"]
+  SKIP --> CONTINUE["Continue from\ncan_resume_from"]
+</div>
+
+<h3>What Survives Each Type of Interruption</h3>
+<table>
+  <tr><th>Scenario</th><th>Preserved</th><th>Recovery</th></tr>
+  <tr><td>Context overflow mid-agent</td><td>State + completed files + generation_report.json</td><td>Orchestrator re-spawns agent for remaining files</td></tr>
+  <tr><td>Quota limit</td><td>All state files + all artifacts + all generated code</td><td><code>/gix</code> &rarr; Resume</td></tr>
+  <tr><td>Terminal closed</td><td>Same as quota</td><td><code>/gix</code> &rarr; Resume</td></tr>
+  <tr><td>Machine restart</td><td>Same as quota</td><td><code>/gix</code> &rarr; Resume</td></tr>
+  <tr><td>Mid-file generation</td><td>All files written before crash + generation_report</td><td>Code generator resumes from last completed file</td></tr>
+</table>
+
+<!-- ===== GUARDRAILS ===== -->
+<h2 id="guardrails">Frontend Guardrails (FG-01 through FG-12)</h2>
+
+<table>
+  <tr><th>ID</th><th>Category</th><th>Priority</th><th>Key Rule</th><th>Detection</th></tr>
+  <tr><td>FG-01</td><td>Cap UI Imports</td><td><span class="badge critical">CRITICAL</span></td><td>Individual file paths only, never barrel imports</td><td>Grep for <code>from '@capillarytech/cap-ui-library'</code></td></tr>
+  <tr><td>FG-02</td><td>Organism Anatomy</td><td><span class="badge critical">CRITICAL</span></td><td>Exactly 10 files per organism</td><td>Count files in organism directory</td></tr>
+  <tr><td>FG-03</td><td>ImmutableJS</td><td><span class="badge critical">CRITICAL</span></td><td>fromJS/set/get only, no direct mutation</td><td>Grep for <code>...state</code>, <code>state.x =</code></td></tr>
+  <tr><td>FG-04</td><td>Saga Error Handling</td><td><span class="badge critical">CRITICAL</span></td><td>Every catch has notifyHandledException</td><td>Count function* vs notifyHandledException</td></tr>
+  <tr><td>FG-05</td><td>Banned Packages</td><td><span class="badge critical">CRITICAL</span></td><td>No TS, RTK, Zustand, Tailwind, axios, Enzyme</td><td>Grep for banned import paths</td></tr>
+  <tr><td>FG-06</td><td>Auth Headers</td><td><span class="badge high">HIGH</span></td><td>Never manual — injected by requestConstructor.js</td><td>Grep for Authorization, X-CAP-*</td></tr>
+  <tr><td>FG-07</td><td>Compose Chain</td><td><span class="badge high">HIGH</span></td><td>withSaga &rarr; withReducer &rarr; withConnect</td><td>Parse index.js compose call</td></tr>
+  <tr><td>FG-08</td><td>Test Imports</td><td><span class="badge high">HIGH</span></td><td>From app/utils/test-utils.js only</td><td>Grep for @testing-library/react</td></tr>
+  <tr><td>FG-09</td><td>Action Naming</td><td><span class="badge high">HIGH</span></td><td>garuda/Org/VERB_NOUN pattern</td><td>Parse constants.js</td></tr>
+  <tr><td>FG-10</td><td>i18n</td><td><span class="badge high">HIGH</span></td><td>formatMessage, no hardcoded strings</td><td>Grep Component.js for raw strings in JSX</td></tr>
+  <tr><td>FG-11</td><td>CSS Naming</td><td><span class="badge high">HIGH</span></td><td>Cap UI tokens, no hardcoded pixels/hex</td><td>Grep styles.js for px/# values</td></tr>
+  <tr><td>FG-12</td><td>AI-Specific</td><td><span class="badge critical">CRITICAL</span></td><td>Read before write, verify imports exist</td><td>Agent exit checklist</td></tr>
+</table>
+
+<div class="mermaid">
+flowchart LR
+  GEN["Code Generator\nwrites file"] --> INLINE["Inline Guardrail\nCheck (per file)"]
+  INLINE -->|pass| WRITE["Write to disk"]
+  INLINE -->|fail| FIX["Agent fixes\nviolation"] --> INLINE
+
+  WRITE --> ALL["All files done"]
+  ALL --> CHECKER["Guardrail Checker\n(full scan)"]
+  CHECKER -->|CRITICAL| BLOCK["Block pipeline\nAgent must fix"]
+  CHECKER -->|HIGH| WARN["Log warning\nContinue"]
+  CHECKER -->|pass| NEXT["Next phase"]
+</div>
+
+<!-- ===== PRODUCTEX ===== -->
+<h2 id="productex">ProductEx Verification</h2>
+
+<div class="mermaid">
+flowchart TD
+  ART["Phase Artifact\n(HLD / LLD / Plan / Code)"] --> PEX["ProductEx Verifier"]
+
+  PRD["PRD\n(from context_bundle)"] --> PEX
+  DOCS["docs.capillarytech.com\n(WebFetch)"] --> PEX
+  KB["knowledge-bank.md"] --> PEX
+
+  PEX --> THREE["Three-Way\nCross-Reference"]
+
+  THREE --> FULFILLED["Fulfilled\n(requirement met)"]
+  THREE --> MISSING["Missing\n(requirement not addressed)"]
+  THREE --> CONFLICT["Conflict\n(artifact contradicts PRD or docs)"]
+  THREE --> DISCREP["Doc Discrepancy\n(PRD contradicts official docs)"]
+
+  MISSING --> CHANGES["status: changes_needed"]
+  CONFLICT --> CHANGES
+  FULFILLED --> APPROVED["status: approved"]
+</div>
+
+<p>ProductEx runs at <strong>4 points</strong>: after HLD (Phase 3), LLD (Phase 5), Planning (Phase 9), and Code Generation (Phase 10). It performs a <strong>three-way cross-reference</strong>:</p>
+
+<div class="grid">
+  <div class="card"><h4>Source 1: PRD / Jira</h4><p>What the team decided to build</p></div>
+  <div class="card"><h4>Source 2: Official Docs</h4><p>What the product is supposed to do (docs.capillarytech.com)</p></div>
+  <div class="card"><h4>Source 3: Artifact</h4><p>What was actually designed/generated</p></div>
+</div>
+
+<!-- ===== BUILD VERIFY ===== -->
+<h2 id="build-verify">Build Verification</h2>
+
+<div class="mermaid">
+flowchart TD
+  START["Code Generation Complete"] --> BUILD1["Attempt 1: npm start"]
+  BUILD1 -->|PASS| DONE["Continue to Visual QA"]
+  BUILD1 -->|FAIL| PARSE["Parse Errors"]
+  PARSE --> CAT{"Categorize"}
+  CAT -->|"Generated code\n(import/syntax)"| FIX["Auto-Fix\n(Edit tool)"]
+  CAT -->|"Environment\n(npm/node)"| ENVWARN["Log as\nnon-blocking warning"]
+  FIX --> BUILD2["Attempt 2: npm start"]
+  BUILD2 -->|PASS| DONE
+  BUILD2 -->|FAIL| FIX2["Auto-Fix"] --> BUILD3["Attempt 3"]
+  BUILD3 -->|PASS| DONE
+  BUILD3 -->|FAIL| HUMAN["STOP\nShow all errors\nAsk developer"]
+
+  style DONE fill:#00e676,color:#000
+  style HUMAN fill:#ff5252,color:#fff
+</div>
+
+<!-- ===== VISUAL QA ===== -->
+<h2 id="visual-qa">Visual Self-Evaluation</h2>
+
+<div class="mermaid">
+flowchart TD
+  START["Build passed"] --> CHECK{"Figma\navailable?"}
+  CHECK -->|no| SKIP["Skip Visual QA"]
+  CHECK -->|yes| SERVER["Start dev server\n(port 8000)"]
+
+  SERVER --> SCREENSHOT["Take screenshot\n(Claude Preview)"]
+  SCREENSHOT --> DOWNLOAD["Download Figma frame\n(Figma MCP)"]
+  DOWNLOAD --> COMPARE["Compare\nside-by-side"]
+
+  COMPARE --> CLASS{"Classify\ndiscrepancies"}
+  CLASS -->|CRITICAL/MAJOR| FIXCSS["Fix CSS/layout\n(Cap UI tokens only)"]
+  CLASS -->|MINOR only| DONE["Done: HIGH fidelity"]
+
+  FIXCSS --> INC{"iteration\n< 3?"}
+  INC -->|yes| SCREENSHOT
+  INC -->|no| REPORT["Done with\nremaining issues"]
+
+  style DONE fill:#00e676,color:#000
+  style SKIP fill:#ffab00,color:#000
+</div>
+
+<div class="callout warn">
+  <strong>CSS/layout only:</strong> Visual QA never modifies business logic, Redux state, or component behavior. It only adjusts styling using Cap UI design tokens.
+</div>
+
+<!-- ===== GATE CHECKS ===== -->
+<h2 id="gate-checks">Gate Checks &amp; Exit Checklists</h2>
+
+<div class="mermaid">
+flowchart LR
+  subgraph "Agent Level"
+    EXIT["Exit Checklist\n(agent self-validates\nbefore writing output)"]
+  end
+
+  subgraph "Orchestrator Level"
+    GATE["Gate Check\n(orchestrator validates\nafter agent returns)"]
+    PREREQ["Prerequisite Check\n(orchestrator validates\nbefore spawning agent)"]
+  end
+
+  subgraph "Verification Level"
+    PEX["ProductEx\n(PRD alignment)"]
+    GR["Guardrail Checker\n(code rule compliance)"]
+    BRD["BRD Validation\n(concrete behaviours)"]
+  end
+</div>
+
+<table>
+  <tr><th>Layer</th><th>What</th><th>When</th><th>Failure Action</th></tr>
+  <tr><td><span class="badge info">Prerequisite</span></td><td>Required artifacts exist</td><td>Before spawning agent</td><td>Stop + tell which phase to run first</td></tr>
+  <tr><td><span class="badge info">Exit Checklist</span></td><td>Agent self-validates output</td><td>Before writing output</td><td>Agent fixes issue before writing</td></tr>
+  <tr><td><span class="badge info">Gate Check</span></td><td>Orchestrator validates agent output</td><td>After agent returns</td><td>Re-run agent or stop pipeline</td></tr>
+  <tr><td><span class="badge pass">ProductEx</span></td><td>PRD + docs alignment</td><td>After phases 3, 5, 9, 10</td><td>Offer re-run or accept deviation</td></tr>
+  <tr><td><span class="badge critical">Guardrails</span></td><td>Code rule compliance</td><td>After phase 10</td><td>CRITICAL = block; HIGH = warn</td></tr>
+  <tr><td><span class="badge" style="background:#7c4dff;color:#fff">BRD Gate</span></td><td>PRD has concrete behaviours</td><td>After phase 1</td><td>Warn + ask user to continue</td></tr>
+</table>
+
+<!-- ===== CHECKPOINTS ===== -->
+<h2 id="checkpoints">Human Checkpoints</h2>
+
+<div class="mermaid">
+flowchart LR
+  P3["Phase 3:\nHLD"] --> CP3{"approve\nfeedback\nabort"}
+  P4["Phase 4:\nBackend"] --> CP4{"ready\nskip"}
+  P5["Phase 5:\nLLD"] --> CP5{"approve\nfeedback"}
+  P6["Phase 6:\nTests"] --> CP6{"review"}
+  P9["Phase 9:\nPlan"] --> CP9{"yes\nno"}
+  P13["Phase 13:\nWrite Tests"] --> CP13{"yes\nno"}
+  P14["Phase 14:\nCoverage"] --> CP14{"accept\nmore tests"}
+
+  style CP3 fill:#ffab00,color:#000
+  style CP4 fill:#ffab00,color:#000
+  style CP5 fill:#ffab00,color:#000
+  style CP6 fill:#ffab00,color:#000
+  style CP9 fill:#ffab00,color:#000
+  style CP13 fill:#ffab00,color:#000
+  style CP14 fill:#ffab00,color:#000
+</div>
+
+<p>The pipeline <strong>never auto-advances past a checkpoint</strong>. The user must explicitly approve or provide input. Every checkpoint decision is logged to <code>approach_log.md</code> and <code>requirements_context.md</code>.</p>
+
+<!-- ===== REWORK ===== -->
+<h2 id="rework">Rework Loops &amp; Circuit Breaker</h2>
+
+<div class="mermaid">
+flowchart TD
+  DOWN["Downstream Phase\ndetects problem"] --> CLASSIFY{"Classify\nblocker"}
+
+  CLASSIFY -->|Trivial| AUTO["Auto-rerun\nupstream phase"]
+  CLASSIFY -->|Critical| PAUSE["Pause for\nhuman approval"]
+  PAUSE -->|approved| AUTO
+
+  AUTO --> CASCADE["Cascade: re-run\nintermediate phases"]
+  CASCADE --> CHECK{"Same phase\nre-run count?"}
+  CHECK -->|"< 3"| RERUN["Re-run with\nblocker context"]
+  CHECK -->|">= 3"| CIRCUIT["CIRCUIT BREAKER\nEscalate to human"]
+
+  CIRCUIT --> OPTIONS["Options:\n1. Try again\n2. Accept deviation\n3. Revert to earlier phase\n4. Manual fix"]
+
+  style CIRCUIT fill:#ff5252,color:#fff
+</div>
+
+<div class="callout err">
+  <strong>Circuit breaker:</strong> After 3 rework cycles on the same phase pair, the pipeline stops and presents the conflict to the developer with concrete options. It never spins indefinitely.
+</div>
+
+<!-- ===== CONSULTATION ===== -->
+<h2 id="consultation">Internal Consultation Protocol</h2>
+
+<div class="mermaid">
+flowchart TD
+  Q["Question arises\nduring pipeline"] --> TYPE{"Question\ntype?"}
+
+  TYPE -->|"Product\n(business logic)"| PEX["Consult ProductEx\n(PRD + docs.capillarytech.com)"]
+  TYPE -->|"Codebase\n(existing code)"| GREP["Search codebase\n(Grep/cross-repo-tracer)"]
+  TYPE -->|"Human intent\n(preferences)"| USER["Ask user\n(always)"]
+
+  PEX --> RESOLVED1{"Resolved?"}
+  RESOLVED1 -->|yes| USE1["Use answer\n(cite source)"]
+  RESOLVED1 -->|no| USER
+
+  GREP --> RESOLVED2{"Resolved?"}
+  RESOLVED2 -->|yes| USE2["Use finding"]
+  RESOLVED2 -->|no| USER
+</div>
+
+<p>This reduces human interruptions. Product and codebase questions are resolved by agents before falling back to the user. Only true human-intent questions (preferences, priorities, scope) go to the user directly.</p>
+
+<!-- ===== CONFIDENCE ===== -->
+<h2 id="confidence">Calibrated Confidence (C1-C7)</h2>
+
+<table>
+  <tr><th>Level</th><th>Label</th><th>Range</th><th>Agent Behaviour</th><th>Evidence Required</th></tr>
+  <tr><td><strong>C1</strong></td><td>Speculative</td><td>&lt;20%</td><td>Flag. Don't act alone.</td><td>Agent reasoning only</td></tr>
+  <tr><td><strong>C2</strong></td><td>Plausible</td><td>20-40%</td><td>Investigate first.</td><td>One indirect source</td></tr>
+  <tr><td><strong>C3</strong></td><td>Tentative</td><td>40-60%</td><td>Act only if reversible.</td><td>One direct source</td></tr>
+  <tr><td><strong>C4</strong></td><td>Probable</td><td>60-75%</td><td>Act if reversible. Escalate if not.</td><td>Two direct sources</td></tr>
+  <tr><td><strong>C5</strong></td><td>Confident</td><td>75-90%</td><td>Act. Flag residual risk.</td><td>3+ direct sources</td></tr>
+  <tr><td><strong>C6</strong></td><td>High Confidence</td><td>90-97%</td><td>Act decisively.</td><td>Comprehensive verification</td></tr>
+  <tr><td><strong>C7</strong></td><td>Near Certain</td><td>&gt;97%</td><td>Verified fact.</td><td>Primary source (read actual code)</td></tr>
+</table>
+
+<div class="callout">
+  <strong>Reversibility matrix:</strong> Reversible + C4 = act. Irreversible + below C4 = STOP and escalate. This eliminates analysis paralysis while protecting against real damage.
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<h2 id="dashboard">Live Dashboard</h2>
+
+<p>An HTML file (<code>live-dashboard.html</code>) that updates after every phase. Open in any browser at any time to see pipeline progress.</p>
+
+<div class="grid">
+  <div class="card"><h4>Progress Bar</h4><p>Visual % of phases completed</p></div>
+  <div class="card"><h4>Phase Sections</h4><p>Summary + key numbers + Mermaid diagrams per phase</p></div>
+  <div class="card"><h4>Sidebar Nav</h4><p>Green = complete, blue = active, grey = pending</p></div>
+  <div class="card"><h4>Stats Bar</h4><p>Phases / artifacts / decisions / files generated</p></div>
+</div>
+
+<!-- ===== BLUEPRINT ===== -->
+<h2 id="blueprint">Blueprint (Final Stakeholder Document)</h2>
+
+<p>Generated at Phase 15 — a comprehensive read-only HTML document that compiles the entire pipeline run. Contains:</p>
+
+<div class="grid">
+  <div class="card"><h4>Pipeline Stats</h4><p>Phases completed, artifacts generated, files written, decisions made, coverage %</p></div>
+  <div class="card"><h4>Key Decisions</h4><p>From approach_log.md — what/why/who for every decision</p></div>
+  <div class="card"><h4>HLD + LLD</h4><p>Summaries with Mermaid architecture and state diagrams</p></div>
+  <div class="card"><h4>Component Inventory</h4><p>Figma-to-component mappings used</p></div>
+  <div class="card"><h4>Build + QA + Tests</h4><p>Build status, visual fidelity, test coverage</p></div>
+  <div class="card"><h4>Verification</h4><p>ProductEx results, guardrail compliance, cross-repo trace</p></div>
+</div>
+
+<p>Output: <code>.claude/workspace/&lt;ticket&gt;/&lt;ticket&gt;-blueprint.html</code> — shareable via browser, no Confluence/repo access needed.</p>
+
+<!-- ===== CONFLUENCE ===== -->
+<h2 id="confluence">Confluence Auto-Publishing</h2>
+
+<div class="mermaid">
+flowchart TD
+  P0["Phase 0: Init"] -->|create| FOLDER["Confluence Run Folder\nGIX: CAP-12345 — 2026-04-08"]
+
+  P1["Phase 1 complete"] -->|publish| C1["Child: Phase 1 PRD"]
+  P3["Phase 3 complete"] -->|publish| C3["Child: Phase 3 HLD"]
+  P5["Phase 5 complete"] -->|publish| C5["Child: Phase 5 LLD"]
+  P10["Phase 10 complete"] -->|publish| C10["Child: Phase 10 Code"]
+  P15["Phase 15 complete"] -->|publish| C15["Child: Blueprint"]
+
+  FOLDER --> C1
+  FOLDER --> C3
+  FOLDER --> C5
+  FOLDER --> C10
+  FOLDER --> C15
+</div>
+
+<p>The <code>confluence-publisher</code> agent runs after every phase (non-blocking). It creates a run folder at Phase 0 and publishes each artifact as a child page. Re-publishing updates existing pages (idempotent).</p>
+
+<!-- ===== GIT ===== -->
+<h2 id="git">Git Integration</h2>
+
+<div class="mermaid">
+gitGraph
+  commit id: "main"
+  branch gix/CAP-12345
+  commit id: "phase-01" tag: "gix/CAP-12345/phase-01"
+  commit id: "phase-02" tag: "gix/CAP-12345/phase-02"
+  commit id: "phase-03" tag: "gix/CAP-12345/phase-03"
+  commit id: "artifacts" type: HIGHLIGHT
+  commit id: "phase-10: code generated" tag: "gix/CAP-12345/phase-10"
+  commit id: "phase-13: tests written" tag: "gix/CAP-12345/phase-13"
+</div>
+
+<table>
+  <tr><th>When</th><th>What</th></tr>
+  <tr><td>Phase 0</td><td>Create branch: <code>gix/&lt;ticket&gt;</code></td></tr>
+  <tr><td>After each phase</td><td>Tag: <code>gix/&lt;ticket&gt;/phase-&lt;NN&gt;</code></td></tr>
+  <tr><td>Before code gen</td><td>Commit all artifact files</td></tr>
+  <tr><td>After code gen</td><td>Commit code + artifacts together</td></tr>
+  <tr><td>Rollback</td><td><code>git reset --hard gix/CAP-12345/phase-09</code></td></tr>
+</table>
+
+<!-- ===== WORKSPACE ===== -->
+<h2 id="workspace">Workspace Layout</h2>
+
+<pre><code>.claude/workspace/CAP-12345/
+├── pipeline_state.json          # Phase status + recovery + Confluence IDs
+├── session_journal.md           # Phase-by-phase execution log
+├── session_memory.md            # Shared context (incrementally updated)
+├── approach_log.md              # Decision log (what/why/who/alternatives)
+├── requirements_context.md      # User's requirements + checkpoint decisions
+├── live-dashboard.html          # Visual progress dashboard
+├── context_bundle.json          # PRD + transcript + design ref + Cap docs
+├── prototype_analysis.json      # v0/prototype URL analysis (if URL provided)
+├── cross_repo_trace.json        # Cross-repo pattern findings
+├── hld_artifact.json            # HLD + Mermaid diagrams
+├── lld_artifact.json            # LLD + Mermaid diagrams
+├── testcase_sheet.json          # Test cases (P0/P1/P2)
+├── dev_context.json             # LLD + Figma + component mapping
+├── comprehension.json           # Codebase analysis
+├── plan.json                    # File-by-file coding plan
+├── generation_report.json       # Files created/modified (incremental)
+├── build_report.json            # Build verification (attempts + fixes)
+├── visual_qa_report.json        # Figma comparison (iterations[])
+├── test_report.json             # Jest results + coverage
+├── CAP-12345-blueprint.html     # Final stakeholder document
+└── verification_reports/
+    ├── verify-prd.json          # ProductEx BRD review
+    ├── verify-hld.json          # ProductEx HLD check
+    ├── verify-lld.json          # ProductEx LLD check
+    ├── verify-plan.json         # ProductEx plan check
+    └── verify-code.json         # ProductEx + guardrail code check</code></pre>
+
+<div class="callout ok">
+  <strong>Everything on disk.</strong> No in-memory state. Any interruption (quota, crash, terminal close) leaves all files intact. Resume reads them back.
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div style="margin-top:64px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;">
+  <p>GIX v3.2.0 — cap-garuda-plugin | 18 agents | 25+ skills | 131 component specs | 12 guardrails | 10 JSON schemas</p>
+  <p>Architecture inspired by <a href="#" style="color:var(--accent);">kalpavriksha</a> (Capillary backend pipeline) — adapted for React/Redux frontend.</p>
+</div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1e1e35',
+      primaryTextColor: '#e2e2ef',
+      primaryBorderColor: '#2a2a45',
+      lineColor: '#00d4ff',
+      secondaryColor: '#0f3460',
+      tertiaryColor: '#161625'
+    }
+  });
+</script>
+</body>
+</html>

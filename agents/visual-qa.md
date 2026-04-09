@@ -22,8 +22,12 @@ Consult this skill for Capillary styling standards when comparing and fixing vis
 ## Prerequisites Check
 
 1. Read `{workspacePath}/dev_context.json` — check if `figma` data is available
-2. If `figma.status` is "unavailable": **SKIP** — write report with `status: "skipped"`, `skip_reason: "No Figma data available"`
-3. Read `{workspacePath}/generation_report.json` — get the organism path
+2. If `figma.status` is "unavailable": **SKIP** — write report with `status: "skipped"`, `skip_reason: "No design reference available"`
+3. Determine design reference source:
+   - If `figma.source == "figma"`: use Figma frame as comparison reference (download via MCP)
+   - If `figma.source == "prototype_url"`: use the prototype URL screenshots from `prototype_analysis.json` as comparison reference. Also navigate to the prototype URL live for side-by-side comparison.
+   - If `figma.source == "screenshot"`: use the provided screenshot as comparison reference
+4. Read `{workspacePath}/generation_report.json` — get the organism path
 
 ## Steps
 

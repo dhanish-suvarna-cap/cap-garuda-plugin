@@ -152,6 +152,42 @@ Consult `skills/shared-rules.md` for all non-negotiable coding patterns. Consult
 - **coding-dna-architecture** — for assessing feasibility, identifying components, and checking approved libraries
 - **coding-dna-state-and-api** — for designing state management sections and API handling patterns
 
+## Mermaid Diagrams
+
+Include Mermaid diagrams in the HLD artifact for visual documentation. Use fenced code blocks (` ```mermaid `) in any markdown output. Include at least:
+
+1. **Component Architecture Diagram** — shows organisms, their relationships, and data flow:
+```mermaid
+graph TD
+  Page[Page: TierConfig] --> Org1[Organism: TierList]
+  Page --> Org2[Organism: TierDetails]
+  Org1 -->|select tier| Org2
+  Org2 --> API[API: /v2/tiers]
+```
+
+2. **Epic Dependency Flowchart** — shows task dependencies:
+```mermaid
+flowchart LR
+  T1[Setup organism] --> T2[API integration]
+  T1 --> T3[Redux state]
+  T2 --> T4[Component UI]
+  T3 --> T4
+  T4 --> T5[Tests]
+```
+
+3. **State Flow Diagram** (if feature has complex state transitions):
+```mermaid
+stateDiagram-v2
+  [*] --> Loading
+  Loading --> Loaded: API success
+  Loading --> Error: API failure
+  Loaded --> Editing: user clicks edit
+  Editing --> Saving: user clicks save
+  Saving --> Loaded: save success
+```
+
+Store diagrams in `hld_artifact.json` under `diagrams` key (array of `{ type, title, mermaid_code }` objects).
+
 ## Guardrail Warnings
 
 If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.

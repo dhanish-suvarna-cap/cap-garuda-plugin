@@ -1,7 +1,7 @@
 ---
 name: prd-ingestion
-description: Fetches and normalizes PRD, grooming transcript, and Figma data into a unified context bundle
-tools: Read, Write, Bash, mcp__mcp-atlassian__jira_get_issue, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_fetch, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_search, mcp__framelink-figma-mcp__get_figma_data
+description: "Fetches and normalizes PRD, grooming transcript, Figma data, and Capillary product documentation into a unified context bundle"
+tools: Read, Write, Bash, WebFetch, WebSearch, mcp__mcp-atlassian__jira_get_issue, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_fetch, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_search, mcp__framelink-figma-mcp__get_figma_data
 ---
 
 # PRD Ingestion Agent
@@ -77,18 +77,72 @@ Extract:
 
 Store `raw_transcript_path` as reference but NEVER include the full transcript content.
 
-### Step 4: Fetch Figma Data
+### Step 4: Fetch Design Reference
 
-**If no figma ref provided**: Set `figma.status: "unavailable"`, skip
+The pipeline accepts three types of design references. Handle based on `designRef.type`:
 
-**If figma ref provided** (format: `fileId:frameId`):
-- Parse `fileId` and `frameId`
+#### Option A: Figma (`designRef.type == "figma"`)
+
+Parse `fileId` and `frameId` from `designRef.value`:
 - Use `mcp__framelink-figma-mcp__get_figma_data` with the file ID
 - Extract: component tree structure, design tokens used, dimensions
 - If only fileId (no frameId): set `figma.status: "partial"`, fetch top-level structure
 - If MCP fails: set `figma.status: "unavailable"`, log error
 
-### Step 5: Write context_bundle.json
+#### Option B: Prototype URL (`designRef.type == "prototype_url"`)
+
+The user provided a live prototype URL (v0.dev, Vercel preview, or any web URL):
+1. Spawn the `prototype-analyzer` agent with:
+   - `prototypeUrl`: `designRef.value`
+   - `workspacePath`: current workspace
+   - Tools: `Read, Write, mcp__Claude_Preview__preview_start, mcp__Claude_Preview__preview_screenshot, mcp__Claude_Preview__preview_eval, mcp__Claude_Preview__preview_inspect`
+2. The prototype-analyzer will:
+   - Navigate to the URL and take screenshots
+   - Inspect DOM to identify UI components (buttons, tables, inputs, selects, modals, etc.)
+   - Map each component to Cap UI Library equivalents using `skills/figma-component-map/SKILL.md`
+   - If v0.dev: also read the generated source code for higher-confidence mapping
+   - Write `prototype_analysis.json` and update `context_bundle.json`
+3. The output populates the same `figma` section in context_bundle.json so downstream agents work seamlessly
+
+#### Option C: Screenshot (`designRef.type == "screenshot"`)
+
+The user provided a local screenshot file:
+1. Read the image file at `designRef.value`
+2. Analyze the screenshot visually to identify UI components
+3. Map to Cap UI Library components using `skills/figma-component-map/SKILL.md`
+4. Populate `figma` section with: component_tree (from visual analysis), status "fetched", source "screenshot"
+
+#### No Design Reference (`designRef == null`)
+
+Set `figma.status: "unavailable"`. Visual QA and Figma-to-component mapping will be skipped. Code generation will rely on LLD text descriptions only.
+
+### Step 5: Fetch Capillary Product Documentation
+
+**Source**: `https://docs.capillarytech.com/`
+
+This step enriches the context bundle with official product documentation so that downstream agents (HLD generator, ProductEx verifier) understand what the product currently does — not just what the PRD asks for.
+
+1. Identify the feature area from the Jira ticket and PRD:
+   - Extract key domain terms (e.g., "tiers", "points", "rewards", "loyalty programs", "campaigns", "members", "benefits")
+   - Determine which product module this feature belongs to
+
+2. Use WebFetch to retrieve relevant pages from `docs.capillarytech.com`:
+   - Fetch the main feature area page (e.g., `https://docs.capillarytech.com/docs/tiers-overview`)
+   - Fetch any sub-pages for specific functionality mentioned in the PRD
+   - Focus on: current behaviour, API contracts, business rules, configuration options
+
+3. Extract and summarize:
+   - **Current behaviour** — what the product currently does in this area
+   - **API contracts** — documented endpoints, request/response shapes relevant to the feature
+   - **Business rules** — documented constraints, edge cases, validation rules
+   - **Configuration** — what's configurable by the end user vs system-managed
+
+4. If docs are unavailable (fetch fails, feature undocumented):
+   - Set `product_docs.status: "unavailable"`
+   - Set `product_docs.reason`: why (e.g., "No docs found for this feature area", "docs.capillarytech.com unreachable")
+   - Proceed without — this is not a blocker
+
+### Step 6: Write context_bundle.json
 
 Write the assembled context to `{workspacePath}/context_bundle.json`:
 
@@ -124,6 +178,16 @@ Write the assembled context to `{workspacePath}/context_bundle.json`:
     "tokens": null,
     "dimensions": null,
     "status": "fetched|partial|unavailable"
+  },
+  "product_docs": {
+    "status": "fetched|partial|unavailable",
+    "source": "docs.capillarytech.com",
+    "pages_consulted": [],
+    "current_behaviour": "",
+    "api_contracts": "",
+    "business_rules": "",
+    "configuration": "",
+    "reason": null
   },
   "fetched_at": "<ISO timestamp>"
 }

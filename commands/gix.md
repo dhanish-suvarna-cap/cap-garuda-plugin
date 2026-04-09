@@ -86,13 +86,24 @@ Step 2 of 5: Grooming Transcript
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 3 of 5: Figma Design
+Step 3 of 6: Design Reference
 
-  Do you have a Figma design? (Y/N): ___
+  Do you have a design reference? (Y/N): ___
 ```
 
-- If Y: `Enter Figma fileId:frameId: ___` → store as `figmaRef`
-- If N: `Skipping Figma. Visual QA will be disabled.` → set `figmaRef = null`
+- If Y: ask which type:
+  ```
+  What type of design reference?
+    [1] Figma — enter fileId:frameId
+    [2] Prototype URL — v0.dev, Vercel preview, or any live URL
+    [3] Screenshot — local image file path
+
+  Enter choice (1-3): ___
+  ```
+  - If `1` (Figma): `Enter Figma fileId:frameId: ___` → store as `designRef = { type: "figma", value: "<input>" }`
+  - If `2` (Prototype URL): `Enter prototype URL: ___` → store as `designRef = { type: "prototype_url", value: "<input>" }`
+  - If `3` (Screenshot): `Enter screenshot file path: ___` → store as `designRef = { type: "screenshot", value: "<input>" }`
+- If N: `Skipping design reference. Visual QA and component mapping will use LLD text only.` → set `designRef = null`
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -160,7 +171,7 @@ If `pipeline_state.json` does not exist, create it:
   "inputs": {
     "jira_ticket_id": "<jiraTicketId>",
     "transcript_source": "<transcriptSource or null>",
-    "figma_ref": "<figmaRef or null>",
+    "design_ref": "<designRef object or null>",
     "confluence_space_key": "<confluenceSpaceKey>",
     "backend_hld_source": null,
     "api_signatures_source": null
@@ -205,7 +216,19 @@ If `pipeline_state.json` does not exist, create it:
 
 5. Initialize `session_memory.md` from `skills/session-memory-template/SKILL.md` template.
 
-6. Capture `requirements_context.md`:
+6. Initialize `approach_log.md`:
+```markdown
+# Approach Log: <jiraTicketId>
+
+> Tracks every decision made during the pipeline — what was decided, why, by whom, and what alternatives were considered.
+
+| # | Phase | Decision | Rationale | Decided By | Alternatives |
+|---|-------|----------|-----------|-----------|-------------|
+```
+
+7. Read `skills/knowledge-bank.md` and load any pre-session context into session memory.
+
+8. Capture `requirements_context.md`:
    - Ask user: **"Briefly describe what you're building and any key requirements. Type `skip` if everything is in the Jira ticket."**
    - Wait for response, write to `requirements_context.md`
 
@@ -217,24 +240,56 @@ Print: `[Phase 0] Workspace initialized at <workspacePath>`
 2. Print: `[Phase 1/15] Starting PRD Ingestion...`
 3. Spawn `prd-ingestion` agent with:
    - `jiraTicketId`, `transcriptSource`, `figmaRef`, `workspacePath`
-   - Tools: `Read, Write, Bash, WebFetch, mcp__mcp-atlassian__jira_get_issue, mcp__framelink-figma-mcp__get_figma_data, mcp__framelink-figma-mcp__download_figma_images`
+   - Tools: `Read, Write, Bash, WebFetch, WebSearch, mcp__mcp-atlassian__jira_get_issue, mcp__framelink-figma-mcp__get_figma_data, mcp__framelink-figma-mcp__download_figma_images`
 
-4. **Gate Check**: Read `<workspacePath>/context_bundle.json`:
+4. **Parallel ProductEx BRD Review** (background):
+   - Spawn `productex-verifier` with `mode = "verify"`, `artifactPath = context_bundle.json`, `phase = "prd"` using `run_in_background: true`
+   - ProductEx independently reviews the gathered context against `docs.capillarytech.com`
+   - Do NOT wait — PRD ingestion and ProductEx run simultaneously
+
+5. **Gate Check**: Read `<workspacePath>/context_bundle.json`:
    - Verify `jira.id` matches `<jiraTicketId>`
    - Verify at least ONE of prd, transcript_summary, or figma populated
    - If `guardrail_warnings` exist, print as warnings
    - If invalid: print error and STOP
 
-5. Update state: `prd_ingestion.status = "completed"`, recovery, journal.
-6. Update `session_memory.md` — add Domain Terminology, Constraints from PRD.
-7. Print: `[Phase 1/15] PRD Ingestion complete.`
+6. **BRD Validation Gate**:
+   - Read `context_bundle.json` and check: does the gathered context contain at least ONE concrete expected behaviour (what should happen, triggered by what, with what outcome)?
+   - If YES: proceed
+   - If NO: print warning and ask:
+     ```
+     ⚠️ No concrete expected behaviour found in PRD/Jira.
+     The pipeline works best with at least one specific requirement like:
+     "When user clicks X, the system should show Y"
+
+     Options:
+     [1] Provide additional requirements now
+     [2] Continue anyway (pipeline may produce vague artifacts)
+     [3] Abort
+     ```
+
+7. **Merge ProductEx BRD Review** (if background agent completed):
+   - Read `verification_reports/verify-prd.json`
+   - If `doc_discrepancies` found: print them to developer
+   - Append findings to `session_memory.md` Codebase Behaviour section
+
+8. Update state: `prd_ingestion.status = "completed"`, recovery, journal.
+9. Update `session_memory.md` — add Domain Terminology, Constraints from PRD.
+10. **Confluence Publish**: Spawn `confluence-publisher` with `artifactPath = context_bundle.json`, `phaseName = "prd_ingestion"` (non-blocking)
+11. Log decision to `approach_log.md`: PRD source used, fallback reason if any
+12. Print: `[Phase 1/15] PRD Ingestion complete.`
 
 ## Step 4 — Phase 2: Codebase Scout + Cross-Repo Trace
 
+**Prerequisite check**: Verify `context_bundle.json` exists. If missing: STOP with "Phase 1 (PRD Ingestion) must complete first."
+
 1. Update state: `codebase_scout.status = "in_progress"`
-2. Print: `[Phase 2/15] Starting Codebase Scout...`
-3. Spawn `codebase-scout` agent with `workspacePath`, Tools: `Read, Bash, Grep, Glob`
-4. **Gate Check**: Verify `codebase_context` key in context_bundle.json
+2. Print: `[Phase 2/15] Starting Codebase Scout + Cross-Repo Trace...`
+3. **Parallel spawn** (both run simultaneously):
+   - Spawn `codebase-scout` agent with `workspacePath`, Tools: `Read, Bash, Grep, Glob`
+   - Spawn `cross-repo-tracer` agent with `workspacePath`, `referenceRepoPaths` (both run in parallel)
+4. Wait for both to complete.
+5. **Gate Check**: Verify `codebase_context` key in context_bundle.json
 
 5. **Cross-Repo Trace** (if `agents/cross-repo-tracer.md` exists and reference repos are accessible):
    - Spawn `cross-repo-tracer` agent with:
@@ -473,9 +528,88 @@ Next Steps:
 ============================================
 ```
 
-Update `pipeline_state.json`: `status = "completed"`, recovery to null.
+### Blueprint Generation
 
-Remove HOW TO RESUME block from journal (session complete).
+Generate `<workspacePath>/<jiraTicketId>-blueprint.html` using `skills/blueprint-template.md`:
+
+1. Read all workspace artifacts (pipeline_state.json, session_journal.md, approach_log.md, hld_artifact.json, lld_artifact.json, dev_context.json, generation_report.json, build_report.json, visual_qa_report.json, test_report.json, verification_reports/*.json, cross_repo_trace.json)
+2. Populate every section of the blueprint HTML template with data from these files
+3. Include Mermaid diagrams from HLD/LLD artifacts
+4. Include key decisions from approach_log.md
+5. Include timeline from session_journal.md
+6. Write the blueprint file
+
+Print: `Blueprint generated: <workspacePath>/<jiraTicketId>-blueprint.html`
+
+### Final Publishing
+
+1. **Confluence Publish**: Publish blueprint and final summary to Confluence run folder
+2. Update `pipeline_state.json`: `status = "completed"`, recovery to null
+3. Remove HOW TO RESUME block from journal (session complete)
+
+## Post-Phase Protocol (After EVERY Phase)
+
+After every phase completes, the orchestrator MUST run these steps in order:
+
+1. **Update pipeline_state.json** — phase status, summary, recovery info
+2. **Update session_journal.md** — append phase completion with timestamp
+3. **Update session_memory.md** — add relevant findings to appropriate sections
+4. **Update approach_log.md** — log any decisions made during this phase
+5. **Update live-dashboard.html** — if `dashboard_enabled: true` (see `skills/live-dashboard-template.md`)
+6. **Confluence publish** — spawn `confluence-publisher` (non-blocking) with this phase's artifact
+7. **Update HOW TO RESUME block** — in session_journal.md
+8. **Show pause prompt** — with available commands
+
+## Prerequisite Map
+
+Before starting any phase, verify required artifacts exist:
+
+| Phase | Required Artifacts |
+|-------|--------------------|
+| Phase 1 (PRD) | — (entry point) |
+| Phase 2 (Scout) | context_bundle.json |
+| Phase 3 (HLD) | context_bundle.json with codebase_context |
+| Phase 4 (Handoff) | hld_artifact.json with status "approved" |
+| Phase 5 (LLD) | hld_artifact.json, backend inputs (or "skip") |
+| Phase 6 (Tests) | lld_artifact.json |
+| Phase 7 (Context) | lld_artifact.json |
+| Phase 8 (Comprehension) | dev_context.json |
+| Phase 9 (Plan) | comprehension.json, dev_context.json |
+| Phase 10 (Code) | plan.json with approved = true |
+| Phase 11 (Build) | generation_report.json |
+| Phase 12 (Visual QA) | generation_report.json, build_report.json with status "pass" |
+| Phase 13 (Tests) | generation_report.json |
+| Phase 14 (Eval) | test files written |
+| Phase 15 (Summary) | all prior phases complete |
+
+If a prerequisite is missing: print warning with which phase needs to run first, ask whether to continue or abort.
+
+## Internal Consultation Protocol
+
+When the orchestrator or any interactive phase needs to ask the user a question, first try to resolve it internally:
+
+1. **Product questions** (about business logic, requirements, feature behaviour):
+   - Spawn `productex-verifier` in `consult` mode with the question
+   - ProductEx searches: context_bundle PRD, knowledge-bank.md, docs.capillarytech.com
+   - If resolved: use the answer (cite source)
+   - If unresolved: ask the user
+
+2. **Codebase questions** (about existing code, patterns, APIs):
+   - Spawn `cross-repo-tracer` or use Grep/Glob to search the codebase
+   - If resolved: use the finding
+   - If unresolved: ask the user
+
+3. **Human-intent questions** (about preferences, priorities, scope decisions):
+   - Always ask the user — these can't be resolved by agents
+
+## Incremental Session Memory Protocol
+
+Every agent MUST update `session_memory.md` after EVERY decision — not batch at phase end:
+
+- During interactive phases: after each user response, immediately write to session memory
+- During subagent phases: agent writes to session memory before writing its output artifact
+- This ensures context survives context window compacting mid-phase
+- Format: `- <finding/decision> _(Phase N)_`
 
 ## Rework Loop Protocol
 
