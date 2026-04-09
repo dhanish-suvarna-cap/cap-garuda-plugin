@@ -79,21 +79,21 @@ Store `raw_transcript_path` as reference but NEVER include the full transcript c
 
 ### Step 4: Fetch Design Reference
 
-The pipeline accepts three types of design references. Handle based on `designRef.type`:
+The pipeline accepts four types of design references. Handle based on `designRef.type`:
 
-#### Option A: Figma (`designRef.type == "figma"`)
+#### Option A: Figma Only (`designRef.type == "figma"`)
 
-Parse `fileId` and `frameId` from `designRef.value`:
+Parse `fileId` and `frameId` from `designRef.figma`:
 - Use `mcp__framelink-figma-mcp__get_figma_data` with the file ID
 - Extract: component tree structure, design tokens used, dimensions
 - If only fileId (no frameId): set `figma.status: "partial"`, fetch top-level structure
 - If MCP fails: set `figma.status: "unavailable"`, log error
 
-#### Option B: Prototype URL (`designRef.type == "prototype_url"`)
+#### Option B: Prototype URL Only (`designRef.type == "prototype_url"`)
 
 The user provided a live prototype URL (v0.dev, Vercel preview, or any web URL):
 1. Spawn the `prototype-analyzer` agent with:
-   - `prototypeUrl`: `designRef.value`
+   - `prototypeUrl`: `designRef.prototype`
    - `workspacePath`: current workspace
    - Tools: `Read, Write, mcp__Claude_Preview__preview_start, mcp__Claude_Preview__preview_screenshot, mcp__Claude_Preview__preview_eval, mcp__Claude_Preview__preview_inspect`
 2. The prototype-analyzer will:
@@ -104,17 +104,87 @@ The user provided a live prototype URL (v0.dev, Vercel preview, or any web URL):
    - Write `prototype_analysis.json` and update `context_bundle.json`
 3. The output populates the same `figma` section in context_bundle.json so downstream agents work seamlessly
 
-#### Option C: Screenshot (`designRef.type == "screenshot"`)
+#### Option C: Screenshot Only (`designRef.type == "screenshot"`)
 
 The user provided a local screenshot file:
-1. Read the image file at `designRef.value`
+1. Read the image file at `designRef.screenshot`
 2. Analyze the screenshot visually to identify UI components
 3. Map to Cap UI Library components using `skills/figma-component-map/SKILL.md`
 4. Populate `figma` section with: component_tree (from visual analysis), status "fetched", source "screenshot"
 
+#### Option D: Dual — Figma + Prototype URL (`designRef.type == "dual"`)
+
+The user provided BOTH Figma (for visual design) and a prototype URL (for interactions). This is the richest input mode:
+
+1. **Fetch Figma** (for visuals):
+   - Parse `fileId` and `frameId` from `designRef.figma`
+   - Use `mcp__framelink-figma-mcp__get_figma_data` → component tree, design tokens, dimensions
+   - This is the **source of truth for layout, colors, spacing, typography, and component appearance**
+
+2. **Analyze Prototype** (for interactions):
+   - Spawn `prototype-analyzer` agent with `designRef.prototype`
+   - Captures: click flows, state transitions, navigation patterns, form behavior, error states
+   - If v0.dev: reads generated source code for state management and API call patterns
+   - This is the **source of truth for user interactions, state changes, and data flow**
+
+3. **Merge into unified context**:
+   ```json
+   {
+     "figma": {
+       "status": "fetched",
+       "source": "dual",
+       "figma_data": {
+         "component_tree": "<from Figma MCP>",
+         "tokens": "<from Figma MCP>",
+         "dimensions": "<from Figma MCP>"
+       },
+       "prototype_data": {
+         "url": "<prototype URL>",
+         "screenshots": "<from prototype-analyzer>",
+         "interactions": "<click flows, state transitions>",
+         "v0_source": "<if v0.dev, the generated code>"
+       }
+     }
+   }
+   ```
+
+4. **Assign responsibilities to each source**:
+
+   | Concern | Primary Source | Fallback |
+   |---------|---------------|----------|
+   | Layout (grid, spacing, alignment) | Figma | Prototype screenshot |
+   | Colors and tokens | Figma | Prototype visual analysis |
+   | Typography (sizes, weights) | Figma | Prototype visual analysis |
+   | Component selection | Figma (which Cap UI component) | Prototype DOM inspection |
+   | Click interactions | Prototype (what happens on click) | Figma annotations (if any) |
+   | State transitions | Prototype (loading, error, empty states) | LLD text description |
+   | Form behavior | Prototype (validation, submission flow) | LLD text description |
+   | API call patterns | Prototype (v0 source if available) | LLD API contracts |
+   | Navigation flow | Prototype (page transitions, routing) | LLD page structure |
+
+5. **Conflict resolution**:
+   If Figma and prototype disagree on something (e.g., Figma shows a dropdown but prototype uses radio buttons):
+   - Log the conflict in `approach_log.md`
+   - **Ask the user** which to follow:
+     ```
+     Conflict detected between Figma and prototype:
+
+     Figma shows: CapSelect (dropdown) for "Tier Selection"
+     Prototype shows: CapRadioGroup (radio buttons) for "Tier Selection"
+
+     Which should we follow?
+       [1] Figma (dropdown — CapSelect)
+       [2] Prototype (radio buttons — CapRadioGroup)
+       [3] Let me decide later — use Figma for now, flag for review
+
+     Enter choice: ___
+     ```
+   - Record the decision in `session_memory.md` under Component Decisions
+   - Record in `approach_log.md` with rationale
+
 #### No Design Reference (`designRef == null`)
 
-Set `figma.status: "unavailable"`. Visual QA and Figma-to-component mapping will be skipped. Code generation will rely on LLD text descriptions only.
+Set `figma.status: "unavailable"`. Visual QA and component mapping will be skipped. Code generation will rely on LLD text descriptions only.
 
 ### Step 5: Fetch Capillary Product Documentation
 

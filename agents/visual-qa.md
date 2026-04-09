@@ -24,9 +24,12 @@ Consult this skill for Capillary styling standards when comparing and fixing vis
 1. Read `{workspacePath}/dev_context.json` — check if `figma` data is available
 2. If `figma.status` is "unavailable": **SKIP** — write report with `status: "skipped"`, `skip_reason: "No design reference available"`
 3. Determine design reference source:
-   - If `figma.source == "figma"`: use Figma frame as comparison reference (download via MCP)
+   - If `figma.source == "figma"`: use Figma frame as comparison reference (download via MCP). Compare layout, colors, spacing, tokens.
    - If `figma.source == "prototype_url"`: use the prototype URL screenshots from `prototype_analysis.json` as comparison reference. Also navigate to the prototype URL live for side-by-side comparison.
-   - If `figma.source == "screenshot"`: use the provided screenshot as comparison reference
+   - If `figma.source == "screenshot"`: use the provided screenshot as comparison reference.
+   - If `figma.source == "dual"`: **two-pass comparison**:
+     - **Pass 1 — Visual fidelity (vs Figma)**: Compare generated app's layout, colors, spacing, and typography against the Figma frame. Fix CSS discrepancies using Cap UI tokens. This ensures the generated UI looks correct.
+     - **Pass 2 — Interaction fidelity (vs Prototype)**: Navigate to the prototype URL. Compare interactive behaviors — does clicking a button show the same result? Does the form validate the same way? Are loading/error/empty states consistent? Log interaction discrepancies but do NOT auto-fix these (interaction fixes require code changes, not just CSS). Report them for the developer to review.
 4. Read `{workspacePath}/generation_report.json` — get the organism path
 
 ## Steps

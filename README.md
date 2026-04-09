@@ -314,9 +314,14 @@ Confirm → Proceed
 ```
 
 **Design Reference Options:**
-- **Figma** — uses Figma MCP to fetch component tree, tokens, and dimensions
-- **Prototype URL** — uses Claude Preview to navigate to the URL, take screenshots, inspect the DOM, and map components to Cap UI Library. Works with v0.dev, Vercel previews, Netlify deploys, or any live web URL. If v0.dev, also reads the generated source code for higher-confidence mapping.
-- **Screenshot** — uses visual analysis to identify and map components
+- **Figma only** — uses Figma MCP to fetch component tree, tokens, and dimensions. Best for layout and visual design.
+- **Prototype URL only** — uses Claude Preview to navigate to the URL, take screenshots, inspect the DOM, and map components to Cap UI Library. Works with v0.dev, Vercel previews, Netlify deploys, or any live web URL. If v0.dev, also reads the generated source code for higher-confidence mapping. Best for interactions.
+- **Screenshot only** — uses visual analysis to identify and map components
+- **Figma + Prototype URL (recommended)** — uses BOTH sources together:
+  - **Figma** = source of truth for layout, colors, spacing, typography, component appearance
+  - **Prototype** = source of truth for interactions, state transitions, click flows, form behavior, API patterns
+  - When they conflict (e.g., Figma shows dropdown but prototype shows radio buttons), the pipeline asks you which to follow
+  - Visual QA runs a **two-pass comparison**: Pass 1 checks visual fidelity against Figma, Pass 2 checks interaction fidelity against prototype
 - **None** — skips visual QA and component mapping, uses LLD text descriptions only
 
 Or skip the menu: `/gix CAP-12345`

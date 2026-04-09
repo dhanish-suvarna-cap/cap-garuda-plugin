@@ -508,27 +508,31 @@ graph LR
 flowchart TD
   INPUT{"Design Reference\nType?"}
 
-  INPUT -->|"Figma\n(fileId:frameId)"| FIGMA["Figma MCP\nget_figma_data\ndownload_figma_images"]
-  INPUT -->|"Prototype URL\n(v0.dev / Vercel / any)"| PROTO["prototype-analyzer agent\n(Claude Preview)"]
-  INPUT -->|"Screenshot\n(local file)"| IMG["Visual Analysis\n(read image)"]
+  INPUT -->|"[1] Figma only"| FIGMA["Figma MCP\nLayout + tokens + dimensions"]
+  INPUT -->|"[2] Prototype URL only"| PROTO["prototype-analyzer\nInteractions + DOM + screenshots"]
+  INPUT -->|"[3] Screenshot only"| IMG["Visual Analysis"]
+  INPUT -->|"[4] Figma + Prototype\n(recommended)"| DUAL["DUAL MODE"]
   INPUT -->|"None"| SKIP["Skip visual features\nUse LLD text only"]
 
-  FIGMA --> TREE["Component Tree\n+ Design Tokens\n+ Dimensions"]
-  PROTO --> TREE
-  IMG --> TREE
+  DUAL --> FIGMA2["Figma MCP\nVisual design source of truth"]
+  DUAL --> PROTO2["prototype-analyzer\nInteraction source of truth"]
 
-  PROTO --> V0{"Is v0.dev?"}
-  V0 -->|yes| SOURCE["Read v0 source code\nTailwind → Cap tokens\nuseState → Redux\nfetch → saga"]
-  V0 -->|no| DOM["Inspect DOM\nIdentify elements"]
-  SOURCE --> MAP
-  DOM --> MAP
+  FIGMA --> MAP
+  PROTO --> MAP
+  IMG --> MAP
+  FIGMA2 --> MERGE["Merge + Conflict Check"]
+  PROTO2 --> MERGE
 
-  TREE --> MAP["Map to Cap UI Library\n(figma-component-map skill)"]
-  MAP --> CTX["context_bundle.json\nfigma section populated"]
+  MERGE -->|"no conflict"| MAP
+  MERGE -->|"conflict found"| ASK["Ask user:\nFigma says dropdown\nPrototype says radio\nWhich to follow?"]
+  ASK --> MAP
 
+  MAP["Map to Cap UI Library"] --> CTX["context_bundle.json"]
   CTX --> DOWN["All downstream agents\nwork identically"]
 
   style SKIP fill:#ffab00,color:#000
+  style DUAL fill:#00e676,color:#000
+  style ASK fill:#ffab00,color:#000
 </div>
 
 <h3>Prototype URL Flow (v0.dev Example)</h3>
@@ -541,20 +545,74 @@ flowchart TD
 <div class="flow-step"><div class="flow-num">6</div><div class="flow-content"><strong>Token Extraction</strong> — Visual colors/spacing/fonts → Cap UI design tokens (CAP_SPACE_*, CAP_G*, FONT_SIZE_*)</div></div>
 <div class="flow-step"><div class="flow-num">7</div><div class="flow-content"><strong>Output</strong> — <code>prototype_analysis.json</code> + context_bundle updated. Downstream agents see same data as Figma flow.</div></div>
 
-<div class="callout ok">
-  <strong>Key insight:</strong> The prototype-analyzer produces output in the same format as Figma MCP. This means HLD generator, LLD generator, dev-context-loader, code-generator, and visual-qa all work identically whether the source was Figma, a v0 URL, or a screenshot.
+<h3>Dual Mode — Source of Truth Assignment</h3>
+
+<p>When both Figma and prototype URL are provided (option [4]), each concern is assigned a primary source:</p>
+
+<table>
+  <tr><th>Concern</th><th>Primary Source</th><th>Fallback</th></tr>
+  <tr><td>Layout (grid, spacing, alignment)</td><td><span class="badge info">Figma</span></td><td>Prototype screenshot</td></tr>
+  <tr><td>Colors and design tokens</td><td><span class="badge info">Figma</span></td><td>Prototype visual analysis</td></tr>
+  <tr><td>Typography (sizes, weights)</td><td><span class="badge info">Figma</span></td><td>Prototype visual analysis</td></tr>
+  <tr><td>Component selection (which Cap UI)</td><td><span class="badge info">Figma</span></td><td>Prototype DOM inspection</td></tr>
+  <tr><td>Click interactions</td><td><span class="badge" style="background:#7c4dff;color:#fff">Prototype</span></td><td>Figma annotations</td></tr>
+  <tr><td>State transitions (loading/error/empty)</td><td><span class="badge" style="background:#7c4dff;color:#fff">Prototype</span></td><td>LLD text description</td></tr>
+  <tr><td>Form behavior (validation, submission)</td><td><span class="badge" style="background:#7c4dff;color:#fff">Prototype</span></td><td>LLD text description</td></tr>
+  <tr><td>API call patterns</td><td><span class="badge" style="background:#7c4dff;color:#fff">Prototype</span> (v0 source)</td><td>LLD API contracts</td></tr>
+  <tr><td>Navigation flow</td><td><span class="badge" style="background:#7c4dff;color:#fff">Prototype</span></td><td>LLD page structure</td></tr>
+</table>
+
+<div class="callout warn">
+  <strong>Conflict resolution:</strong> When Figma and prototype disagree (e.g., Figma shows a dropdown but prototype uses radio buttons), the pipeline <strong>asks the user</strong> which to follow. The decision is logged in <code>approach_log.md</code> and <code>session_memory.md</code>.
 </div>
 
-<h3>Visual QA with Prototype URL</h3>
+<div class="callout ok">
+  <strong>Key insight:</strong> All design reference modes produce output in the same format (<code>figma</code> section in context_bundle.json). This means HLD generator, LLD generator, dev-context-loader, code-generator, and visual-qa all work identically regardless of the source.
+</div>
 
-<p>When the design reference is a prototype URL, visual QA compares the <strong>generated app</strong> (localhost:8000) against the <strong>live prototype</strong> (v0.dev URL) side-by-side:</p>
+<h3>Visual QA — Dual Mode (Two-Pass Comparison)</h3>
+
+<p>When both Figma and prototype URL are provided, visual QA runs <strong>two passes</strong>:</p>
+
+<div class="mermaid">
+flowchart TD
+  GEN["Generated App\n(localhost:8000)"]
+
+  subgraph "Pass 1: Visual Fidelity (auto-fix CSS)"
+    GEN -->|screenshot| CMP1["Compare vs Figma\nlayout, colors, spacing, tokens"]
+    FIGMA["Figma Frame\n(MCP download)"] --> CMP1
+    CMP1 -->|"CRITICAL/MAJOR"| FIX["Fix CSS using\nCap UI tokens"]
+    FIX -->|"re-screenshot"| CMP1
+    CMP1 -->|"MINOR only"| PASS1["Pass 1 done\nVisual fidelity: HIGH"]
+  end
+
+  subgraph "Pass 2: Interaction Fidelity (report only)"
+    GEN -->|navigate + interact| CMP2["Compare vs Prototype\nclicks, states, forms, navigation"]
+    PROTO["Prototype URL\n(live)"] -->|navigate + interact| CMP2
+    CMP2 --> REPORT["Interaction discrepancies\n(reported, NOT auto-fixed)"]
+  end
+
+  PASS1 --> FINAL["visual_qa_report.json\nVisual: HIGH | Interactions: 3 issues noted"]
+  REPORT --> FINAL
+
+  style FIX fill:#00d4ff,color:#000
+  style REPORT fill:#ffab00,color:#000
+</div>
+
+<div class="callout">
+  <strong>Why two passes?</strong> Visual discrepancies (wrong spacing, wrong color) are CSS-only fixes — safe to auto-fix. Interaction discrepancies (wrong click behavior, missing state transition) require code changes — too risky to auto-fix, so they're reported for the developer.
+</div>
+
+<h3>Single-Source Visual QA</h3>
+
+<p>When only Figma OR only prototype URL is provided:</p>
 
 <div class="mermaid">
 flowchart LR
-  GEN["Generated App\n(localhost:8000)"] -->|screenshot| CMP["Side-by-side\nComparison"]
-  PROTO["Prototype URL\n(v0.dev)"] -->|screenshot| CMP
+  GEN["Generated App\n(localhost:8000)"] -->|screenshot| CMP["Compare vs\ndesign reference"]
+  REF["Figma OR Prototype"] -->|"screenshot/frame"| CMP
   CMP --> DISC["Discrepancies:\nCRITICAL / MAJOR / MINOR"]
-  DISC -->|"fix CSS"| GEN
+  DISC -->|"fix CSS (3x max)"| GEN
 </div>
 
 <h2 id="cap-ui">Cap UI Library Component System</h2>

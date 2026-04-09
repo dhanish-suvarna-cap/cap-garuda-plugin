@@ -94,15 +94,30 @@ Step 3 of 6: Design Reference
 - If Y: ask which type:
   ```
   What type of design reference?
-    [1] Figma — enter fileId:frameId
-    [2] Prototype URL — v0.dev, Vercel preview, or any live URL
-    [3] Screenshot — local image file path
+    [1] Figma only — for UI layout, tokens, and visual design
+    [2] Prototype URL only — v0.dev, Vercel preview, or any live URL
+    [3] Screenshot only — local image file path
+    [4] Figma + Prototype URL — Figma for visuals, prototype for interactions
+        (recommended when both are available)
 
-  Enter choice (1-3): ___
+  Enter choice (1-4): ___
   ```
-  - If `1` (Figma): `Enter Figma fileId:frameId: ___` → store as `designRef = { type: "figma", value: "<input>" }`
-  - If `2` (Prototype URL): `Enter prototype URL: ___` → store as `designRef = { type: "prototype_url", value: "<input>" }`
-  - If `3` (Screenshot): `Enter screenshot file path: ___` → store as `designRef = { type: "screenshot", value: "<input>" }`
+  - If `1` (Figma): `Enter Figma fileId:frameId: ___` → store as `designRef = { type: "figma", figma: "<input>", prototype: null }`
+  - If `2` (Prototype URL): `Enter prototype URL: ___` → store as `designRef = { type: "prototype_url", figma: null, prototype: "<input>" }`
+  - If `3` (Screenshot): `Enter screenshot file path: ___` → store as `designRef = { type: "screenshot", figma: null, prototype: null, screenshot: "<input>" }`
+  - If `4` (Figma + Prototype):
+    ```
+    Enter Figma fileId:frameId: ___
+    Enter prototype URL: ___
+    ```
+    Store as `designRef = { type: "dual", figma: "<figma-input>", prototype: "<url-input>" }`
+    ```
+    Using dual design reference:
+      Figma   → visual design (layout, colors, spacing, tokens)
+      Prototype → interactions (click flows, state transitions, API behavior)
+
+    When they conflict, the pipeline will ask you which to follow.
+    ```
 - If N: `Skipping design reference. Visual QA and component mapping will use LLD text only.` → set `designRef = null`
 
 ```
