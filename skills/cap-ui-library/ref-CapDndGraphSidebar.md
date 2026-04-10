@@ -15,10 +15,14 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapDndGr
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Graph Sidebar (Node Palette)
 ```jsx
 import CapDndGraphSidebar from '@capillarytech/cap-ui-library/CapDndGraphSidebar';
 
-<CapDndGraphSidebar />
+<CapDndGraphSidebar
+  items={sidebarItems}
+  onDragStart={handleDragStart}
+/>
 ```

@@ -28,9 +28,42 @@ A customized icon component that extends Ant Design's Icon component with additi
 - CapIcon.AntIcon
 - CapIcon.CapIconAvatar
 
-## Usage Example
-```jsx
-import CapIcon from "@capillarytech/cap-ui-library/CapIcon";
+## Usage Examples
 
-<CapIcon />
+### Basic Icon with Sizes
+```jsx
+import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
+
+<CapIcon type="search" size="s" />   {/* 16px */}
+<CapIcon type="search" size="m" />   {/* 24px (default) */}
+<CapIcon type="search" size="l" />   {/* 32px */}
+```
+
+### Common Icon Types
+```jsx
+<CapIcon type="add" size="s" />
+<CapIcon type="edit" size="s" />
+<CapIcon type="delete" size="s" />
+<CapIcon type="close" size="s" />
+<CapIcon type="check-circle" size="s" />
+<CapIcon type="upload" size="s" />
+<CapIcon type="download" size="s" />
+<CapIcon type="filter" size="s" />
+<CapIcon type="setting" size="s" />
+```
+
+### With Background
+```jsx
+<CapIcon type="add" size="m" withBackground />
+<CapIcon
+  type="edit"
+  size="m"
+  withBackground
+  backgroundProps={{ style: { backgroundColor: 'green' }, className: 'custom-bg' }}
+/>
+```
+
+### Spinning Icon (Loading)
+```jsx
+<CapIcon type="loading" spin />
 ```

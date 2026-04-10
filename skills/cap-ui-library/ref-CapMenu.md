@@ -32,9 +32,68 @@ A customized menu component that extends Ant Design's Menu component with additi
 | onOpenChange | function(openKeys) | None | Callback executed when sub-menus open or close |
 | onSelect | function({ item, key, keyPath, selectedKeys, domEvent }) | None | Callback executed when a menu item is selected |
 
-## Usage Example
-```jsx
-import CapMenu from "@capillarytech/cap-ui-library/CapMenu";
+## Usage Examples
 
-<CapMenu />
+### Basic Vertical Menu with Items
+```jsx
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+<CapMenu
+  mode="vertical"
+  selectedKeys={['tiers']}
+  onClick={({ key }) => handleMenuClick(key)}
+  items={[
+    { key: 'tiers', label: 'Tiers' },
+    { key: 'benefits', label: 'Benefits' },
+    { key: 'rules', label: 'Rules' },
+    { key: 'settings', label: 'Settings' },
+  ]}
+/>
+```
+
+### Horizontal Menu with Sub-Menus
+```jsx
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+<CapMenu
+  mode="horizontal"
+  defaultSelectedKeys={['dashboard']}
+  items={[
+    { key: 'dashboard', label: 'Dashboard' },
+    {
+      key: 'programs',
+      label: 'Programs',
+      children: [
+        { key: 'loyalty', label: 'Loyalty Program' },
+        { key: 'referral', label: 'Referral Program' },
+      ],
+    },
+    { key: 'reports', label: 'Reports' },
+  ]}
+  onSelect={({ key }) => navigateTo(key)}
+/>
+```
+
+### Inline Collapsible Menu
+```jsx
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+<CapMenu
+  mode="inline"
+  inlineCollapsed={isCollapsed}
+  defaultOpenKeys={['campaigns']}
+  items={[
+    {
+      key: 'campaigns',
+      label: 'Campaigns',
+      children: [
+        { key: 'active', label: 'Active' },
+        { key: 'draft', label: 'Drafts' },
+        { key: 'archived', label: 'Archived' },
+      ],
+    },
+    { key: 'segments', label: 'Segments' },
+  ]}
+  theme="light"
+/>
 ```

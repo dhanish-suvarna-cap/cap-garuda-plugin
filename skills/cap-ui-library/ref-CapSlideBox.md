@@ -20,9 +20,59 @@ A customized slide-in panel component that provides a modal-like experience with
 | closeIconPosition | string | right | Position of the close icon in the header. Possible values: 'left', 'right' |
 | closeIconType | string | close | Type of the close icon. Possible values: 'close', 'back' |
 
-## Usage Example
-```jsx
-import CapSlideBox from "@capillarytech/cap-ui-library/CapSlideBox";
+## Usage Examples
 
-<CapSlideBox />
+### Basic Right-Side Slide Panel
+```jsx
+import CapSlideBox from '@capillarytech/cap-ui-library/CapSlideBox';
+
+<CapSlideBox
+  show={isSlideBoxVisible}
+  header="Tier Details"
+  content={<div>Gold Tier — 5000 points required</div>}
+  handleClose={() => setIsSlideBoxVisible(false)}
+/>
+```
+
+### Large Slide Panel with Footer
+```jsx
+import CapSlideBox from '@capillarytech/cap-ui-library/CapSlideBox';
+
+<CapSlideBox
+  show={showPanel}
+  size="size-l"
+  position="right"
+  header="Edit Benefit Configuration"
+  content={
+    <div>
+      <p>Benefit Name: Free Shipping</p>
+      <p>Applicable Tiers: Gold, Platinum</p>
+    </div>
+  }
+  footer={
+    <div>
+      <button onClick={handleSave}>Save</button>
+      <button onClick={handleCancel}>Cancel</button>
+    </div>
+  }
+  handleClose={handleCancel}
+  closeIconPosition="right"
+  closeIconSize="m"
+/>
+```
+
+### Left-Side Slide Panel
+```jsx
+import CapSlideBox from '@capillarytech/cap-ui-library/CapSlideBox';
+
+<CapSlideBox
+  show={showFilters}
+  size="size-s"
+  position="left"
+  header="Filter Options"
+  content={<FilterForm />}
+  handleClose={() => setShowFilters(false)}
+  closeIconType="back"
+  closeIconPosition="left"
+/>
 ```

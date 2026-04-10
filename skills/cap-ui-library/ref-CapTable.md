@@ -40,9 +40,79 @@ A customized table component that extends Ant Design's Table component with addi
 | onRow | function(record, index) | None | Set props on each row |
 | onHeaderRow | function(columns, index) | None | Set props on the table header row |
 
-## Usage Example
-```jsx
-import CapTable from "@capillarytech/cap-ui-library/CapTable";
+## Usage Examples
 
-<CapTable />
+### Basic Table with Columns and Data
+```jsx
+import CapTable from '@capillarytech/cap-ui-library/CapTable';
+
+const columns = [
+  { title: 'Name', dataIndex: 'name', key: 'name' },
+  { title: 'Age', dataIndex: 'age', key: 'age' },
+  { title: 'Address', dataIndex: 'address', key: 'address' },
+];
+
+const dataSource = [
+  { key: '1', name: 'John Brown', age: 32, address: 'New York No. 1 Lake Park' },
+  { key: '2', name: 'Jim Green', age: 42, address: 'London No. 1 Lake Park' },
+];
+
+<CapTable columns={columns} dataSource={dataSource} />
+```
+
+### With Sorting
+```jsx
+const columns = [
+  {
+    title: 'Name',
+    dataIndex: 'name',
+    sorter: (a, b) => a.name.length - b.name.length,
+    sortDirections: ['descend', 'ascend'],
+  },
+  {
+    title: 'Age',
+    dataIndex: 'age',
+    defaultSortOrder: 'descend',
+    sorter: (a, b) => a.age - b.age,
+  },
+];
+
+<CapTable columns={columns} dataSource={dataSource} />
+```
+
+### With Nested Column Groups (using CapHeader)
+```jsx
+import CapHeader from '@capillarytech/cap-ui-library/CapHeader';
+
+const columns = [
+  {
+    title: <CapHeader size="small" title="Campaign name" description="Marketing objective" />,
+    dataIndex: 'name',
+    key: 'name',
+    width: '30%',
+  },
+  {
+    title: <CapHeader size="small" title="Performance" />,
+    className: "table-parent",
+    children: [
+      { title: <CapHeader size="small" description="Unique users" />, dataIndex: 'u_user', className: "table-children" },
+      { title: <CapHeader size="small" description="Message Sent" />, dataIndex: 'm_sent', className: "table-children" },
+    ],
+  },
+];
+
+<CapTable id="capTable_1" columns={columns} dataSource={dataSource} />
+```
+
+### With Infinite Scroll
+```jsx
+<CapTable
+  id="capTable_scroll"
+  columns={columns}
+  dataSource={dataSource}
+  infinteScroll
+  pagination={{ offset: 0, limit: 10 }}
+  setPagination={handleLoadMore}
+  showLoader={loading}
+/>
 ```

@@ -15,10 +15,11 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapEmoji
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic Emoji Picker
 ```jsx
 import CapEmojiPicker from '@capillarytech/cap-ui-library/CapEmojiPicker';
 
-<CapEmojiPicker />
+<CapEmojiPicker onEmojiClick={(emoji) => handleEmojiSelect(emoji)} />
 ```

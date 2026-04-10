@@ -24,9 +24,47 @@ A customized switch component that extends Ant Design's Switch component with ad
 | checkedChildren | ReactNode | - | The content to be shown when the state is checked |
 | unCheckedChildren | ReactNode | - | The content to be shown when the state is unchecked |
 
-## Usage Example
-```jsx
-import CapSwitch from "@capillarytech/cap-ui-library/CapSwitch";
+## Usage Examples
 
-<CapSwitch />
+### Basic Switch
+```jsx
+import CapSwitch from '@capillarytech/cap-ui-library/CapSwitch';
+
+<CapSwitch defaultChecked />
+<CapSwitch size="small" defaultChecked />
+<CapSwitch loading defaultChecked />
+```
+
+### With Checked/Unchecked Labels
+```jsx
+<CapSwitch checkedChildren="ON" unCheckedChildren="OFF" />
+<CapSwitch checkedChildren="1" unCheckedChildren="0" />
+```
+
+### With Label (Left Position)
+```jsx
+<CapSwitch
+  label="Enable notifications"
+  inductiveText="Receive email alerts for campaign updates"
+  labelPosition="left"
+/>
+```
+
+### With Label (Top Position)
+```jsx
+<CapSwitch
+  label="Auto-approve"
+  inductiveText="Automatically approve new campaign requests"
+  labelPosition="top"
+/>
+```
+
+### With Component Position Override
+```jsx
+<CapSwitch
+  label="Feature Toggle"
+  inductiveText="Controls feature visibility"
+  labelPosition="left"
+  componentPosition="top"
+/>
 ```

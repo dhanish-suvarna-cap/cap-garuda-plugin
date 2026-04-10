@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapMobil
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Mobile Date Range Picker
 ```jsx
 import CapMobileDateRangePicker from '@capillarytech/cap-ui-library/CapMobileDateRangePicker';
 
-<CapMobileDateRangePicker />
+<CapMobileDateRangePicker
+  label="Date Range"
+  onChange={handleDateRangeChange}
+  placeholder={['Start', 'End']}
+/>
 ```

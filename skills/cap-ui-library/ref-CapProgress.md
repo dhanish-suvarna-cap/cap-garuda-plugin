@@ -30,9 +30,25 @@ A customized progress component that extends Ant Design's Progress component wit
 | animation | boolean | True | Whether to apply animation effect |
 | gradient | boolean | False | Whether to use gradient color effect |
 
-## Usage Example
-```jsx
-import CapProgress from "@capillarytech/cap-ui-library/CapProgress";
+## Usage Examples
 
-<CapProgress />
+### Circle Progress
+```jsx
+import CapProgress from '@capillarytech/cap-ui-library/CapProgress';
+
+<CapProgress type="circle" percent={75}>Email</CapProgress>
+```
+
+### Line Progress with Custom Format
+```jsx
+<CapProgress percent={75} size="small" format={(percent) => `${percent}% 3,46,234`}>Email</CapProgress>
+<CapProgress percent={90} size="small" format={(percent) => `${percent}% 2,46,234`}>SMS</CapProgress>
+<CapProgress percent={50} size="small" format={(percent) => `${percent}% 1,12,234`}>Push</CapProgress>
+```
+
+### Status Variants
+```jsx
+<CapProgress percent={100} status="success" />
+<CapProgress percent={70} status="active" />
+<CapProgress percent={50} status="exception" />
 ```

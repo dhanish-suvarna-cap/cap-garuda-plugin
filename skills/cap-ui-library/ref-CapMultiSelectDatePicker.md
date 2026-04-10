@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapMulti
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Multi-Date Selection
 ```jsx
 import CapMultiSelectDatePicker from '@capillarytech/cap-ui-library/CapMultiSelectDatePicker';
 
-<CapMultiSelectDatePicker />
+<CapMultiSelectDatePicker
+  label="Blackout Dates"
+  placeholder="Select multiple dates"
+  onChange={handleDatesChange}
+/>
 ```

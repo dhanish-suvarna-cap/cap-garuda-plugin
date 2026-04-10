@@ -15,10 +15,22 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapCusto
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic Checkbox List
 ```jsx
 import CapCustomCheckboxList from '@capillarytech/cap-ui-library/CapCustomCheckboxList';
 
-<CapCustomCheckboxList />
+const options = [
+  { label: 'Email', value: 'email' },
+  { label: 'SMS', value: 'sms' },
+  { label: 'Push Notification', value: 'push' },
+];
+
+<CapCustomCheckboxList
+  options={options}
+  value={selectedChannels}
+  onChange={handleChange}
+  label="Communication Channels"
+/>
 ```

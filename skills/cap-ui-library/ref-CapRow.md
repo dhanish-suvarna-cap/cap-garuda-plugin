@@ -30,9 +30,44 @@ A customized row component that extends Ant Design's Row component with addition
 | responsive | boolean | True | Whether to enable responsive behavior |
 | vertical | boolean | False | Whether to stack items vertically |
 
-## Usage Example
-```jsx
-import CapRow from "@capillarytech/cap-ui-library/CapRow";
+## Usage Examples
 
-<CapRow />
+### Basic Row with Justified Columns
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+import CapColumn from '@capillarytech/cap-ui-library/CapColumn';
+
+<CapRow gutter={16} justify="space-between" align="middle">
+  <CapColumn span={8}>Left section</CapColumn>
+  <CapColumn span={8}>Center section</CapColumn>
+  <CapColumn span={8}>Right section</CapColumn>
+</CapRow>
+```
+
+### Vertical Layout with Full Width
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+
+<CapRow vertical fullWidth padding="16px" gap={12}>
+  <div>First row item</div>
+  <div>Second row item</div>
+  <div>Third row item</div>
+</CapRow>
+```
+
+### Flex Row with Custom Sizing
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+
+<CapRow
+  type="flex"
+  justify="center"
+  align="middle"
+  height="200px"
+  fullWidth
+  gutter={[16, 24]}
+  style={{ background: '#f5f5f5' }}
+>
+  {children}
+</CapRow>
 ```

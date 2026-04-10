@@ -22,9 +22,26 @@ A customized tag component that extends Ant Design's Tag component with addition
 ## Sub-Components
 - CapTag.CheckableTag
 
-## Usage Example
-```jsx
-import CapTag from "@capillarytech/cap-ui-library/CapTag";
+## Usage Examples
 
-<CapTag />
+### Tag Types
+```jsx
+import CapTag from '@capillarytech/cap-ui-library/CapTag';
+
+<CapTag>Default Tag</CapTag>
+<CapTag type="outline" onClick={handleClick}>Outline Tag</CapTag>
+<CapTag type="static">Static Tag</CapTag>
+<CapTag disabled>Disabled Tag</CapTag>
+```
+
+### Closable Tags
+```jsx
+<CapTag closable onClose={handleClose}>Removable Tag</CapTag>
+```
+
+### Checkable Tag
+```jsx
+const { CheckableTag } = CapTag;
+
+<CheckableTag checked={isChecked} onChange={handleChange}>Category</CheckableTag>
 ```

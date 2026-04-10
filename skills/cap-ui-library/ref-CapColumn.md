@@ -25,9 +25,45 @@ A customized column component that extends Ant Design's Col component with addit
 | style | object | {} | Custom style object for the column |
 | children | ReactNode | None | Content of the column |
 
-## Usage Example
-```jsx
-import CapColumn from "@capillarytech/cap-ui-library/CapColumn";
+## Usage Examples
 
-<CapColumn />
+### Basic Two-Column Layout
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+import CapColumn from '@capillarytech/cap-ui-library/CapColumn';
+
+<CapRow gutter={16}>
+  <CapColumn span={12}>Left half</CapColumn>
+  <CapColumn span={12}>Right half</CapColumn>
+</CapRow>
+```
+
+### Responsive Column with Breakpoints
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+import CapColumn from '@capillarytech/cap-ui-library/CapColumn';
+
+<CapRow gutter={16}>
+  <CapColumn xs={24} sm={12} md={8} lg={6}>
+    Responsive card content
+  </CapColumn>
+  <CapColumn xs={24} sm={12} md={16} lg={18}>
+    Main content area
+  </CapColumn>
+</CapRow>
+```
+
+### Column with Offset and Ordering
+```jsx
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+import CapColumn from '@capillarytech/cap-ui-library/CapColumn';
+
+<CapRow>
+  <CapColumn span={6} offset={6} order={2}>
+    Offset and reordered column
+  </CapColumn>
+  <CapColumn span={6} order={1}>
+    First visually, second in DOM
+  </CapColumn>
+</CapRow>
 ```

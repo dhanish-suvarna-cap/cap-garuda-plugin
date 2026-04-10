@@ -24,9 +24,64 @@ A customized dropdown component that extends Ant Design's Dropdown component wit
 ## Sub-Components
 - CapDropdown.Button
 
-## Usage Example
-```jsx
-import CapDropdown from "@capillarytech/cap-ui-library/CapDropdown";
+## Usage Examples
 
-<CapDropdown />
+### Basic Dropdown with Menu Overlay
+```jsx
+import CapDropdown from '@capillarytech/cap-ui-library/CapDropdown';
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+const menu = (
+  <CapMenu
+    onClick={({ key }) => handleAction(key)}
+    items={[
+      { key: 'edit', label: 'Edit Tier' },
+      { key: 'duplicate', label: 'Duplicate' },
+      { key: 'delete', label: 'Delete' },
+    ]}
+  />
+);
+
+<CapDropdown overlay={menu} trigger={['click']}>
+  <span>Actions</span>
+</CapDropdown>
+```
+
+### Dropdown with Placement and Arrow
+```jsx
+import CapDropdown from '@capillarytech/cap-ui-library/CapDropdown';
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+const statusMenu = (
+  <CapMenu
+    items={[
+      { key: 'active', label: 'Active' },
+      { key: 'inactive', label: 'Inactive' },
+      { key: 'draft', label: 'Draft' },
+    ]}
+  />
+);
+
+<CapDropdown
+  overlay={statusMenu}
+  placement="bottomRight"
+  arrow
+  trigger={['hover']}
+  onVisibleChange={(visible) => setDropdownOpen(visible)}
+>
+  <button>Filter by Status</button>
+</CapDropdown>
+```
+
+### Disabled Dropdown
+```jsx
+import CapDropdown from '@capillarytech/cap-ui-library/CapDropdown';
+import CapMenu from '@capillarytech/cap-ui-library/CapMenu';
+
+<CapDropdown
+  overlay={<CapMenu items={[{ key: '1', label: 'Option 1' }]} />}
+  disabled={!hasPermission}
+>
+  <span>More Options</span>
+</CapDropdown>
 ```

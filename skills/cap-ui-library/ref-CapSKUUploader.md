@@ -15,10 +15,11 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapSKUUp
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic SKU File Upload
 ```jsx
 import CapSKUUploader from '@capillarytech/cap-ui-library/CapSKUUploader';
 
-<CapSKUUploader />
+<CapSKUUploader onUpload={handleSKUUpload} />
 ```

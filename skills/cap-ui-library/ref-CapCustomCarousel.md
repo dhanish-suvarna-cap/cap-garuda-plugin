@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapCusto
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic Custom Carousel
 ```jsx
 import CapCustomCarousel from '@capillarytech/cap-ui-library/CapCustomCarousel';
 
-<CapCustomCarousel />
+<CapCustomCarousel>
+  <div>Slide 1 content</div>
+  <div>Slide 2 content</div>
+  <div>Slide 3 content</div>
+</CapCustomCarousel>
 ```

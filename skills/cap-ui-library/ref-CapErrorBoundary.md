@@ -15,10 +15,44 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapError
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic error boundary wrapping a component
 ```jsx
 import CapErrorBoundary from '@capillarytech/cap-ui-library/CapErrorBoundary';
 
-<CapErrorBoundary />
+<CapErrorBoundary
+  onError={(error) => notifyHandledException(error)}
+  fallback={<div>Something went wrong. Please refresh.</div>}
+>
+  <MyComponent />
+</CapErrorBoundary>
+```
+
+### With image illustration and refresh button
+```jsx
+import CapErrorBoundary from '@capillarytech/cap-ui-library/CapErrorBoundary';
+
+<CapErrorBoundary
+  showImage
+  onError={(error) => notifyHandledException(error)}
+  onRefreshClick={() => window.location.reload()}
+>
+  <TierConfigurationPanel />
+</CapErrorBoundary>
+```
+
+### Used via ErrorBoundaryWrapper (common pattern)
+```jsx
+import CapErrorBoundary from '@capillarytech/cap-ui-library/CapErrorBoundary';
+
+// Typically wrapped in an ErrorBoundaryWrapper molecule:
+const ErrorBoundaryWrapper = ({ children, showImage, onError }) => (
+  <CapErrorBoundary
+    showImage={showImage}
+    onError={onError}
+  >
+    {children}
+  </CapErrorBoundary>
+);
 ```

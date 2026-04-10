@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapTimel
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Nested Timeline
 ```jsx
 import CapTimelineNested from '@capillarytech/cap-ui-library/CapTimelineNested';
 
-<CapTimelineNested />
+<CapTimelineNested
+  timelinePanes={nestedPanes}
+  currentStep={currentStep}
+  setCurrentStep={setCurrentStep}
+/>
 ```

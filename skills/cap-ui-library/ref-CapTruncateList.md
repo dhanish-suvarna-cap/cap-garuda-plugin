@@ -15,10 +15,16 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapTrunc
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Truncated List with "Show More"
 ```jsx
 import CapTruncateList from '@capillarytech/cap-ui-library/CapTruncateList';
 
-<CapTruncateList />
+<CapTruncateList
+  items={allItems}
+  maxItems={5}
+  renderItem={(item) => <span>{item.name}</span>}
+  moreText="Show more"
+/>
 ```

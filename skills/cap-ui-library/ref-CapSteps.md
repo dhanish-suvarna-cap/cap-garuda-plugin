@@ -27,9 +27,53 @@ A customized steps component that extends Ant Design's Steps component with addi
 | startIndex | number | 0 | Starting number for numbered steps |
 | showStepIndexes | boolean | True | Whether to show step numbers/indexes |
 
-## Usage Example
-```jsx
-import CapSteps from "@capillarytech/cap-ui-library/CapSteps";
+## Usage Examples
 
-<CapSteps />
+### Basic Steps with Items
+```jsx
+import CapSteps from '@capillarytech/cap-ui-library/CapSteps';
+
+<CapSteps
+  current={1}
+  items={[
+    { title: 'Basic Info', description: 'Name and description' },
+    { title: 'Configuration', description: 'Set thresholds' },
+    { title: 'Benefits', description: 'Assign benefits' },
+    { title: 'Review', description: 'Confirm and publish' },
+  ]}
+/>
+```
+
+### Clickable Steps with Change Handler
+```jsx
+import CapSteps from '@capillarytech/cap-ui-library/CapSteps';
+
+<CapSteps
+  current={currentStep}
+  clickable
+  onChange={(step) => setCurrentStep(step)}
+  size="small"
+  items={[
+    { title: 'Select Program' },
+    { title: 'Define Rules' },
+    { title: 'Preview' },
+  ]}
+/>
+```
+
+### Vertical Steps with Status
+```jsx
+import CapSteps from '@capillarytech/cap-ui-library/CapSteps';
+
+<CapSteps
+  direction="vertical"
+  current={2}
+  status="error"
+  items={[
+    { title: 'Created', description: 'Tier created on Jan 1' },
+    { title: 'Configured', description: 'Rules assigned' },
+    { title: 'Validation', description: 'Threshold conflict detected', status: 'error' },
+    { title: 'Published', description: 'Pending' },
+  ]}
+/>
 ```

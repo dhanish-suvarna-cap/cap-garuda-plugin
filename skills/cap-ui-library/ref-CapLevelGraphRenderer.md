@@ -15,10 +15,11 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapLevel
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Level Graph Renderer
 ```jsx
 import CapLevelGraphRenderer from '@capillarytech/cap-ui-library/CapLevelGraphRenderer';
 
-<CapLevelGraphRenderer />
+<CapLevelGraphRenderer data={levelData} onNodeClick={handleNodeClick} />
 ```

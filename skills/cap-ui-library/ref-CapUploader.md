@@ -15,10 +15,29 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapUploa
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic File Upload with Button
 ```jsx
 import CapUploader from '@capillarytech/cap-ui-library/CapUploader';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
 
-<CapUploader />
+<CapUploader action="/api/upload" onChange={handleUploadChange}>
+  <CapButton>
+    <CapIcon type="upload" /> Upload
+  </CapButton>
+</CapUploader>
+```
+
+### With File Type & Size Restrictions
+```jsx
+<CapUploader
+  action="/api/upload"
+  accept=".csv,.xlsx"
+  beforeUpload={(file) => file.size / 1024 / 1024 < 5}
+  onChange={handleChange}
+>
+  <CapButton type="secondary">Upload File (Max 5MB)</CapButton>
+</CapUploader>
 ```

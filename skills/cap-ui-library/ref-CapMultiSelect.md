@@ -61,9 +61,63 @@ A customized multi-select component that extends Ant Design's Select component w
 | inline | boolean | False | Whether to display the component inline |
 | selectAllOption | boolean \| object | False | Whether to show a select all option, or customize the select all option |
 
-## Usage Example
-```jsx
-import CapMultiSelect from "@capillarytech/cap-ui-library/CapMultiSelect";
+## Usage Examples
 
-<CapMultiSelect />
+### Basic Multi-Select with Tree Data
+```jsx
+import CapMultiSelect from '@capillarytech/cap-ui-library/CapMultiSelect';
+
+const treeData = [
+  { title: 'Loyalty Points', key: '1' },
+  { title: 'Coupons', key: '2' },
+  { title: 'Rewards', key: '3', info: 'Premium tier only' },
+  { title: 'Gift Cards', key: '4' },
+];
+
+<CapMultiSelect
+  placeholder="Select Segments"
+  searchPlaceholder="Search"
+  closeText="Close"
+  selectText="Select"
+  treeData={treeData}
+  onSelect={handleSelect}
+/>
+```
+
+### With Pre-selected Values & Max Selection Limit
+```jsx
+<CapMultiSelect
+  placeholder="Select Segments"
+  searchPlaceholder="Search"
+  treeData={treeData}
+  appliedKeys={['1', '2']}
+  onSelect={handleSelect}
+  maxValuesToSelect={5}
+  showSelectButtonToolTip
+  selectTooltipText="Only 5 values can be selected"
+  disableSelectAll
+/>
+```
+
+### Disabled
+```jsx
+<CapMultiSelect
+  placeholder="Select Segments"
+  treeData={treeData}
+  onSelect={handleSelect}
+  disabled
+/>
+```
+
+### Custom Target Element (Button Trigger)
+```jsx
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+<CapMultiSelect
+  searchPlaceholder="Search"
+  treeData={treeData}
+  onSelect={handleSelect}
+  width="300px"
+  target={<CapButton isAddBtn type="flat">Select Items</CapButton>}
+/>
 ```

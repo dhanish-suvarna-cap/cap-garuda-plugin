@@ -15,10 +15,13 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapStatu
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Status Indicator
 ```jsx
 import CapStatus from '@capillarytech/cap-ui-library/CapStatus';
 
-<CapStatus />
+<CapStatus status="active" text="Active" />
+<CapStatus status="inactive" text="Inactive" />
+<CapStatus status="pending" text="Pending Review" />
 ```

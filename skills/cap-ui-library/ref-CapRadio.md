@@ -23,9 +23,37 @@ A customized radio component that extends Ant Design's Radio component with addi
 | inline | boolean | False | If true, display property of radio is set to inline-block |
 | name | string |  | Name property used in radio group |
 
-## Usage Example
-```jsx
-import CapRadio from "@capillarytech/cap-ui-library/CapRadio";
+## Usage Examples
 
-<CapRadio />
+### Basic Radio Options
+```jsx
+import CapRadio from '@capillarytech/cap-ui-library/CapRadio';
+
+<CapRadio>Plain</CapRadio>
+<CapRadio autoFocus>Auto Focus</CapRadio>
+<CapRadio defaultChecked>Default Checked</CapRadio>
+<CapRadio disabled>Disabled</CapRadio>
+```
+
+### Radio Group with Inductive Text & Suffix
+```jsx
+import CapHeading from '@capillarytech/cap-ui-library/CapHeading';
+
+const { CapRadioGroup } = CapRadio;
+
+<CapRadioGroup value={radioValue} onChange={(e) => setRadioValue(e.target.value)}>
+  <CapRadio
+    value="option1"
+    suffix={<CapHeading.CapHeadingSpan type="label2">(recommended)</CapHeading.CapHeadingSpan>}
+    inductiveText="Global settings can be overridden through advanced settings"
+  >
+    Option 1
+  </CapRadio>
+  <CapRadio
+    value="option2"
+    inductiveText="Uses custom configuration per campaign"
+  >
+    Option 2
+  </CapRadio>
+</CapRadioGroup>
 ```

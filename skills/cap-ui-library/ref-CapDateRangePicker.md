@@ -65,9 +65,46 @@ A customized date range picker component that wraps around react-dates DateRange
 | daySize | number | 32 | Size of the calendar day cells in pixels |
 | initialVisibleMonth | function() | - | Function that returns the initially visible month |
 
-## Usage Example
-```jsx
-import CapDateRangePicker from "@capillarytech/cap-ui-library/CapDateRangePicker";
+## Usage Examples
 
-<CapDateRangePicker />
+### Basic Date Range Picker
+```jsx
+import CapDateRangePicker from '@capillarytech/cap-ui-library/CapDateRangePicker';
+
+<CapDateRangePicker
+  startDateId="campaignStart"
+  endDateId="campaignEnd"
+  startDatePlaceholderText="Start Date"
+  endDatePlaceholderText="End Date"
+  onChange={([startDate, endDate]) => handleDateChange(startDate, endDate)}
+/>
+```
+
+### With Label & Validation
+```jsx
+<CapDateRangePicker
+  label="Campaign Duration"
+  labelPosition="top"
+  isRequired
+  errorMessage="Please select a date range"
+  inductiveText="Select the start and end dates"
+  startDateId="start"
+  endDateId="end"
+  displayFormat="DD MMM YYYY"
+  numberOfMonths={2}
+  onChange={handleDateChange}
+/>
+```
+
+### With Restricted Date Range
+```jsx
+import moment from 'moment';
+
+<CapDateRangePicker
+  startDateId="start"
+  endDateId="end"
+  isOutsideRange={(day) => day.isBefore(moment().startOf('day'))}
+  minimumNights={1}
+  onChange={handleDateChange}
+/>
 ```

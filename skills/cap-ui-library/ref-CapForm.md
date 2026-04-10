@@ -23,9 +23,48 @@ A customized form component that extends Ant Design's Form component with additi
 | labelCol | object | None | The layout of label. You can set span offset to configure the column |
 | wrapperCol | object | None | The layout for input controls. Same as labelCol |
 
-## Usage Example
-```jsx
-import CapForm from "@capillarytech/cap-ui-library/CapForm";
+## Usage Examples
 
-<CapForm />
+### Basic Form with Vertical Layout
+```jsx
+import CapForm from '@capillarytech/cap-ui-library/CapForm';
+import CapInput from '@capillarytech/cap-ui-library/CapInput';
+import CapSelect from '@capillarytech/cap-ui-library/CapSelect';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+const { CapForm: Form } = CapForm;
+
+<Form layout="vertical" onSubmit={handleSubmit}>
+  <CapInput label="Name" isRequired placeholder="Enter name" />
+  <CapSelect label="Category" options={categoryOptions} placeholder="Select category" />
+  <CapButton type="primary" htmlType="submit">Submit</CapButton>
+</Form>
+```
+
+### With Form.create() (Ant Design v3 Pattern)
+```jsx
+const { create } = CapForm;
+
+class MyForm extends Component {
+  handleSubmit = (e) => {
+    e.preventDefault();
+    this.props.form.validateFields((err, values) => {
+      if (!err) { /* submit values */ }
+    });
+  };
+
+  render() {
+    const { getFieldDecorator } = this.props.form;
+    return (
+      <Form layout="horizontal" onSubmit={this.handleSubmit}>
+        {getFieldDecorator('name', { rules: [{ required: true }] })(
+          <CapInput label="Name" />
+        )}
+        <CapButton type="primary" htmlType="submit">Save</CapButton>
+      </Form>
+    );
+  }
+}
+
+export default create()(MyForm);
 ```

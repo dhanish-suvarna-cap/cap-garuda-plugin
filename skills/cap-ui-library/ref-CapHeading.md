@@ -26,9 +26,24 @@ A customized heading component for displaying titles and subtitles with consiste
 | children | ReactNode | None | Content of the heading |
 | onClick | function(event) | None | Callback executed when heading is clicked |
 
-## Usage Example
-```jsx
-import CapHeading from "@capillarytech/cap-ui-library/CapHeading";
+## Usage Examples
 
-<CapHeading />
+### Heading Levels (h1–h6)
+```jsx
+import CapHeading from '@capillarytech/cap-ui-library/CapHeading';
+
+<CapHeading type="h1">Heading 1</CapHeading>
+<CapHeading type="h2">Heading 2</CapHeading>
+<CapHeading type="h3">Heading 3</CapHeading>
+<CapHeading type="h4">Heading 4</CapHeading>
+<CapHeading type="h5">Heading 5</CapHeading>
+<CapHeading type="h6">Heading 6</CapHeading>
+```
+
+### CapHeadingSpan (Inline Label Text)
+```jsx
+const { CapHeadingSpan } = CapHeading;
+
+<CapHeadingSpan type="label1">Label 1</CapHeadingSpan>
+<CapHeadingSpan type="label2">Label 2 (lighter)</CapHeadingSpan>
 ```

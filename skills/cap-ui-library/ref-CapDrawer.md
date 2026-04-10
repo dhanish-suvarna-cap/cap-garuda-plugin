@@ -36,9 +36,63 @@ A customized drawer component that extends Ant Design's Drawer component with ad
 | extra | ReactNode | None | Extra content in the drawer header |
 | children | ReactNode | None | Content of the drawer |
 
-## Usage Example
-```jsx
-import CapDrawer from "@capillarytech/cap-ui-library/CapDrawer";
+## Usage Examples
 
-<CapDrawer />
+### Basic Drawer (Right Placement, Default Width)
+```jsx
+import CapDrawer from '@capillarytech/cap-ui-library/CapDrawer';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+<CapButton onClick={() => setShowDrawer(true)}>Open Drawer</CapButton>
+
+{showDrawer && (
+  <CapDrawer
+    visible={showDrawer}
+    onClose={() => setShowDrawer(false)}
+    title="Basic Drawer"
+    closable={false}
+    keyboard
+  >
+    <p>Drawer content goes here.</p>
+  </CapDrawer>
+)}
+```
+
+### Left Placement
+```jsx
+<CapDrawer
+  visible={showDrawer}
+  onClose={handleClose}
+  title="Left Drawer"
+  placement="left"
+  closable={false}
+  keyboard
+>
+  <p>Content for left drawer.</p>
+</CapDrawer>
+```
+
+### With Preset Sizes (s / r / l)
+```jsx
+{/* Small drawer */}
+<CapDrawer visible={show} onClose={handleClose} title="Small Drawer" size="s" keyboard />
+
+{/* Regular drawer */}
+<CapDrawer visible={show} onClose={handleClose} title="Regular Drawer" size="r" keyboard />
+
+{/* Large drawer */}
+<CapDrawer visible={show} onClose={handleClose} title="Large Drawer" size="l" keyboard />
+```
+
+### With Content Prop (Alternative to Children)
+```jsx
+const content = <p>Some content rendered via content prop.</p>;
+
+<CapDrawer
+  visible={showDrawer}
+  onClose={handleClose}
+  title="Using Content Prop"
+  content={content}
+  closable={false}
+/>
 ```

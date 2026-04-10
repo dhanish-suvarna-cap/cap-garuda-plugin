@@ -39,9 +39,45 @@ A customized slider component that extends Ant Design's Slider component with ad
 | showInputControls | boolean | False | Whether to show input controls alongside the slider |
 | inputPosition | string | end | Position of the input controls. Possible values: 'start', 'end' |
 
-## Usage Example
-```jsx
-import CapSlider from "@capillarytech/cap-ui-library/CapSlider";
+## Usage Examples
 
-<CapSlider />
+### Basic Ratio Slider
+```jsx
+import CapSlider from '@capillarytech/cap-ui-library/CapSlider';
+
+<CapSlider type="ratio" defaultValue={40} />
+<CapSlider type="ratio" defaultValue={40} disabled />
+```
+
+### With Marks (Tick Points)
+```jsx
+const marks = [0, 1, 2, 3, 4, 5, 6, 7];
+
+<CapSlider
+  defaultValue={1}
+  marks={marks}
+  max={7}
+  min={0}
+  dots={false}
+  included={false}
+  onChange={handleChange}
+  value={sliderValue}
+/>
+```
+
+### Range Slider
+```jsx
+<CapSlider range defaultValue={[20, 50]} min={0} max={100} onChange={handleRangeChange} />
+```
+
+### With Label
+```jsx
+<CapSlider
+  label="Discount Percentage"
+  labelPosition="top"
+  min={0}
+  max={100}
+  defaultValue={30}
+  onChange={handleChange}
+/>
 ```

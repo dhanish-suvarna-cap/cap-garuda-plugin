@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapExpre
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Expression/Formula Editor
 ```jsx
 import CapExpressionEditor from '@capillarytech/cap-ui-library/CapExpressionEditor';
 
-<CapExpressionEditor />
+<CapExpressionEditor
+  value={expression}
+  onChange={handleExpressionChange}
+  variables={availableVariables}
+/>
 ```

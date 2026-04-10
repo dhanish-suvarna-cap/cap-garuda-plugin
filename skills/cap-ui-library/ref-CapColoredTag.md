@@ -25,7 +25,31 @@ A customizable colored tag component that extends the Tag component with additio
 ## Sub-Components
 - CapColoredTag.CheckableTag
 
-## Usage Example
+## Usage Examples
+
+### Custom Colored Tags
+```jsx
+import CapColoredTag from '@capillarytech/cap-ui-library/CapColoredTag';
+
+<CapColoredTag tagColor="#e6f7ff" tagTextColor="#1890ff" tagBorderColor="#91d5ff">Active</CapColoredTag>
+<CapColoredTag tagColor="#fff7e6" tagTextColor="#fa8c16" tagBorderColor="#ffd591">Pending</CapColoredTag>
+<CapColoredTag tagColor="#f6ffed" tagTextColor="#52c41a" tagBorderColor="#b7eb8f">Completed</CapColoredTag>
+```
+
+### Closable Colored Tag
+```jsx
+<CapColoredTag
+  tagColor="#fff1f0"
+  tagTextColor="#f5222d"
+  closable
+  tagCloseIconColor="#f5222d"
+  onClose={handleClose}
+>
+  Error
+</CapColoredTag>
+```
+
+### Previous Import Reference
 ```jsx
 import CapColoredTag from "@capillarytech/cap-ui-library/CapColoredTag";
 

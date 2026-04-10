@@ -29,9 +29,46 @@ A customized tab component that extends Ant Design's Tabs component with additio
 | animated | boolean \| { inkBar: boolean, tabPane: boolean } | { inkBar: true, tabPane: false } | Whether to use animation for tabs |
 | items | array | [] | Array of tab items with label, key, children and other properties |
 
-## Usage Example
-```jsx
-import CapTab from "@capillarytech/cap-ui-library/CapTab";
+## Usage Examples
 
-<CapTab />
+### Basic Tabs with Panes
+```jsx
+import CapTab from '@capillarytech/cap-ui-library/CapTab';
+
+const panes = [
+  { tab: 'Overview', key: 'tab1', content: <OverviewPanel /> },
+  { tab: 'Details', key: 'tab2', content: <DetailsPanel /> },
+  { tab: 'History', key: 'tab3', content: 'History content here' },
+];
+
+<CapTab panes={panes} />
+```
+
+### Disabled Tabs
+```jsx
+const panes = [
+  { tab: 'Active', key: 'tab1', content: 'Active content' },
+  { tab: 'Disabled', key: 'tab2', content: 'Disabled content', disabled: true },
+];
+
+<CapTab panes={panes} />
+```
+
+### With Tab Content as Card
+```jsx
+import CapCard from '@capillarytech/cap-ui-library/CapCard';
+
+const card = (
+  <CapCard title="Campaign Stats" style={{ width: 300 }}>
+    <p>Total sent: 10,000</p>
+    <p>Opened: 3,500</p>
+  </CapCard>
+);
+
+const panes = [
+  { tab: 'Stats', key: 'stats', content: card },
+  { tab: 'Settings', key: 'settings', content: 'Settings panel' },
+];
+
+<CapTab panes={panes} onChange={handleTabChange} />
 ```

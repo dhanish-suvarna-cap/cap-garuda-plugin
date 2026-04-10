@@ -15,10 +15,16 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapListL
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### List Layout Wrapper
 ```jsx
 import CapListLayout from '@capillarytech/cap-ui-library/CapListLayout';
 
-<CapListLayout />
+<CapListLayout
+  header={<h3>Campaign List</h3>}
+  footer={<span>Showing 10 of 50</span>}
+>
+  {campaigns.map(item => <div key={item.id}>{item.name}</div>)}
+</CapListLayout>
 ```

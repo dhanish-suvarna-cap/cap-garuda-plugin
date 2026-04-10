@@ -18,9 +18,35 @@ A customized divider component that extends Ant Design's Divider component to se
 | style | object | {} | Custom style object for the divider |
 | children | ReactNode | None | Content to be displayed inside the divider (only works when type is 'horizontal') |
 
-## Usage Example
-```jsx
-import CapDivider from "@capillarytech/cap-ui-library/CapDivider";
+## Usage Examples
 
-<CapDivider />
+### Basic Horizontal Divider
+```jsx
+import CapDivider from '@capillarytech/cap-ui-library/CapDivider';
+
+<div>
+  <p>Section above</p>
+  <CapDivider />
+  <p>Section below</p>
+</div>
+```
+
+### Divider with Title
+```jsx
+import CapDivider from '@capillarytech/cap-ui-library/CapDivider';
+
+<CapDivider orientation="left">Tier Benefits</CapDivider>
+```
+
+### Dashed Vertical Divider
+```jsx
+import CapDivider from '@capillarytech/cap-ui-library/CapDivider';
+
+<div style={{ display: 'flex', alignItems: 'center' }}>
+  <span>Points: 1,200</span>
+  <CapDivider type="vertical" dashed />
+  <span>Tier: Gold</span>
+  <CapDivider type="vertical" dashed />
+  <span>Status: Active</span>
+</div>
 ```

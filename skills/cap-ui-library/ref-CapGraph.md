@@ -15,10 +15,11 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapGraph
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic Chart/Graph
 ```jsx
 import CapGraph from '@capillarytech/cap-ui-library/CapGraph';
 
-<CapGraph />
+<CapGraph data={chartData} type="line" width={600} height={400} />
 ```

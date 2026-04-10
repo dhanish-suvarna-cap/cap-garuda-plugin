@@ -22,9 +22,55 @@ A customized notification component that extends Ant Design's notification compo
 | btn | ReactNode | None | Custom action button within the notification |
 | type | string | None | Type of notification. Possible values: 'success', 'info', 'warning', 'error' |
 
-## Usage Example
-```jsx
-import CapNotification from "@capillarytech/cap-ui-library/CapNotification";
+## Usage Examples
 
-<CapNotification />
+### Success / Error Notifications
+```jsx
+import CapNotification from '@capillarytech/cap-ui-library/CapNotification';
+
+// Success notification
+CapNotification.success({
+  message: 'Campaign Saved',
+  duration: 3,
+});
+
+// Error notification with description
+CapNotification.error({
+  message: 'Save Failed',
+  description: 'Unable to save campaign. Please check your network and try again.',
+  duration: 0, // won't auto-close
+});
+```
+
+### Default Notification with Custom Icon
+```jsx
+import CapIcon from '@capillarytech/cap-ui-library/CapIcon';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+CapNotification.open({
+  message: 'New Feature Available',
+  description: (
+    <div>
+      <div>Check out the new campaign builder.</div>
+      <CapButton style={{ marginTop: '24px' }}>Try Now</CapButton>
+    </div>
+  ),
+  icon: <CapIcon type="gallery" />,
+  duration: 0,
+  key: 'feature_notification',
+});
+
+// Close by key
+CapNotification.close('feature_notification');
+```
+
+### API Methods
+```jsx
+CapNotification.success(config)
+CapNotification.error(config)
+CapNotification.info(config)
+CapNotification.warning(config)
+CapNotification.open(config)
+CapNotification.close(key)
+CapNotification.destroy()
 ```

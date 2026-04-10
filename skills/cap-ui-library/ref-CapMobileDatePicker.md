@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapMobil
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Mobile-Optimized Date Picker
 ```jsx
 import CapMobileDatePicker from '@capillarytech/cap-ui-library/CapMobileDatePicker';
 
-<CapMobileDatePicker />
+<CapMobileDatePicker
+  label="Date of Birth"
+  placeholder="Select date"
+  onChange={handleDateChange}
+/>
 ```

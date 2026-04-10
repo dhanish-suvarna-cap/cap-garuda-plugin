@@ -26,9 +26,46 @@ A customized popover component that extends Ant Design's Popover component with 
 | arrow | boolean \| { pointAtCenter: boolean } | True | Whether the popover has an arrow, or adjust placement by point |
 | autoAdjustOverflow | boolean | True | Whether to adjust popover placement automatically when popover is off screen |
 
-## Usage Example
-```jsx
-import CapPopover from "@capillarytech/cap-ui-library/CapPopover";
+## Usage Examples
 
-<CapPopover />
+### Basic Popover with Content
+```jsx
+import CapPopover from '@capillarytech/cap-ui-library/CapPopover';
+
+<CapPopover
+  title="Reward Details"
+  content={<div><p>Earn 100 bonus points on your next purchase.</p></div>}
+  trigger="hover"
+  placement="top"
+>
+  <span>Hover for details</span>
+</CapPopover>
+```
+
+### Click-Triggered with Controlled Visibility
+```jsx
+<CapPopover
+  title="Filter Options"
+  content={filterContent}
+  trigger="click"
+  visible={popoverVisible}
+  onVisibleChange={(visible) => setPopoverVisible(visible)}
+  placement="bottomRight"
+>
+  <CapButton type="secondary">Filters</CapButton>
+</CapPopover>
+```
+
+### Without Arrow and Custom Container
+```jsx
+<CapPopover
+  content={<div>Popover anchored to a specific container.</div>}
+  arrow={false}
+  overlayClassName="custom-popover"
+  overlayStyle={{ padding: 0 }}
+  getPopupContainer={(triggerNode) => triggerNode.parentElement}
+  destroyTooltipOnHide
+>
+  <span>Click me</span>
+</CapPopover>
 ```

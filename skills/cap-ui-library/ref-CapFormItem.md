@@ -27,9 +27,56 @@ A customized form item component that extends Ant Design's Form.Item component w
 | validateTrigger | string \| string[] | onChange | When to validate the value of children node |
 | rules | object[] | None | Validation rules for form item |
 
-## Usage Example
-```jsx
-import CapFormItem from "@capillarytech/cap-ui-library/CapFormItem";
+## Usage Examples
 
-<CapFormItem />
+### Basic with Label and Required
+```jsx
+import CapFormItem from '@capillarytech/cap-ui-library/CapFormItem';
+import CapInput from '@capillarytech/cap-ui-library/CapInput';
+
+<CapFormItem label="Campaign Name" required>
+  <CapInput placeholder="Enter campaign name" />
+</CapFormItem>
+```
+
+### With Validation Rules
+```jsx
+<CapFormItem
+  label="Email Address"
+  required
+  rules={[
+    { required: true, message: 'Email is required' },
+    { type: 'email', message: 'Please enter a valid email' },
+  ]}
+>
+  <CapInput placeholder="user@example.com" />
+</CapFormItem>
+```
+
+### With Pattern Validation and Help Text
+```jsx
+<CapFormItem
+  label="Promo Code"
+  required
+  rules={[
+    { required: true, message: 'Promo code is required' },
+    { pattern: /^[A-Z0-9]{4,12}$/, message: 'Use 4-12 uppercase letters or numbers' },
+  ]}
+  extra="Promo codes must be 4-12 characters, uppercase letters and numbers only."
+>
+  <CapInput placeholder="SUMMER2024" />
+</CapFormItem>
+```
+
+### With Error State and Feedback
+```jsx
+<CapFormItem
+  label="Points Multiplier"
+  required
+  validateStatus="error"
+  help="Value must be between 1 and 10"
+  hasFeedback
+>
+  <CapInput placeholder="Enter multiplier" />
+</CapFormItem>
 ```

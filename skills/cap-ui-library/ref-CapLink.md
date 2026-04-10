@@ -25,9 +25,44 @@ A customized link component that extends React Router's Link component with addi
 | external | boolean | False | Whether the link points to an external resource |
 | rel | string | None | The relationship of the linked URL. When external is true, defaults to 'noopener noreferrer' |
 
-## Usage Example
-```jsx
-import CapLink from "@capillarytech/cap-ui-library/CapLink";
+## Usage Examples
 
-<CapLink />
+### Basic Internal Link
+```jsx
+import CapLink from '@capillarytech/cap-ui-library/CapLink';
+
+<CapLink to="/loyalty/ui/v3/tiers">
+  View All Tiers
+</CapLink>
+```
+
+### External Link with Icon
+```jsx
+import CapLink from '@capillarytech/cap-ui-library/CapLink';
+
+<CapLink
+  to="https://docs.capillary.com"
+  external
+  target="_blank"
+  icon={<ExternalLinkIcon />}
+  iconPosition="right"
+>
+  Documentation
+</CapLink>
+```
+
+### Disabled and Styled Link
+```jsx
+import CapLink from '@capillarytech/cap-ui-library/CapLink';
+
+<CapLink
+  to="/loyalty/ui/v3/benefits/edit"
+  disabled={!hasEditPermission}
+  color="#1890ff"
+  hoverColor="#40a9ff"
+  underline={false}
+  onClick={(e) => handleLinkClick(e)}
+>
+  Edit Benefit
+</CapLink>
 ```

@@ -38,9 +38,42 @@ A customized time picker component that extends Ant Design's TimePicker componen
 | inductiveText | string \| node |  | Inductive text to show below time picker label |
 | inline | boolean | False | If true, display property of time picker is set to inline-block |
 
-## Usage Example
-```jsx
-import CapTimePicker from "@capillarytech/cap-ui-library/CapTimePicker";
+## Usage Examples
 
-<CapTimePicker />
+### Basic with 12-hour format
+```jsx
+import CapTimePicker from '@capillarytech/cap-ui-library/CapTimePicker';
+
+<CapTimePicker
+  use12Hours
+  format="h:mm a"
+  placeholder="Select time"
+  onChange={(time, timeString) => console.log(time, timeString)}
+/>
+```
+
+### With label and validation (HOC props)
+```jsx
+<CapTimePicker
+  label="Meeting Time"
+  labelPosition="top"
+  isRequired
+  errorMessage="Please select a time"
+  inductiveText="Choose a time slot for the meeting"
+  use12Hours
+  format="h:mm:ss A"
+  onChange={handleTimeChange}
+/>
+```
+
+### With disabled hours and custom steps
+```jsx
+<CapTimePicker
+  label="Business Hours Only"
+  format="HH:mm"
+  minuteStep={15}
+  disabledHours={() => [0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23]}
+  onChange={handleTimeChange}
+  inline
+/>
 ```

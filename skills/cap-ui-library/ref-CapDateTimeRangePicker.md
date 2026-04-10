@@ -15,10 +15,15 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapDateT
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Basic Date+Time Range Picker
 ```jsx
 import CapDateTimeRangePicker from '@capillarytech/cap-ui-library/CapDateTimeRangePicker';
 
-<CapDateTimeRangePicker />
+<CapDateTimeRangePicker
+  label="Campaign Schedule"
+  onChange={handleDateTimeRangeChange}
+  placeholder={['Start date & time', 'End date & time']}
+/>
 ```

@@ -33,9 +33,61 @@ A customized modal dialog component that extends Ant Design's Modal component wi
 | width | string \| number | 520 | Width of the modal dialog |
 | zIndex | number | 1000 | The z-index of the Modal |
 
-## Usage Example
-```jsx
-import CapModal from "@capillarytech/cap-ui-library/CapModal";
+## Usage Examples
 
-<CapModal />
+### Basic Modal with Title and Content
+```jsx
+import CapModal from '@capillarytech/cap-ui-library/CapModal';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+<CapButton type="primary" onClick={() => setVisible(true)}>Open Modal</CapButton>
+
+<CapModal
+  title="Confirm Action"
+  visible={visible}
+  onOk={handleOk}
+  onCancel={handleCancel}
+>
+  <p>Are you sure you want to proceed?</p>
+</CapModal>
+```
+
+### With Loading State & Custom Button Text
+```jsx
+<CapModal
+  title="Save Changes"
+  visible={visible}
+  onOk={handleSave}
+  onCancel={handleCancel}
+  okText="Save"
+  closeText="Discard"
+  confirmLoading={saving}
+  cancelButtonType="secondary"
+/>
+```
+
+### Custom Footer (or No Footer)
+```jsx
+<CapModal title="Preview" visible={visible} onCancel={handleCancel} footer={null}>
+  <p>Content without default footer buttons</p>
+</CapModal>
+```
+
+### Static Methods (Info / Success / Error / Warning)
+```jsx
+// Info dialog
+CapModal.info({
+  title: 'This is a notification message',
+  content: <p>Some informational content here.</p>,
+  onOk() {},
+});
+
+// Success dialog
+CapModal.success({ title: 'Operation successful', content: 'Record saved.' });
+
+// Error dialog
+CapModal.error({ title: 'Something went wrong', content: 'Please try again.' });
+
+// Warning dialog
+CapModal.warning({ title: 'Warning', content: 'This action cannot be undone.' });
 ```

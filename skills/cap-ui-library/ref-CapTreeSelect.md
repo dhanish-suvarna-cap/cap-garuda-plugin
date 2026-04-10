@@ -60,9 +60,66 @@ A customized tree select component that extends Ant Design's TreeSelect componen
 | inductiveText | string \| ReactNode |  | Helper text to display below the input |
 | inline | boolean | False | Whether to display the component inline |
 
-## Usage Example
-```jsx
-import CapTreeSelect from "@capillarytech/cap-ui-library/CapTreeSelect";
+## Usage Examples
 
-<CapTreeSelect />
+### Basic Tree Select
+```jsx
+import CapTreeSelect from '@capillarytech/cap-ui-library/CapTreeSelect';
+
+const treeData = [
+  {
+    title: 'Customer',
+    value: 'customer',
+    children: [
+      { title: 'First Name', value: 'first_name' },
+      { title: 'Last Name', value: 'last_name' },
+      { title: 'Email', value: 'email' },
+    ],
+  },
+  {
+    title: 'Store',
+    value: 'store',
+    children: [
+      { title: 'Store Name', value: 'store_name' },
+      { title: 'Store Location', value: 'store_location' },
+    ],
+  },
+];
+
+<CapTreeSelect
+  treeData={treeData}
+  style={{ width: '35%' }}
+  dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+  placeholder="Please select"
+  size="large"
+/>
+```
+
+### With Header, Side Label & Info Note
+```jsx
+<CapTreeSelect
+  treeData={treeData}
+  style={{ width: '400px' }}
+  placeholder="Please select"
+  size="large"
+  headerTitle="Scope of message"
+  headerDescription="Target users in a particular Loyalty program or Card series."
+  infoNote="Loyalty attributes unavailable if program is None."
+  treeSelectSideLabel="Loyalty program / Card series"
+  disabledTooltip="Select a program first"
+/>
+```
+
+### Multi-Select with Checkboxes
+```jsx
+<CapTreeSelect
+  treeData={treeData}
+  treeCheckable
+  showCheckedStrategy="SHOW_CHILD"
+  placeholder="Select attributes"
+  label="Customer Attributes"
+  labelPosition="top"
+  isRequired
+  onChange={handleChange}
+/>
 ```

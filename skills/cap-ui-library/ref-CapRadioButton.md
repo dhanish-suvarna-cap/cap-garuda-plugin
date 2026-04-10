@@ -17,9 +17,25 @@ A customized radio button component that extends Ant Design's Radio.Button compo
 | autoFocus | boolean | False | Whether the radio button gets focus when component mounted |
 | name | string | - | Name property used in radio group |
 
-## Usage Example
-```jsx
-import CapRadioButton from "@capillarytech/cap-ui-library/CapRadioButton";
+## Usage Examples
 
-<CapRadioButton />
+### Button-Style Radio Group
+```jsx
+import CapRadioButton from '@capillarytech/cap-ui-library/CapRadioButton';
+import CapRadioGroup from '@capillarytech/cap-ui-library/CapRadioGroup';
+
+<CapRadioGroup defaultValue="daily" buttonStyle="solid">
+  <CapRadioButton value="daily">Daily</CapRadioButton>
+  <CapRadioButton value="weekly">Weekly</CapRadioButton>
+  <CapRadioButton value="monthly">Monthly</CapRadioButton>
+</CapRadioGroup>
+```
+
+### With Disabled Option
+```jsx
+<CapRadioGroup defaultValue="a">
+  <CapRadioButton value="a">Option A</CapRadioButton>
+  <CapRadioButton value="b" disabled>Option B</CapRadioButton>
+  <CapRadioButton value="c">Option C</CapRadioButton>
+</CapRadioGroup>
 ```

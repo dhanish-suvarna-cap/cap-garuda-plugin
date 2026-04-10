@@ -37,9 +37,51 @@ A customized skeleton component that extends Ant Design's Skeleton component to 
 | imageProps | object | {} | Custom props for image skeleton |
 | paragraphProps | object | {} | Custom props for paragraph skeleton |
 
-## Usage Example
-```jsx
-import CapSkeleton from "@capillarytech/cap-ui-library/CapSkeleton";
+## Usage Examples
 
-<CapSkeleton />
+### Basic Skeleton with Animation
+```jsx
+import CapSkeleton from '@capillarytech/cap-ui-library/CapSkeleton';
+
+<CapSkeleton active loading={isLoading}>
+  <div>Content loaded successfully.</div>
+</CapSkeleton>
+```
+
+### Avatar + Title + Paragraph
+```jsx
+<CapSkeleton
+  active
+  loading={isLoading}
+  avatar
+  title={{ width: '40%' }}
+  paragraph={{ rows: 3, width: ['100%', '80%', '60%'] }}
+>
+  <div>User profile content here.</div>
+</CapSkeleton>
+```
+
+### Custom Dimensions (Card Placeholder)
+```jsx
+<CapSkeleton
+  active
+  loading={isLoading}
+  title={false}
+  paragraph={false}
+  style={{ width: 300, height: 200, borderRadius: 8 }}
+  block
+/>
+```
+
+### Paragraph-Only Skeleton
+```jsx
+<CapSkeleton
+  active
+  loading={isLoading}
+  title={false}
+  paragraph={{ rows: 4 }}
+  round
+>
+  <p>Table data will appear here once loaded.</p>
+</CapSkeleton>
 ```

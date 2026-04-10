@@ -18,9 +18,29 @@ A customized spin component that extends Ant Design's Spin component with additi
 | fullscreen | boolean | False | Whether to display the spin as a fullscreen overlay |
 | color | string | None | Custom color for the spinning indicator |
 
-## Usage Example
-```jsx
-import CapSpin from "@capillarytech/cap-ui-library/CapSpin";
+## Usage Examples
 
-<CapSpin />
+### Sizes
+```jsx
+import CapSpin from '@capillarytech/cap-ui-library/CapSpin';
+
+<CapSpin size="small" />
+<CapSpin />             {/* default size */}
+<CapSpin size="large" />
+```
+
+### Embedded Mode (Wrapping Content)
+```jsx
+<CapSpin spinning={loading} delay={500}>
+  <div className="content-area">
+    <p>This content will show a spinner overlay while loading.</p>
+  </div>
+</CapSpin>
+```
+
+### With Tip Text
+```jsx
+<CapSpin spinning={loading} tip="Loading data...">
+  <div className="content-area">{children}</div>
+</CapSpin>
 ```

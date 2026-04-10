@@ -15,10 +15,18 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapTreeV
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Tree View Display
 ```jsx
 import CapTreeView from '@capillarytech/cap-ui-library/CapTreeView';
 
-<CapTreeView />
+const treeData = [
+  { title: 'Root', key: '0', children: [
+    { title: 'Branch A', key: '0-0' },
+    { title: 'Branch B', key: '0-1' },
+  ]},
+];
+
+<CapTreeView treeData={treeData} defaultExpandAll />
 ```

@@ -24,9 +24,34 @@ A customized tooltip component that extends Ant Design's Tooltip component with 
 | destroyTooltipOnHide | boolean | False | Whether to destroy tooltip dom when hidden |
 | getPopupContainer | function(triggerNode) | () => document.body | The DOM container of the tip, the default behavior is to create a div element in body |
 
-## Usage Example
-```jsx
-import CapTooltip from "@capillarytech/cap-ui-library/CapTooltip";
+## Usage Examples
 
-<CapTooltip />
+### Basic Tooltip
+```jsx
+import CapTooltip from '@capillarytech/cap-ui-library/CapTooltip';
+
+<CapTooltip title="This is a helpful hint">
+  <span>Hover me for tooltip</span>
+</CapTooltip>
+```
+
+### Tooltip on Button
+```jsx
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+
+<CapTooltip title="Click to submit">
+  <span>
+    <CapButton>Submit</CapButton>
+  </span>
+</CapTooltip>
+```
+
+### Tooltip on Disabled Button
+```jsx
+{/* NOTE: Wrap disabled button with span.button-disabled-tooltip-wrapper */}
+<CapTooltip title="You don't have permission">
+  <span className="button-disabled-tooltip-wrapper">
+    <CapButton disabled>Submit</CapButton>
+  </span>
+</CapTooltip>
 ```

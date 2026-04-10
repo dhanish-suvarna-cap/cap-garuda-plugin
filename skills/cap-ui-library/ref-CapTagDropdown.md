@@ -18,9 +18,23 @@ A dropdown component for managing a list of tags, providing functionality to add
 | dropdownProps | object | { placement: 'bottomLeft', trigger: ['click'] } | Additional props which can be passed to CapDropdown |
 | width | string | 24.571rem | Width of the dropdown component |
 
-## Usage Example
-```jsx
-import CapTagDropdown from "@capillarytech/cap-ui-library/CapTagDropdown";
+## Usage Examples
 
-<CapTagDropdown />
+### Tag Input with Dropdown
+```jsx
+import CapTagDropdown from '@capillarytech/cap-ui-library/CapTagDropdown';
+
+const tags = [
+  { id: 1, tag: 'VIP' },
+  { id: 2, tag: 'Premium' },
+];
+
+<CapTagDropdown
+  list={tags}
+  content={inputValue}
+  handleRemoveTagCallback={(id) => removeTag(id)}
+  handleKeyDownCallback={handleKeyDown}
+  width="300px"
+/>
+```
 ```

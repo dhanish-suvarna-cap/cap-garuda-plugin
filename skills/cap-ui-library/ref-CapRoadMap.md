@@ -15,10 +15,11 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapRoadM
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Roadmap Visualization
 ```jsx
 import CapRoadMap from '@capillarytech/cap-ui-library/CapRoadMap';
 
-<CapRoadMap />
+<CapRoadMap steps={roadmapSteps} currentStep={activeStep} />
 ```

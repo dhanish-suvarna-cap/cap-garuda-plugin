@@ -59,9 +59,52 @@ A customized component that combines multi-select functionality with tree struct
 | selectAllOption | boolean \| object | False | Whether to show a select all option and its configuration |
 | loadData | function(node) | None | Load data asynchronously for tree nodes |
 
-## Usage Example
-```jsx
-import CapMultiSelectWithTree from "@capillarytech/cap-ui-library/CapMultiSelectWithTree";
+## Usage Examples
 
-<CapMultiSelectWithTree />
+### Basic Tree Multi-Select
+```jsx
+import CapMultiSelectWithTree from '@capillarytech/cap-ui-library/CapMultiSelectWithTree';
+
+const treeData = [
+  {
+    title: 'Electronics',
+    value: 'electronics',
+    children: [
+      { title: 'Phones', value: 'phones' },
+      { title: 'Laptops', value: 'laptops' },
+    ],
+  },
+  {
+    title: 'Clothing',
+    value: 'clothing',
+    children: [
+      { title: 'Men', value: 'men' },
+      { title: 'Women', value: 'women' },
+    ],
+  },
+];
+
+<CapMultiSelectWithTree
+  treeData={treeData}
+  placeholder="Select categories"
+  treeCheckable
+  treeDefaultExpandAll
+  onChange={handleChange}
+  style={{ width: 400 }}
+/>
+```
+
+### With Label & Validation
+```jsx
+<CapMultiSelectWithTree
+  treeData={treeData}
+  label="Product Categories"
+  labelPosition="top"
+  isRequired
+  errorMessage="Please select at least one category"
+  inductiveText="Select applicable product categories"
+  placeholder="Select categories"
+  treeCheckable
+  showSearch
+/>
 ```

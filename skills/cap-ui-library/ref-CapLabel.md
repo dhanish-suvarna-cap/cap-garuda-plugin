@@ -15,9 +15,35 @@ A customized label component that provides a variety of predefined text styles w
 | className | string |  | Additional CSS class for the label |
 | style | object | {} | Custom style object for the label |
 
-## Usage Example
-```jsx
-import CapLabel from "@capillarytech/cap-ui-library/CapLabel";
+## Usage Examples
 
-<CapLabel />
+### Basic Label Types
+```jsx
+import CapLabel from '@capillarytech/cap-ui-library/CapLabel';
+
+<CapLabel type="label1">Primary Field Label</CapLabel>
+<CapLabel type="label2">Secondary Description</CapLabel>
+<CapLabel type="label3">Helper Text</CapLabel>
+<CapLabel type="label4">Small Caption</CapLabel>
+```
+
+### With Custom Font Weight and Style
+```jsx
+<CapLabel type="label1" fontWeight={600} style={{ color: '#091e42' }}>
+  Tier Name
+</CapLabel>
+<CapLabel type="label2" fontWeight={400} lineHeight="20px">
+  Points balance: 1,250
+</CapLabel>
+```
+
+### Inline Label with Other Components
+```jsx
+import CapLabel from '@capillarytech/cap-ui-library/CapLabel';
+import CapInput from '@capillarytech/cap-ui-library/CapInput';
+
+<div>
+  <CapLabel type="label1">Campaign Name</CapLabel>
+  <CapInput placeholder="Enter campaign name" />
+</div>
 ```

@@ -45,9 +45,86 @@ A customized select component that extends Ant Design's Select component with cu
 ## Sub-Components
 - CapSelect.CapCustomSelect
 
-## Usage Example
-```jsx
-import CapSelect from "@capillarytech/cap-ui-library/CapSelect";
+## Usage Examples
 
-<CapSelect />
+### Basic Select
+```jsx
+import CapSelect from '@capillarytech/cap-ui-library/CapSelect';
+
+const options = [
+  { label: 'Option 1', value: 'option1' },
+  { label: 'Option 2', value: 'option2' },
+  { label: 'Option 3', value: 'option3' },
+];
+
+<CapSelect
+  options={options}
+  placeholder="Select a person"
+  defaultValue="option1"
+  style={{ width: 200 }}
+/>
+```
+
+### With Label, Validation & Inductive Text
+```jsx
+<CapSelect
+  options={options}
+  label="Organization"
+  labelPosition="top"
+  isRequired
+  errorMessage="Please select an organization"
+  inductiveText="Choose the target organization"
+  placeholder="Select organization"
+  style={{ width: 300 }}
+/>
+```
+
+### Tags Mode (Multiple Values as Tags)
+```jsx
+<CapSelect
+  mode="tags"
+  options={options}
+  label="Permissions"
+  inductiveText="Select multiple permissions"
+  labelPosition="top"
+  style={{ width: 480 }}
+/>
+```
+
+### Disabled
+```jsx
+<CapSelect options={options} placeholder="Select a person" disabled style={{ width: 300 }} />
+```
+
+### CapCustomSelect (Search Inside Dropdown)
+```jsx
+const { CapCustomSelect } = CapSelect;
+
+const orgsList = [
+  { label: 'Purples', value: 'purples' },
+  { label: 'Buckle', value: 'buckle' },
+  { label: 'Metro', value: 'metro' },
+];
+
+<CapCustomSelect
+  label="Organization"
+  errorMessage="Selection required"
+  width="250px"
+  selectPlaceholder="Select organizations"
+  showSearch
+  options={orgsList}
+  value={selectedOrg}
+  onChange={handleOrgChange}
+/>
+```
+
+### CapCustomSelect with Virtual Scrolling (Large Lists)
+```jsx
+<CapCustomSelect
+  showSearch
+  virtual
+  options={largeOptionsList}
+  value={selectedValue}
+  onChange={setSelectedValue}
+/>
 ```

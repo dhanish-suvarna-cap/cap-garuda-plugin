@@ -26,9 +26,44 @@ A radio group component that extends Ant Design's Radio.Group component with add
 | inline | boolean | False | If true, display property of radio group is set to inline-block |
 | direction | string | horizontal | Direction of radio buttons arrangement. Options: 'horizontal' | 'vertical' |
 
-## Usage Example
-```jsx
-import CapRadioGroup from "@capillarytech/cap-ui-library/CapRadioGroup";
+## Usage Examples
 
-<CapRadioGroup />
+### Basic Radio Group
+```jsx
+import CapRadioGroup from '@capillarytech/cap-ui-library/CapRadioGroup';
+import CapRadio from '@capillarytech/cap-ui-library/CapRadio';
+
+<CapRadioGroup name="radiogroup" defaultValue={1}>
+  <CapRadio value={1}>Option A</CapRadio>
+  <CapRadio value={2}>Option B</CapRadio>
+  <CapRadio value={3}>Option C</CapRadio>
+</CapRadioGroup>
+```
+
+### Disabled Group
+```jsx
+<CapRadioGroup name="radiogroup" disabled>
+  <CapRadio value={1}>A</CapRadio>
+  <CapRadio value={2}>B</CapRadio>
+</CapRadioGroup>
+```
+
+### With Error Message
+```jsx
+<CapRadioGroup name="radiogroup" defaultValue={1} errorMessage="Please select an option">
+  <CapRadio value={1}>A</CapRadio>
+  <CapRadio value={2}>B</CapRadio>
+  <CapRadio value={3}>C</CapRadio>
+</CapRadioGroup>
+```
+
+### Using Options Array
+```jsx
+const options = [
+  { label: 'Daily', value: 'daily' },
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Monthly', value: 'monthly', disabled: true },
+];
+
+<CapRadioGroup options={options} value={frequency} onChange={(e) => setFrequency(e.target.value)} />
 ```

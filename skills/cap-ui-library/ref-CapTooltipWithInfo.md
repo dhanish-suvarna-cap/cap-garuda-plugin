@@ -19,9 +19,31 @@ A tooltip component with an info icon that shows information on hover or click.
 | visible | boolean | None | Whether the tooltip is visible or not |
 | onVisibleChange | function(visible) | None | Callback executed when visibility of the tooltip changes |
 
-## Usage Example
-```jsx
-import CapTooltipWithInfo from "@capillarytech/cap-ui-library/CapTooltipWithInfo";
+## Usage Examples
 
-<CapTooltipWithInfo />
+### Basic Info Tooltip
+```jsx
+import CapTooltipWithInfo from '@capillarytech/cap-ui-library/CapTooltipWithInfo';
+
+<CapTooltipWithInfo title="Points will be credited within 24 hours of the transaction." />
+```
+
+### With Placement and Custom Trigger
+```jsx
+<CapTooltipWithInfo
+  title="Tier upgrades are evaluated at the end of each billing cycle."
+  placement="right"
+  trigger="click"
+/>
+```
+
+### With Custom Info Icon Props and Overlay Styling
+```jsx
+<CapTooltipWithInfo
+  title={<span>Earn <strong>2x points</strong> on all purchases this month.</span>}
+  placement="bottomLeft"
+  infoIconProps={{ style: { color: '#1890ff', fontSize: 16 } }}
+  overlayClassName="custom-tooltip-overlay"
+  ariaLabel="Promotion details"
+/>
 ```

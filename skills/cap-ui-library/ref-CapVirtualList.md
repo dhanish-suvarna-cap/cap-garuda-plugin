@@ -15,10 +15,16 @@ Cap UI Library component. See source code at `cap-ui-library/components/CapVirtu
 
 > **Note**: This is a stub spec. Run the spec generator against the source code to populate full props.
 
-## Usage Example
+## Usage Examples
 
+### Virtualized List (Large Data Sets)
 ```jsx
 import CapVirtualList from '@capillarytech/cap-ui-library/CapVirtualList';
 
-<CapVirtualList />
+<CapVirtualList
+  data={largeDataArray}
+  rowHeight={40}
+  height={400}
+  renderItem={(item, index) => <div key={index}>{item.name}</div>}
+/>
 ```
