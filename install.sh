@@ -164,6 +164,34 @@ echo "--- Schemas ---"
 copy_files "$PLUGIN_DIR/schemas" "$SCHEMAS_DIR" "schema" ".json"
 echo ""
 
+# 4b. Copy scripts
+echo "--- Scripts ---"
+if [ -d "$PLUGIN_DIR/scripts" ]; then
+  SCRIPTS_DIR="$REPO_CLAUDE_DIR/scripts"
+  if [ ! -d "$SCRIPTS_DIR" ]; then
+    mkdir -p "$SCRIPTS_DIR"
+    echo "  [+] Created $SCRIPTS_DIR"
+  fi
+
+  if [ -d "$PLUGIN_DIR/scripts/visual-qa" ]; then
+    cp -r "$PLUGIN_DIR/scripts/visual-qa" "$SCRIPTS_DIR/visual-qa"
+    echo "  [+] Copied scripts/visual-qa/"
+
+    # Install Node dependencies for visual QA
+    if command -v npm &> /dev/null; then
+      echo "  [*] Installing visual-qa dependencies..."
+      (cd "$SCRIPTS_DIR/visual-qa" && npm install --silent 2>&1) && \
+        echo "  [+] Visual QA dependencies installed" || \
+        echo "  [!] Visual QA dependency install failed — run 'npm install' manually in .claude/scripts/visual-qa/"
+    else
+      echo "  [!] npm not found — run 'npm install' manually in .claude/scripts/visual-qa/"
+    fi
+  fi
+else
+  echo "  [=] No scripts directory found"
+fi
+echo ""
+
 # 5. Create workspace directories
 echo "--- Workspaces ---"
 for ws in "$WORKSPACE" "$PRE_DEV_WORKSPACE" "$DEV_WORKSPACE"; do
@@ -181,14 +209,21 @@ echo "--- Git Ignore ---"
 add_gitignore_entry "$GITIGNORE" ".claude/workspace/"
 add_gitignore_entry "$GITIGNORE" ".claude/pre-dev-workspace/"
 add_gitignore_entry "$GITIGNORE" ".claude/dev-workspace/"
+add_gitignore_entry "$GITIGNORE" ".claude/scripts/"
 echo ""
 
 # 7. MCP availability check (informational only)
 echo "--- MCP Requirements ---"
-check_mcp "mcp-atlassian (Jira + Confluence)" "required"
-check_mcp "framelink-figma-mcp (Figma)" "required"
+echo "  All MCP integrations use Claude.ai built-in servers (no local config needed):"
+check_mcp "claude_ai_Atlassian (Jira + Confluence)" "built-in"
+check_mcp "claude_ai_Figma (Figma)" "built-in"
+check_mcp "claude_ai_Google_Drive (PRD from Google Docs)" "built-in"
 check_mcp "cap-ui-library skill (Component docs)" "built-in"
-check_mcp "Claude Preview (Visual QA)" "required"
+check_mcp "Playwright (Visual QA screenshots)" "auto-installed via scripts/visual-qa"
+echo ""
+echo "  Note: Atlassian, Figma, and Google Drive integrations are managed through"
+echo "  Claude.ai account connections. No local MCP server configuration needed."
+echo "  [?] ENV: FIGMA_ACCESS_TOKEN — optional, enables pixel-level diff in Visual QA"
 check_mcp "Google Drive (PRD from Google Docs)" "optional"
 echo ""
 echo "  Note: MCP servers must be configured in your Claude Code settings."
@@ -229,7 +264,7 @@ echo "  Reload Claude Code to pick up new commands, agents, and skills."
 echo ""
 echo "  Quick start:"
 echo "    Unified: /gix (interactive menu) or /gix CAP-12345 (direct)"
-echo "    Pre-Dev: /pre-dev CAP-12345 --transcript=/path/to/transcript.txt"
+echo "    Pre-Dev: /pre-dev CAP-12345 --prd=/path/to/prd.md --transcript=/path/to/transcript.txt"
 echo "    Dev:     /dev-execute --lld=<confluence-id> --figma=fileId:frameId"
 echo ""
 echo "  Resume interrupted pipeline:"

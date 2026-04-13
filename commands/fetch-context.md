@@ -2,7 +2,7 @@
 description: Fetch task context from Jira, Confluence, Figma, and Google Docs into a context bundle
 argument-hint: <jira-ticket-id> [--confluence=<page-id>] [--figma=<fileId:frameId>] [--transcript=<path-or-url>]
 disable-model-invocation: true
-allowed-tools: Agent, Read, Write, mcp__mcp-atlassian__jira_get_issue, mcp__mcp-atlassian__confluence_get_page, mcp__framelink-figma-mcp__get_figma_data, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_fetch
+allowed-tools: Agent, Read, Write, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Figma__get_design_context, mcp__claude_ai_Google_Drive__read_file_content
 ---
 
 # /fetch-context
@@ -42,7 +42,7 @@ Parse `$ARGUMENTS`:
    - `confluencePageId`: `<confluencePageId or "none">`
    - `workspacePath`: `<workspacePath>`
 
-   Give the Agent these tools: `Read, Write, Bash, WebFetch, mcp__mcp-atlassian__jira_get_issue, mcp__mcp-atlassian__confluence_get_page, mcp__framelink-figma-mcp__get_figma_data, mcp__c1fc4002-5f49-5f9d-a4e5-93c4ef5d6a75__google_drive_fetch`
+   Give the Agent these tools: `Read, Write, Bash, WebFetch, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Figma__get_design_context, mcp__claude_ai_Google_Drive__read_file_content`
 
 5. **Gate Check**: Read `<workspacePath>/context_bundle.json`:
    - Verify `jira.id` matches `<jiraTicketId>`

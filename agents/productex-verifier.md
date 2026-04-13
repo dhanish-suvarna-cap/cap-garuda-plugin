@@ -141,6 +141,15 @@ When `mode = "consult"`:
 5. If found: return the answer with evidence citation and URL
 6. If not found anywhere: return "unresolved" — the orchestrator will ask the developer
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. Verification report is valid JSON matching `schemas/verification_report.schema.json`
@@ -151,6 +160,7 @@ When `mode = "consult"`:
 6. Status correctly reflects the findings (changes_needed if ANY missing or high-severity conflict)
 7. No claims without evidence (Principle III from fe-principles.md)
 8. Session memory consulted for any prior decisions that affect verification
+9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

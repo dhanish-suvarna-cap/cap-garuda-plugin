@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Figma Decomposition",
+  "description": "Output from figma-decomposer agent — Figma frame broken into component-level sections with Cap UI Library mappings",
+  "type": "object",
+  "required": ["source_frame", "sections", "total_sections", "total_components_mapped", "timestamp"],
+  "properties": {
+    "source_frame": {
+      "type": "object",
+      "required": ["file_key", "frame_id"],
+      "properties": {
+        "file_key": { "type": "string" },
+        "frame_id": { "type": "string" },
+        "frame_name": { "type": ["string", "null"] }
+      }
+    },
+    "decomposition_strategy": {
+      "type": "string",
+      "description": "Brief description of how the frame was decomposed"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["node_id", "name", "purpose", "design_context_available"],
+        "properties": {
+          "node_id": { "type": "string", "description": "Figma node ID for this section" },
+          "name": { "type": "string", "description": "Section name (from Figma layer name or analysis)" },
+          "type": { "type": "string", "description": "Figma node type: FRAME, GROUP, INSTANCE, etc." },
+          "purpose": { "type": "string", "description": "What this section represents in the UI" },
+          "design_context_available": { "type": "boolean" },
+          "fallback": {
+            "type": ["string", "null"],
+            "enum": ["screenshot_and_metadata", null],
+            "description": "Fallback used if get_design_context failed"
+          },
+          "code_snippet": { "type": ["string", "null"], "description": "Reference code from Figma MCP" },
+          "tokens": {
+            "type": ["object", "null"],
+            "description": "Design tokens extracted (spacing, colors, typography)"
+          },
+          "component_tree": {
+            "type": ["object", "null"],
+            "description": "Hierarchical component structure from Figma"
+          },
+          "component_mapping": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["figma_element", "cap_component", "import_path"],
+              "properties": {
+                "figma_element": { "type": "string", "description": "Figma element name/description" },
+                "cap_component": { "type": "string", "description": "Cap UI Library component name" },
+                "import_path": { "type": "string", "description": "Full import path" },
+                "key_props": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Key props to use based on design"
+                },
+                "spec_file": { "type": "string", "description": "Path to Cap UI component spec" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "unmapped_elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["figma_element", "reason"],
+        "properties": {
+          "figma_element": { "type": "string" },
+          "section": { "type": "string", "description": "Which section this element belongs to" },
+          "reason": { "type": "string" },
+          "suggestion": { "type": "string" }
+        }
+      }
+    },
+    "total_sections": { "type": "integer", "minimum": 0 },
+    "total_components_mapped": { "type": "integer", "minimum": 0 },
+    "total_unmapped": { "type": "integer", "minimum": 0 },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

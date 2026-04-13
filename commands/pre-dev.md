@@ -1,8 +1,8 @@
 ---
 description: Run the full pre-dev pipeline — PRD ingestion, codebase scout, HLD generation, LLD generation, test case generation
-argument-hint: <jira-ticket-id> [--transcript=<path-or-url>] [--figma=<fileId:frameId>] [--confluence-space=<SPACE>]
+argument-hint: <jira-ticket-id> [--prd=<path-or-url-or-confluence-id>] [--transcript=<path-or-url>] [--figma=<fileId:frameId>] [--confluence-space=<SPACE>]
 disable-model-invocation: true
-allowed-tools: Agent, Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page
+allowed-tools: Agent, Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage
 ---
 
 # Pre-Dev Pipeline Orchestrator
@@ -110,7 +110,7 @@ Parse `$ARGUMENTS` to extract:
    - `figmaRef`: `<figmaRef or "none">`
    - `workspacePath`: `<workspacePath>`
 
-   Give the Agent these tools: `Read, Write, Bash, WebFetch, mcp__mcp-atlassian__jira_get_issue, mcp__framelink-figma-mcp__get_figma_data, mcp__framelink-figma-mcp__download_figma_images`
+   Give the Agent these tools: `Read, Write, Bash, WebFetch, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Figma__get_design_context, mcp__claude_ai_Figma__get_screenshot`
 
 4. **Gate Check**: Read `<workspacePath>/context_bundle.json`:
    - Verify `jira.id` matches `<jiraTicketId>`
@@ -182,7 +182,7 @@ Parse `$ARGUMENTS` to extract:
    - `confluenceSpaceKey`: `<confluenceSpaceKey>`
    - `feedback`: `<feedback or "none">`
 
-   Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page`
+   Give the Agent these tools: `Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage`
 
 4. **Gate Check**: Read `<workspacePath>/hld_artifact.json`:
    - Validate against `schemas/hld_artifact.schema.json` (check required fields exist)

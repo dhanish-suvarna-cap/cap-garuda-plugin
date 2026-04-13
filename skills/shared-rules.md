@@ -16,11 +16,24 @@ Every organism MUST have exactly these 10 files in this dependency order:
 | 5 | `selectors.js` | Reselect memoized selectors |
 | 6 | `styles.js` | styled-components CSS with Cap UI tokens |
 | 7 | `messages.js` | react-intl message definitions |
-| 8 | `Component.js` | React functional component |
-| 9 | `index.js` | Barrel export with compose chain |
+| 8 | `Component.js` | React functional component + compose chain + Redux connect |
+| 9 | `index.js` | **ONLY** a barrel re-export: `export { default } from './ComponentName';` |
 | 10 | `Loadable.js` | Lazy loading wrapper |
 
 This order is also the **generation dependency order** — each file may import from files above it but never below.
+
+**CRITICAL — index.js Rule**: The `index.js` file MUST contain ONLY a single re-export line. All compose chain logic, Redux connect, mapStateToProps, mapDispatchToProps, withSaga, withReducer, withStyles, injectIntl — ALL of this goes in `Component.js`, NOT in `index.js`.
+
+```js
+// index.js — CORRECT (the ONLY content allowed)
+export { default } from './TierComparisonMatrix';
+
+// index.js — WRONG (compose chain does NOT belong here)
+// import { connect } from 'react-redux';
+// import { compose } from 'redux';
+// ... mapStateToProps, mapDispatchToProps, compose(...)
+// This must be in Component.js instead.
+```
 
 ## 2. Action Type Naming Pattern
 
@@ -34,17 +47,36 @@ Every async operation MUST have the three-state pattern: REQUEST, SUCCESS, FAILU
 
 Additional patterns: `SET_*`, `CLEAR_*`, `TOGGLE_*` for synchronous state changes.
 
-## 3. Compose Chain Order (Exact)
+## 3. Compose Chain Order (Exact) — Lives in Component.js
+
+The compose chain, mapStateToProps, mapDispatchToProps, and all HOC wiring lives in `Component.js` (NOT in `index.js`).
 
 ```js
+// Component.js — at the BOTTOM of the file, after the component definition
+
+const mapStateToProps = createStructuredSelector({
+  data: makeSelectData(),
+  loading: makeSelectLoading(),
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  actions: bindActionCreators({ fetchData, updateData }, dispatch),
+});
+
+const withConnect = connect(mapStateToProps, mapDispatchToProps);
+const withSaga = injectSaga({ key: `${CURRENT_APP_NAME}-slice-key`, saga });
+const withReducer = injectReducer({ key: `${CURRENT_APP_NAME}-slice-key`, reducer });
+
 export default compose(
-  withSaga({ key: 'sliceKey', saga }),       // outermost
-  withReducer({ key: 'sliceKey', reducer }), 
-  withConnect(mapStateToProps, mapDispatchToProps),
-)(injectIntl(withStyles(Component, styles)));  // innermost
+  withSaga,       // outermost
+  withReducer, 
+  withConnect,
+)(injectIntl(withStyles(ComponentName, styles)));  // innermost
 ```
 
 Order: `withSaga → withReducer → withConnect` wrapping `injectIntl(withStyles(Component, styles))`.
+
+**index.js** only re-exports: `export { default } from './ComponentName';`
 
 ## 4. Cap* Import Rule
 
@@ -163,6 +195,30 @@ Selectors that return objects/arrays MUST call `.toJS()` to prevent Immutable le
 ## 13. Banned Packages
 
 NEVER use: TypeScript, React Query, Redux Toolkit, Zustand, Tailwind, emotion, axios, Formik, React Hook Form, Enzyme (for new tests).
+
+## 15. No Native HTML Elements
+
+**NEVER use native HTML elements** (`<div>`, `<span>`, `<p>`, `<h1>`-`<h6>`, `<label>`, `<a>`, etc.) in Component.js. Use Cap UI Library equivalents instead:
+
+| Native HTML | Cap UI Replacement | Import |
+|---|---|---|
+| `<div>` (layout) | `CapRow`, `CapColumn` | `@capillarytech/cap-ui-library/CapRow`, `CapColumn` |
+| `<span>`, `<p>`, `<label>` | `CapLabel` | `@capillarytech/cap-ui-library/CapLabel` |
+| `<h1>`-`<h6>` | `CapHeading` (type="h1" through "h6") | `@capillarytech/cap-ui-library/CapHeading` |
+| `<a>` | `CapLink` | `@capillarytech/cap-ui-library/CapLink` |
+| `<button>` | `CapButton` | `@capillarytech/cap-ui-library/CapButton` |
+| `<input>` | `CapInput` | `@capillarytech/cap-ui-library/CapInput` |
+| `<select>` | `CapSelect` | `@capillarytech/cap-ui-library/CapSelect` |
+| `<table>` | `CapTable` | `@capillarytech/cap-ui-library/CapTable` |
+| `<img>` | `CapIcon` (for icons) or `<img>` only for dynamic user content | — |
+| `<hr>` | `CapDivider` | `@capillarytech/cap-ui-library/CapDivider` |
+
+**Exceptions** (native HTML is acceptable):
+- `<Fragment>` / `<>` — React fragments are fine
+- Styled-components wrappers defined in `styles.js` (e.g., `const Wrapper = styled.div`) — these are in the styles file, not in Component.js JSX
+- Inside render helpers that wrap Cap UI components for layout that Cap UI doesn't cover (rare — document with `/* no Cap UI equivalent */` comment)
+
+**Why**: Cap UI components apply consistent Capillary design tokens (spacing, colors, typography). Native HTML elements bypass the design system and create visual inconsistencies.
 
 ## 14. Import Order
 

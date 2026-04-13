@@ -1,0 +1,19 @@
+{
+  "name": "garuda-visual-qa-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Visual QA scripts for Garuda pipeline — localhost screenshots, Figma download, pixel diff",
+  "scripts": {
+    "screenshot": "node screenshot.js",
+    "diff": "node diff.js",
+    "figma-download": "node figma-download.js",
+    "login": "node login.js",
+    "postinstall": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0",
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0",
+    "sharp": "^0.33.0"
+  }
+}

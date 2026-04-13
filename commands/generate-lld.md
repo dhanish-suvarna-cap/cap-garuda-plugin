@@ -68,7 +68,7 @@ Parse `$ARGUMENTS` to extract:
    - `apiSignaturesSource`: `<workspacePath>/api_signatures.json` (if exists)
    - `feedback`: none (or feedback if re-generating)
 
-   Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_get_page, mcp__mcp-atlassian__confluence_create_page`
+   Give the Agent these tools: `Read, Write, Bash, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__createConfluencePage`
 
 4. After the agent completes, use Read to load `<workspacePath>/lld_artifact.json`.
 
@@ -131,7 +131,7 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace if e
    - `workspacePath`: `<workspacePath>`
    - `confluenceSpaceKey`: `<confluenceSpaceKey>`
 
-   Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page`
+   Give the Agent these tools: `Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage`
 
 4. After the agent completes, use Read to load `<workspacePath>/testcase_sheet.json`.
 

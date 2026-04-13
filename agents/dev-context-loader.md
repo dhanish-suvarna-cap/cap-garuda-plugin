@@ -1,7 +1,7 @@
 ---
 name: dev-context-loader
 description: Loads LLD from Confluence or local file, Figma data, and extra context files into unified dev_context.json
-tools: Read, Write, Glob, mcp__mcp-atlassian__confluence_get_page, mcp__framelink-figma-mcp__get_figma_data
+tools: Read, Write, Glob, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Figma__get_design_context, mcp__claude_ai_Figma__get_screenshot
 ---
 
 # Dev Context Loader
@@ -31,7 +31,7 @@ You receive these parameters:
 Auto-detect the source type:
 
 - **Confluence page** (lldSource is numeric or looks like a page ID):
-  1. Call `mcp__mcp-atlassian__confluence_get_page` with the page ID.
+  1. Call `mcp__claude_ai_Atlassian__getConfluencePage` with the page ID.
   2. Extract the page body content. Parse out structural sections: Overview, Component Structure, Data Flow, API Contracts, State Management, UI Specifications, Edge Cases.
   3. If the call fails, log the error and STOP — LLD is mandatory.
 
@@ -47,17 +47,23 @@ Store the result in the `lld` section of the output.
 
 If `figmaRef` is provided:
 
-1. Split on `:` to get `fileId` and `frameId`.
-2. Call `mcp__framelink-figma-mcp__get_figma_data` with the fileId and frameId.
-3. Extract from the response:
-   - Component tree structure (frames, groups, instances)
-   - Component names and their hierarchy
-   - Text content visible in the design
-   - Layout properties (auto-layout direction, spacing, padding)
-   - Style references (colors, typography)
-4. If the call fails, log warning but continue — Figma is optional.
+**Priority 1 — Use existing decomposition** (from pre-dev pipeline Phase 1):
+Check if `{workspacePath}/figma_decomposition.json` exists (written by `figma-decomposer` during PRD ingestion). If yes:
+1. Read `figma_decomposition.json`
+2. Set `figma.source = "decomposed"` in the output
+3. Build `component_mapping` by merging all `sections[].component_mapping` arrays
+4. Build `component_summary` from `sections[].name` and `sections[].purpose`
+5. Skip calling `get_design_context` directly — the decomposition has richer per-section data
 
-Store the result in the `figma` section of the output. Include raw node tree plus a simplified `component_summary` array.
+**Priority 2 — Decompose fresh** (dev-only mode, no pre-dev workspace):
+If no `figma_decomposition.json` exists:
+1. Split `figmaRef` on `:` to get `fileId` and `frameId`. Convert any `-` in frameId to `:`.
+2. Spawn the `figma-decomposer` agent with `workspacePath`, `fileKey = fileId`, `frameId`.
+3. Read the resulting `figma_decomposition.json` and proceed as Priority 1 above.
+4. If decomposer fails, fall back to calling `mcp__claude_ai_Figma__get_design_context` directly.
+5. If that also fails, log warning but continue — Figma is optional.
+
+Store the result in the `figma` section of the output. Include decomposition reference and merged component mappings.
 
 If `figmaRef` is not provided, set `figma` to `null`.
 
@@ -167,6 +173,15 @@ After writing dev_context.json:
 2. Update **Figma Mapping** section with the component mappings
 3. Update **Component Decisions** section with chosen Cap UI components
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `dev_context.json` is valid JSON and written to workspace
@@ -178,6 +193,7 @@ After writing dev_context.json:
 7. If LLD source was file: file path recorded in dev_context.json
 8. Session memory updated with Figma Mapping and Component Decisions
 9. Any load failures or unmapped elements logged in `guardrail_warnings`
+10. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

@@ -121,7 +121,86 @@ During Phase 15 (Final Summary), after all phases complete, generate the bluepri
 
     <section id="visual">
       <h2>Visual QA</h2>
-      <!-- Fidelity, iterations, remaining discrepancies -->
+      <!-- Populated from visual_qa_report.json -->
+      <div class="stats">
+        <div class="stat"><div class="val">FIDELITY</div><div class="lbl">Fidelity</div></div>
+        <div class="stat"><div class="val">MODE</div><div class="lbl">Comparison</div></div>
+        <div class="stat"><div class="val">N</div><div class="lbl">Iterations</div></div>
+        <div class="stat"><div class="val">N%</div><div class="lbl">Final Mismatch</div></div>
+      </div>
+
+      <h3 style="color:var(--accent); margin:24px 0 12px;">Iteration-by-Iteration Improvement</h3>
+      <table>
+        <thead>
+          <tr><th>Iteration</th><th>Mismatch %</th><th>Improvement</th><th>Fixes Applied</th><th>Discrepancies Found</th><th>Remaining</th></tr>
+        </thead>
+        <tbody>
+          <!-- One row per iteration from visual_qa_report.json iterations[] array -->
+          <!-- Example:
+          <tr>
+            <td>1</td>
+            <td>12.5%</td>
+            <td>-</td>
+            <td>3</td>
+            <td>4</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>5.1%</td>
+            <td style="color:#00e676">-7.4%</td>
+            <td>2</td>
+            <td>2</td>
+            <td>0</td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+
+      <h3 style="color:var(--accent); margin:24px 0 12px;">Fixes Applied</h3>
+      <table>
+        <thead>
+          <tr><th>Iteration</th><th>File</th><th>Element</th><th>Change</th><th>Severity</th></tr>
+        </thead>
+        <tbody>
+          <!-- All fixes from all iterations, flattened -->
+          <!-- Example:
+          <tr>
+            <td>1</td>
+            <td>styles.js</td>
+            <td>Card padding</td>
+            <td>Updated to CAP_SPACE_16</td>
+            <td><span class="badge warn">MAJOR</span></td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+
+      <h3 style="color:var(--accent); margin:24px 0 12px;">Remaining Discrepancies</h3>
+      <table>
+        <thead>
+          <tr><th>Element</th><th>Expected</th><th>Actual</th><th>Severity</th><th>Category</th></tr>
+        </thead>
+        <tbody>
+          <!-- From visual_qa_report.json final_discrepancies[] where auto_fixed == false -->
+          <!-- Example:
+          <tr>
+            <td>Button border-radius</td>
+            <td>4px</td>
+            <td>2px</td>
+            <td><span class="badge pass">MINOR</span></td>
+            <td>minor_detail</td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+
+      <h3 style="color:var(--accent); margin:24px 0 12px;">Discrepancy Breakdown</h3>
+      <div class="stats">
+        <div class="stat"><div class="val" style="color:#ff5252">N</div><div class="lbl">Critical</div></div>
+        <div class="stat"><div class="val" style="color:#ffc107">N</div><div class="lbl">Major</div></div>
+        <div class="stat"><div class="val" style="color:#a0a0a0">N</div><div class="lbl">Minor</div></div>
+      </div>
     </section>
 
     <section id="tests">

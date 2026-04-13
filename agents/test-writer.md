@@ -206,6 +206,15 @@ If `testcase_sheet.json` exists in the context:
 - Map each test case to actual test code
 - Include all P0 tests (mandatory), P1 tests (recommended), skip P2 unless easy to add
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. All test files written to `<organism-path>/tests/`
@@ -218,6 +227,7 @@ If `testcase_sheet.json` exists in the context:
 8. `generation_report.json` updated with test file paths
 9. If `testcase_sheet.json` exists: all P0 tests implemented, P1 tests recommended
 10. Log any tests that couldn't be generated to `guardrail_warnings`
+11. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

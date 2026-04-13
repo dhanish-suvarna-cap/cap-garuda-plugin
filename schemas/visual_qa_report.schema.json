@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Visual QA Report",
+  "description": "Output from visual-qa agent — pixel diff and semantic comparison results with auto-fix iteration history",
+  "type": "object",
+  "required": ["status", "overall_fidelity", "total_iterations", "timestamp"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["completed", "skipped"],
+      "description": "Whether visual QA ran or was skipped"
+    },
+    "skip_reason": {
+      "type": ["string", "null"],
+      "description": "Why visual QA was skipped (null if completed)"
+    },
+    "figma_file_key": {
+      "type": ["string", "null"],
+      "description": "Figma file key used for comparison"
+    },
+    "figma_node_id": {
+      "type": ["string", "null"],
+      "description": "Figma node ID used for comparison"
+    },
+    "screenshot_url": {
+      "type": ["string", "null"],
+      "description": "Localhost URL that was screenshotted"
+    },
+    "comparison_mode": {
+      "type": "string",
+      "enum": ["pixel_and_semantic", "semantic_only", "none"],
+      "description": "pixel_and_semantic = full diff, semantic_only = Figma MCP inline only (no FIGMA_ACCESS_TOKEN)"
+    },
+    "pixel_diff_available": {
+      "type": "boolean",
+      "description": "Whether pixel-level diff was performed (requires FIGMA_ACCESS_TOKEN + Playwright)"
+    },
+    "final_mismatch_percent": {
+      "type": ["number", "null"],
+      "description": "Final pixel mismatch percentage after all iterations (null if pixel diff unavailable)"
+    },
+    "iterations": {
+      "type": "array",
+      "description": "Per-iteration results",
+      "items": {
+        "type": "object",
+        "required": ["iteration", "discrepancies_found", "discrepancies_remaining"],
+        "properties": {
+          "iteration": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "1-indexed iteration number"
+          },
+          "mismatch_percent": {
+            "type": ["number", "null"],
+            "description": "Pixel mismatch % at start of this iteration (null if pixel diff unavailable)"
+          },
+          "discrepancies_found": {
+            "type": "integer",
+            "description": "Number of discrepancies identified by semantic analysis"
+          },
+          "fixes_applied": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["file", "element", "change", "severity"],
+              "properties": {
+                "file": { "type": "string", "description": "File that was edited (e.g. styles.js)" },
+                "element": { "type": "string", "description": "UI element that was fixed" },
+                "change": { "type": "string", "description": "Description of the fix applied" },
+                "severity": { "type": "string", "enum": ["CRITICAL", "MAJOR", "MINOR"] }
+              }
+            }
+          },
+          "discrepancies_remaining": {
+            "type": "integer",
+            "description": "Number of discrepancies remaining after fixes"
+          }
+        }
+      }
+    },
+    "final_discrepancies": {
+      "type": "array",
+      "description": "Discrepancies remaining after all iterations",
+      "items": {
+        "type": "object",
+        "required": ["element", "severity", "auto_fixed"],
+        "properties": {
+          "element": { "type": "string", "description": "UI element with the discrepancy" },
+          "expected": { "type": "string", "description": "What the Figma design shows" },
+          "actual": { "type": "string", "description": "What the localhost shows" },
+          "severity": { "type": "string", "enum": ["CRITICAL", "MAJOR", "MINOR"] },
+          "category": {
+            "type": "string",
+            "enum": ["layout", "component", "typography", "color", "spacing", "minor_detail"],
+            "description": "Type of discrepancy"
+          },
+          "auto_fixed": { "type": "boolean", "description": "Whether this was auto-fixed during iterations" }
+        }
+      }
+    },
+    "overall_fidelity": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"],
+      "description": "HIGH = no CRITICAL/MAJOR remaining, MEDIUM = no CRITICAL remaining, LOW = CRITICAL remaining or page broken"
+    },
+    "critical_count": { "type": "integer", "default": 0 },
+    "major_count": { "type": "integer", "default": 0 },
+    "minor_count": { "type": "integer", "default": 0 },
+    "total_iterations": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Number of fix iterations performed"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when report was generated"
+    },
+    "guardrail_warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Non-blocking warnings or unfixable issues"
+    }
+  }
+}

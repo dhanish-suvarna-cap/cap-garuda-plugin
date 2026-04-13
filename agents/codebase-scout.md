@@ -106,6 +106,15 @@ Read the existing `context_bundle.json`, add the `codebase_context` section, and
 
 If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `context_bundle.json` updated with `codebase_context` key
@@ -116,6 +125,7 @@ If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warning
 6. No full file reads performed (only first N lines per `skills/config.md` limits)
 7. Scan completed within target time from `skills/config.md`
 8. If any arrays are empty, log reason in `guardrail_warnings`
+9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

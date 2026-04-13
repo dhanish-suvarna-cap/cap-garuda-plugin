@@ -150,6 +150,15 @@ When modifying existing files:
 4. Preserve all code marked as PRESERVE in the plan
 5. Test that imports remain consistent after modifications
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist — Per File (Inline Guardrail Check)
 
 After generating EACH file, verify before writing to disk:
@@ -178,6 +187,7 @@ After generating EACH file, verify before writing to disk:
 4. No CRITICAL guardrail violations (FG-01 through FG-05, FG-12) in any file
 5. Session memory updated with Key Decisions and Component Decisions
 6. Log any unresolved items or HIGH guardrail warnings to `guardrail_warnings`
+7. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

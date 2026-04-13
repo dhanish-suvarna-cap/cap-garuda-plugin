@@ -241,6 +241,15 @@ For each reference organism, extract the same structural information as UPDATE S
 - If a standard file is missing: Record in `missing_standard_files`, continue with available files.
 - If `Grep` for parent consumers returns too many results: Cap results per `skills/config.md` scout limits and narrow search to pages/ and organisms/ directories only.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `comprehension.json` is valid JSON and written to workspace
@@ -254,6 +263,7 @@ For each reference organism, extract the same structural information as UPDATE S
 9. For CREATE: `patterns` section has all pattern keys populated
 10. ZERO source files were written or modified (READ-ONLY constraint verified)
 11. `analyzed_at` is a valid ISO 8601 timestamp
+12. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

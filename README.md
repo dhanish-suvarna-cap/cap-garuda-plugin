@@ -1,4 +1,4 @@
-# cap-garuda-plugin (v3.2.0)
+# cap-garuda-plugin (v4.0.0)
 
 AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket to verified, tested code in a single command.
 
@@ -19,14 +19,15 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
                ┌───────────────┴───────────────┐
                |    INTERACTIVE INPUTS          |
                |  1. Jira ticket (required)     |
-               |  2. Transcript? (Y/N → path)   |
-               |  3. Design ref? (Y/N)          |
+               |  2. PRD? (Y/N → doc/file/auto) |
+               |  3. Transcript? (Y/N → path)   |
+               |  4. Design ref? (Y/N)          |
                |     [1] Figma (fileId:frameId) |
                |     [2] Prototype URL (v0/any) |
                |     [3] Screenshot (file path) |
-               |  4. Confluence? (Y/N → space)   |
-               |  5. Extra context? (Y/N → paths)|
-               |  6. Live dashboard? (Y/N)       |
+               |  5. Confluence? (Y/N → space)   |
+               |  6. Extra context? (Y/N → paths)|
+               |  7. Live dashboard? (Y/N)       |
                |  Confirm → Proceed              |
                └───────────────┬───────────────┘
                                |
@@ -59,9 +60,13 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
   |     └────────┼─────────┼─────────────┼───────────┘    |
   |              ▼                                          |
   |  ┌───────────────────────────────────────────────┐     |
-  |  | If Figma → Figma MCP (component tree)         |     |
-  |  | If v0/URL → prototype-analyzer agent           |     |
-  |  |   (Claude Preview: screenshot + DOM + mapping) |     |
+  |  | Figma → Decomposer agent (standard flow):     |     |
+  |  |   1. get_screenshot (full frame overview)      |     |
+  |  |   2. get_metadata (child node IDs, names)      |     |
+  |  |   3. Analyze → identify component sections     |     |
+  |  |   4. get_design_context per section (detailed)  |     |
+  |  |   5. Map sections → Cap UI Library components  |     |
+  |  | If v0/URL → prototype-analyzer (Playwright)    |     |
   |  | If Image → visual analysis                     |     |
   |  └───────────────────────────────────────────────┘     |
   |              ▼                                          |
@@ -203,9 +208,13 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
   | PHASE 12: VISUAL SELF-EVALUATION                         |
   |  (skip if no Figma or build failed)                      |
   |                                                          |
+  |  Login: login.js → Arya API → auth.json                  |
+  |  Route: app-config.js prefix + feature route              |
+  |                                                          |
   |  ┌───── Iteration Loop (max 3) ─────┐                  |
-  |  | Start dev server → Screenshot     |                  |
-  |  | Compare with Figma frame          |                  |
+  |  | Playwright → localhost screenshot |                  |
+  |  | pixelmatch → pixel diff + mismatch%|                  |
+  |  | Claude reads 3 images (semantic)  |                  |
   |  | CRITICAL/MAJOR → Fix CSS          |                  |
   |  | (Cap UI tokens only)              |                  |
   |  | Re-screenshot → Re-compare        |                  |
@@ -258,6 +267,8 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
   ─── Internal consultation- consult ProductEx/tracer before asking user
   ─── Rework loops ──────── downstream blocker → re-run upstream (max 3)
   ─── C1-C7 confidence ──── on all uncertain agent claims
+  ─── Ask-before-assume ── agents query user for C3-or-below decisions
+  ─── pending_queries.json  resolved by orchestrator after each phase
 ```
 
 ---
@@ -301,14 +312,19 @@ Inputs are collected step-by-step (not flags):
 
 ```
 Step 1: Jira Ticket ID (required)
-Step 2: Grooming Transcript? (Y/N)
-Step 3: Design Reference? (Y/N)
+Step 2: PRD? (Y/N)
+         [1] Google Doc URL
+         [2] Confluence page ID
+         [3] Local file (.md, .pdf, .txt)
+         [4] Auto-detect from Jira links
+Step 3: Grooming Transcript? (Y/N)
+Step 4: Design Reference? (Y/N)
          [1] Figma — enter fileId:frameId
          [2] Prototype URL — v0.dev, Vercel preview, or any live URL
          [3] Screenshot — local image file path
-Step 4: Confluence Space? (Y/N)
-Step 5: Additional Context? (Y/N)
-Step 6: Live Dashboard? (Y/N)
+Step 5: Confluence Space? (Y/N)
+Step 6: Additional Context? (Y/N)
+Step 7: Live Dashboard? (Y/N)
 
 Confirm → Proceed
 ```
@@ -372,6 +388,10 @@ Or skip the menu: `/gix CAP-12345`
 ├── generation_report.json       # Files created/modified
 ├── build_report.json            # Build verification
 ├── visual_qa_report.json        # Figma comparison + iterations
+├── figma_decomposition.json    # Figma frame decomposed into component sections
+├── pending_queries.json        # Agent queries awaiting user answers
+├── query_answers.json          # User answers to agent queries
+├── auth.json                   # Visual QA login credentials (auto-generated)
 ├── test_report.json             # Jest results + coverage
 ├── CAP-12345-blueprint.html     # Final stakeholder document
 └── verification_reports/        # ProductEx + guardrail reports
@@ -411,7 +431,7 @@ Open in any browser — no Confluence/repo access needed.
 
 ## Verification & Quality
 
-### Frontend Guardrails (FG-01 through FG-12)
+### Frontend Guardrails (FG-01 through FG-14)
 
 | ID | Rule | Priority |
 |----|------|----------|
@@ -427,6 +447,8 @@ Open in any browser — no Confluence/repo access needed.
 | FG-10 | i18n: formatMessage, no hardcoded text | HIGH |
 | FG-11 | CSS: Cap UI tokens, no hardcoded values | HIGH |
 | FG-12 | AI: read before write, verify imports | CRITICAL |
+| FG-13 | No native HTML: use CapRow/CapColumn/CapLabel/CapHeading | CRITICAL |
+| FG-14 | index.js: only `export { default }` — compose in Component.js | CRITICAL |
 
 ### ProductEx Verification
 
@@ -450,7 +472,7 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 
 ## Skills & Agents
 
-### Agents (18)
+### Agents (19)
 
 | Agent | Phase | Purpose |
 |-------|-------|---------|
@@ -470,7 +492,8 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 | test-writer | 13 | Unit tests (>90% coverage) |
 | test-evaluator | 14 | Jest results + coverage |
 | productex-verifier | 3,5,9,10 | PRD + docs alignment check |
-| guardrail-checker | 10 | FG-01..FG-12 violation scan |
+| guardrail-checker | 10 | FG-01..FG-14 violation scan |
+| figma-decomposer | 1 | Decompose Figma frames → component sections → Cap UI mapping |
 | confluence-publisher | all | Auto-publish artifacts to Confluence |
 
 ### Skills (25+)
@@ -490,6 +513,7 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 | knowledge-bank | Pre-session context (human-populated) |
 | shared-rules | Non-negotiable coding patterns |
 | config | Centralized configurable values |
+| ask-before-assume | Agent query protocol (C3-or-below → ask user) |
 
 ### Standalone Commands
 
@@ -508,14 +532,16 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 
 ## MCP Requirements
 
-| MCP | Purpose | Required? |
+| MCP Integration | Purpose | Setup |
 |-----|---------|-----------|
-| mcp-atlassian | Jira + Confluence read/write | Required |
-| framelink-figma-mcp | Figma design data + images | Required |
-| Claude Preview | Visual QA screenshots | Required |
-| Google Drive | PRD from Google Docs | Optional |
+| claude_ai_Atlassian | Jira + Confluence read/write | Claude.ai account connection |
+| claude_ai_Figma | Figma design data + screenshots | Claude.ai account connection |
+| claude_ai_Google_Drive | PRD from Google Docs | Claude.ai account connection |
+| Playwright | Visual QA localhost screenshots | Auto-installed via scripts/visual-qa |
 
-**Built-in** (no MCP needed): Cap UI Library specs (131 components as skills)
+**All MCP integrations are built into Claude.ai** — no local server configuration needed. Connect your Atlassian, Figma, and Google accounts through Claude.ai settings.
+
+**Built-in skills** (no MCP needed): Cap UI Library specs (131 components as skills)
 
 ---
 
@@ -525,3 +551,69 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 - Tags: `gix/<ticket-id>/phase-<NN>` after each phase
 - Commits: artifacts before code gen, code + artifacts after code gen
 - Rollback: `git reset --hard gix/CAP-12345/phase-09`
+
+---
+
+## Visual QA System
+
+Phase 12 uses a two-layer comparison to verify the generated UI matches the Figma design:
+
+- **Quantitative** (pixelmatch): Pixel-level diff producing mismatch percentage
+- **Semantic** (Claude vision): Claude reads Figma, localhost, and diff images to identify specific discrepancies
+
+### Flow
+
+1. `login.js` calls Arya login API → `auth.json` (localStorage entries)
+2. Reads `app-config.js` for URL prefix and `intouchBaseUrl`
+3. `screenshot.js` injects auth into localStorage → navigates to feature URL → captures PNG
+4. `figma-download.js` downloads Figma frame as PNG via REST API
+5. `diff.js` resizes + pixel-diffs → `diff.png` + mismatch %
+6. Claude reads all 3 images → structured discrepancy list
+7. Auto-fixes CSS using Cap UI tokens
+8. Repeats (max 3 iterations) until mismatch < 5%
+
+### Auth
+
+Env vars: `GARUDA_USERNAME`, `GARUDA_PASSWORD` (required), `GARUDA_ORG_ID` (optional override), `GARUDA_INTOUCH_BASE_URL` (optional)
+
+### Scripts
+
+Located in `scripts/visual-qa/`:
+
+| Script | Purpose |
+|--------|---------|
+| `login.js` | Arya API login, outputs auth.json |
+| `screenshot.js` | Playwright headless screenshot with `--auth-json` flag |
+| `figma-download.js` | Figma REST API image download |
+| `diff.js` | pixelmatch pixel diff with sharp resizing |
+
+---
+
+## Ask-Before-Assume Protocol
+
+Every agent follows `skills/ask-before-assume.md`. When confidence is C3 or below on an irreversible decision:
+
+1. Agent writes query to `pending_queries.json` (question, options, context, blocking flag)
+2. Agent continues working on non-dependent sections
+3. Orchestrator reads queries after phase completes → presents to user
+4. User answers → `query_answers.json`
+5. If blocking answer changes completed work → phase re-runs
+
+**Must ask**: requirements, architecture, API contracts, component choice, business logic, scope, data assumptions
+
+**Agent decides**: code patterns, Cap UI props, file structure, import order, tokens (documented in skills/)
+
+---
+
+## Figma Frame Decomposer
+
+Standard Figma processing flow for all frames (handles both small and large):
+
+1. `get_screenshot` — full frame visual overview (always works)
+2. `get_metadata` — lightweight XML with child node IDs, names, positions
+3. Claude analyzes both → identifies component sections (Header, Form, Table, etc.)
+4. `get_design_context` per section → detailed code, tokens, component tree
+5. Maps each section → Cap UI Library components
+6. Outputs `figma_decomposition.json` → consumed by HLD, LLD, dev-context-loader
+
+Solves `FIGMA_LARGE_FRAME` — individual sections are small enough for the API.

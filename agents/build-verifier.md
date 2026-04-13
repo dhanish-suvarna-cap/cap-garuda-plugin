@@ -113,6 +113,15 @@ Write `{workspacePath}/build_report.json`:
 }
 ```
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `build_report.json` is valid JSON matching `schemas/build_report.schema.json`
@@ -122,6 +131,7 @@ Write `{workspacePath}/build_report.json`:
 5. Environment warnings separated from generated-code errors
 6. Attempt count is <= 3
 7. If status is `"fail"`: error details are specific enough for manual debugging
+8. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

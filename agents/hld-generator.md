@@ -1,7 +1,7 @@
 ---
 name: hld-generator
 description: Generates a High Level Design document from context bundle and writes it to Confluence
-tools: Read, Write, mcp__mcp-atlassian__confluence_create_page, mcp__mcp-atlassian__confluence_get_page, mcp__mcp-atlassian__confluence_search
+tools: Read, Write, mcp__claude_ai_Atlassian__createConfluencePage, mcp__claude_ai_Atlassian__getConfluencePage, mcp__claude_ai_Atlassian__searchAtlassian
 ---
 
 # HLD Generator Agent
@@ -26,6 +26,13 @@ Read `{workspacePath}/context_bundle.json`. Extract all relevant sections:
 - `transcript_summary` — grooming call insights (decisions, requirements, tech feedback, design inputs)
 - `figma` — design data if available
 - `codebase_context` — existing components, endpoints, slices
+
+**Figma Decomposition Data**: If `figma.status == "decomposed"` (standard for all Figma inputs):
+- Read `{workspacePath}/figma_decomposition.json`
+- Use `sections[].purpose` to inform component breakdown in HLD Section 3.5 (Components Needed)
+- Use `sections[].component_mapping` to list specific Cap UI components per section
+- Reference section names when describing the UI layout and component hierarchy
+- Use `unmapped_elements` to flag components requiring custom implementation in the HLD
 
 ### Step 2: Read Previous Version (if re-generating)
 
@@ -88,15 +95,45 @@ Format the HLD as a Confluence page following the template structure:
 - Include the Jira ticket link
 - Include version number
 
-Use `mcp__mcp-atlassian__confluence_create_page` to create the page:
+**CRITICAL: Confluence upload is mandatory, not optional. If the content is too large for a single page, chunk it.**
+
+**4a. Estimate content size:**
+- If the full HLD content fits in a single page (under ~50KB of markup): publish as one page
+- If the content is large: split into a **parent page + child pages** (see 4c below)
+
+**4b. Single page publish** (standard case):
+Use `mcp__claude_ai_Atlassian__createConfluencePage`:
 - Space: `confluenceSpaceKey`
 - Parent: `parentPageId` (if provided)
 - Title: `[HLD] {jira.summary} - {jira.id}`
 
-**Fallback**: If Confluence write fails:
-1. Retry once
-2. If still fails: write as `{workspacePath}/hld_document.md` (local markdown file)
-3. Log warning: "Confluence write failed — HLD saved locally at [path]"
+If the create call fails due to size:
+- Do NOT fall back to local file — proceed to 4c (chunked upload)
+
+**4c. Chunked publish** (large HLD):
+If single-page publish fails or content is known to be large:
+
+1. Create a **parent HLD page** with:
+   - Title: `[HLD] {jira.summary} - {jira.id}`
+   - Content: Executive summary + table of contents with links to child pages
+   - Include: feature name, feasibility verdict, total bandwidth, component count
+
+2. Create **child pages** under the parent, one per major HLD section:
+   - `[HLD] 1. Overview — {jira.id}`
+   - `[HLD] 2. Functional Requirements — {jira.id}`
+   - `[HLD] 3. Technical Design — {jira.id}` (components, APIs, state)
+   - `[HLD] 4. Bandwidth & Tasks — {jira.id}`
+   - `[HLD] 5. Open Questions — {jira.id}`
+
+3. Each child page contains one section's full content. This keeps each page under the size limit.
+
+4. Update the parent page's table of contents with links to all child pages.
+
+**4d. Retry logic:**
+- If a Confluence call fails (network, auth, timeout): retry once
+- If retry fails: log the error, write to `{workspacePath}/hld_document.md` as local backup
+- **Always log a guardrail_warning** if Confluence publish fails: "HLD not on Confluence — saved locally at [path]"
+- **Never silently skip Confluence** — the warning must be visible in the pipeline output
 
 ### Step 5: Write Local Artifact
 
@@ -192,6 +229,15 @@ Store diagrams in `hld_artifact.json` under `diagrams` key (array of `{ type, ti
 
 If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `hld_artifact.json` is valid JSON
@@ -211,6 +257,7 @@ If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warning
 15. Bandwidth breakdown sums to total_person_days
 16. No organism is listed without a corresponding API (unless pure UI)
 17. Dependencies in epic_breakdown are consistent (no circular deps)
+18. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

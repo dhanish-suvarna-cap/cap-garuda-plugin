@@ -25,6 +25,8 @@ description: "Frontend development guardrails for Capillary UI projects. 12 cate
 | FG-10 | i18n | HIGH | All user-facing text via formatMessage, no hardcoded strings |
 | FG-11 | CSS Naming | HIGH | kebab-case, component-prefixed, Cap UI tokens |
 | FG-12 | AI-Specific | CRITICAL | Read before write, follow existing patterns, verify imports |
+| FG-13 | No Native HTML | CRITICAL | Use Cap UI (CapRow, CapColumn, CapLabel, CapHeading) — never div, span, p, h1-h6 |
+| FG-14 | index.js Purity | CRITICAL | index.js contains ONLY `export { default } from './ComponentName';` — no compose chain |
 
 **CRITICAL** = Violation is an automatic blocker — cannot proceed without fixing.
 **HIGH** = Violation is flagged in review — must justify if deviating.

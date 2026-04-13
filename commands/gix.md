@@ -1,8 +1,8 @@
 ---
 description: "GIX — Garuda Intelligent eXecution. Unified AI pipeline from Jira ticket to verified, tested frontend code."
-argument-hint: "[ticket-id] — or run without args for interactive menu"
+argument-hint: "[ticket-id] [--prd=<path-or-url>] — or run without args for interactive menu"
 disable-model-invocation: true
-allowed-tools: Agent, Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page, mcp__mcp-atlassian__jira_get_issue
+allowed-tools: Agent, Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage, mcp__claude_ai_Atlassian__getJiraIssue
 ---
 
 # GIX — Garuda Intelligent eXecution
@@ -67,7 +67,7 @@ Collect inputs one at a time:
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 1 of 5: Jira Ticket ID (required)
+Step 1 of 6: Jira Ticket ID (required)
 
   Enter ticket ID: _______________
 ```
@@ -76,7 +76,30 @@ Wait for response → store as `jiraTicketId`.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 2 of 5: Grooming Transcript
+Step 2 of 6: PRD / Product Requirements Document
+
+  Do you have a PRD? (Y/N): ___
+```
+
+- If Y: ask which type:
+  ```
+  What type of PRD source?
+    [1] Google Doc URL
+    [2] Confluence page ID
+    [3] Local file (.md, .pdf, .txt, .docx)
+    [4] Auto-detect from Jira links (default)
+
+  Enter choice (1-4): ___
+  ```
+  - If `1`: `Enter Google Doc URL: ___` → store as `prdSource = { type: "google_doc", value: "<url>" }`
+  - If `2`: `Enter Confluence page ID: ___` → store as `prdSource = { type: "confluence", value: "<id>" }`
+  - If `3`: `Enter file path: ___` → store as `prdSource = { type: "local_file", value: "<path>" }`
+  - If `4`: store as `prdSource = { type: "auto", value: null }`
+- If N: `Will extract requirements from Jira ticket description.` → set `prdSource = { type: "auto", value: null }`
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 3 of 6: Grooming Transcript
 
   Do you have a grooming transcript? (Y/N): ___
 ```
@@ -86,7 +109,7 @@ Step 2 of 5: Grooming Transcript
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 3 of 6: Design Reference
+Step 4 of 6: Design Reference
 
   Do you have a design reference? (Y/N): ___
 ```
@@ -122,7 +145,7 @@ Step 3 of 6: Design Reference
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 4 of 5: Confluence Space
+Step 5 of 6: Confluence Space
 
   Do you have a specific Confluence space? (Y/N): ___
 ```
@@ -132,7 +155,7 @@ Step 4 of 5: Confluence Space
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Step 5 of 5: Additional Context
+Step 6 of 6: Additional Context
 
   Do you have any additional context files (.md, .json)? (Y/N): ___
 ```
@@ -147,6 +170,7 @@ Then display confirmation:
 Starting GIX Pipeline with:
 
   Ticket:     CAP-12345
+  PRD:        Google Doc (https://docs.google.com/...)
   Transcript: /path/to/transcript.txt
   Figma:      abc123:frame456
   Confluence: LOYALTY
@@ -185,6 +209,7 @@ If `pipeline_state.json` does not exist, create it:
   "status": "in_progress",
   "inputs": {
     "jira_ticket_id": "<jiraTicketId>",
+    "prd_source": "<prdSource object or null>",
     "transcript_source": "<transcriptSource or null>",
     "design_ref": "<designRef object or null>",
     "confluence_space_key": "<confluenceSpaceKey>",
@@ -208,12 +233,19 @@ If `pipeline_state.json` does not exist, create it:
     "test_evaluation": { "status": "not_started", "summary": null, "guardrail_result": null, "verification_result": null, "artifacts": [], "started_at": null, "completed_at": null },
     "final_summary": { "status": "not_started", "summary": null, "guardrail_result": null, "verification_result": null, "artifacts": [], "started_at": null, "completed_at": null }
   },
+  "queries": {
+    "total_asked": 0,
+    "total_answered": 0,
+    "total_pending": 0,
+    "phases_with_queries": []
+  },
   "recovery": {
     "last_successful_phase": null,
     "can_resume_from": "prd_ingestion",
     "interrupted_phase": null,
     "rework_history": []
   },
+  "dashboard_enabled": false,
   "resume_instructions": "Start from Phase 1: PRD Ingestion",
   "created_at": "<current ISO timestamp>",
   "updated_at": "<current ISO timestamp>"
@@ -247,6 +279,25 @@ If `pipeline_state.json` does not exist, create it:
    - Ask user: **"Briefly describe what you're building and any key requirements. Type `skip` if everything is in the Jira ticket."**
    - Wait for response, write to `requirements_context.md`
 
+9. **Live Dashboard Setup**:
+   Ask user:
+   ```
+   Live Dashboard (recommended):
+     Do you want a live HTML dashboard? (Y/N)
+     It updates after every phase — open it in your browser to track progress in real-time.
+   ```
+   - If Y:
+     1. Read `skills/live-dashboard-template/SKILL.md` — get the Initial Template HTML
+     2. Replace placeholders: `TICKET_ID` → `<jiraTicketId>`, `FEATURE_NAME` → feature name from requirements, `START_DATE` → current ISO timestamp, `WORKSPACE_PATH` → `<workspacePath>`
+     3. Write the HTML to `<workspacePath>/live-dashboard.html`
+     4. Update `pipeline_state.json`: set `dashboard_enabled: true`
+     5. Print: `Dashboard created. Open in browser:`
+     6. Print: `  file://<absolute path to workspacePath>/live-dashboard.html`
+     7. Print: `  (auto-refreshes every 10 seconds)`
+   - If N:
+     1. Set `dashboard_enabled: false` in pipeline_state.json
+     2. Print: `Dashboard skipped. You can still track progress via console output.`
+
 Print: `[Phase 0] Workspace initialized at <workspacePath>`
 
 ## Step 3 — Phase 1: PRD Ingestion
@@ -254,8 +305,8 @@ Print: `[Phase 0] Workspace initialized at <workspacePath>`
 1. Update `pipeline_state.json` — set `phases.prd_ingestion.status = "in_progress"`, `started_at`.
 2. Print: `[Phase 1/15] Starting PRD Ingestion...`
 3. Spawn `prd-ingestion` agent with:
-   - `jiraTicketId`, `transcriptSource`, `figmaRef`, `workspacePath`
-   - Tools: `Read, Write, Bash, WebFetch, WebSearch, mcp__mcp-atlassian__jira_get_issue, mcp__framelink-figma-mcp__get_figma_data, mcp__framelink-figma-mcp__download_figma_images`
+   - `jiraTicketId`, `prdSource`, `transcriptSource`, `figmaRef`, `workspacePath`
+   - Tools: `Read, Write, Bash, WebFetch, WebSearch, mcp__claude_ai_Atlassian__getJiraIssue, mcp__claude_ai_Figma__get_screenshot, mcp__claude_ai_Figma__get_metadata, mcp__claude_ai_Figma__get_design_context, mcp__claude_ai_Google_Drive__read_file_content`
 
 4. **Parallel ProductEx BRD Review** (background):
    - Spawn `productex-verifier` with `mode = "verify"`, `artifactPath = context_bundle.json`, `phase = "prd"` using `run_in_background: true`
@@ -328,7 +379,7 @@ Print: `[Phase 0] Workspace initialized at <workspacePath>`
 1. Update state: `hld_generation.status = "in_progress"`
 2. Print: `[Phase 3/15] Starting HLD Generation...`
 3. Spawn `hld-generator` agent with `workspacePath`, `confluenceSpaceKey`
-   - Tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page`
+   - Tools: `Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage`
 
 4. **Gate Check**: Read `<workspacePath>/hld_artifact.json`:
    - Validate required fields (feasibility, components, tasks)
@@ -461,10 +512,29 @@ Ask: `Type "yes" to approve and begin code generation. Type "no" to request chan
 - Build verification failed
 - User passed `--skip-visual-qa`
 
-1. Spawn `visual-qa` agent with `workspacePath`, `maxIterations = 3`
-2. **Gate Check**: Read visual_qa_report.json
-   - If fidelity LOW: warn "Significant visual differences — manual review recommended"
+1. Spawn `visual-qa` agent with `workspacePath`, `maxIterations = 3`, `repoRoot = <REPO_ROOT>`
+   - The agent uses Playwright for screenshots, pixelmatch for pixel diff, and Claude vision for semantic analysis
+   - See `agents/visual-qa.md` for full procedure
+2. **Gate Check**: Read `visual_qa_report.json`:
+   - If `status == "skipped"`: log skip reason, proceed
+   - If fidelity `LOW`: warn "Significant visual differences — manual review recommended"
+   - Print iteration summary:
+     ```
+     Visual QA Complete:
+       Fidelity: HIGH/MEDIUM/LOW
+       Mode: pixel_and_semantic / semantic_only
+       Iterations: N
+       Final mismatch: N% (started at M%)
+       Fixes applied: N total
+       Remaining: N critical, N major, N minor
+     ```
 3. Update state, journal.
+4. **Dashboard update** (if `dashboard_enabled`): the Post-Phase Protocol step 5i generates the detailed Visual QA iteration tracker HTML from `visual_qa_report.json`. This includes:
+   - Iteration-by-iteration mismatch improvement table
+   - Per-iteration fix details with severity badges
+   - Mismatch progress bars showing visual improvement
+   - Final discrepancy table
+   - Fidelity badge and discrepancy breakdown counts
 
 ## Step 15 — Phase 13: Test Writing
 
@@ -552,9 +622,27 @@ Generate `<workspacePath>/<jiraTicketId>-blueprint.html` using `skills/blueprint
 3. Include Mermaid diagrams from HLD/LLD artifacts
 4. Include key decisions from approach_log.md
 5. Include timeline from session_journal.md
-6. Write the blueprint file
+6. **Populate Visual QA section** from `visual_qa_report.json`:
+   - Fill the iteration improvement table (one row per iteration with mismatch %, improvement delta, fixes count)
+   - Fill the fixes table (all fixes from all iterations, flattened with iteration number)
+   - Fill the remaining discrepancies table (from `final_discrepancies` where `auto_fixed == false`)
+   - Fill the discrepancy breakdown stats (critical/major/minor counts)
+   - Set fidelity badge, comparison mode, iteration count, final mismatch %
+   - If visual QA was skipped: replace the section with `<p>Visual QA was skipped: SKIP_REASON</p>`
+7. Write the blueprint file
 
 Print: `Blueprint generated: <workspacePath>/<jiraTicketId>-blueprint.html`
+
+### Finalize Live Dashboard
+
+If `dashboard_enabled: true`:
+1. Read `live-dashboard.html`
+2. Remove `<meta http-equiv="refresh" content="10">` tag (stop auto-refresh)
+3. Set progress bar to 100%
+4. Mark all phases complete in sidebar
+5. Add the Pipeline Complete banner (from `skills/live-dashboard-template/SKILL.md`) after the progress stats, with link to `<jiraTicketId>-blueprint.html`
+6. Write back to `live-dashboard.html`
+7. Print: `Dashboard finalized. Auto-refresh disabled.`
 
 ### Final Publishing
 
@@ -570,10 +658,66 @@ After every phase completes, the orchestrator MUST run these steps in order:
 2. **Update session_journal.md** — append phase completion with timestamp
 3. **Update session_memory.md** — add relevant findings to appropriate sections
 4. **Update approach_log.md** — log any decisions made during this phase
-5. **Update live-dashboard.html** — if `dashboard_enabled: true` (see `skills/live-dashboard-template.md`)
-6. **Confluence publish** — spawn `confluence-publisher` (non-blocking) with this phase's artifact
-7. **Update HOW TO RESUME block** — in session_journal.md
-8. **Show pause prompt** — with available commands
+5. **Update live-dashboard.html** — if `dashboard_enabled: true` in pipeline_state.json:
+   a. Read the current `<workspacePath>/live-dashboard.html`
+   b. Count completed phases from pipeline_state.json
+   c. Calculate progress percentage: `completed / 15 * 100`
+   d. Update the progress bar: find `id="progress-fill"`, set `style="width: <pct>%"`, update inner text to `<pct>%`
+   e. Update stats: `#stat-phases` → completed count, `#stat-artifacts` → count of *.json files in workspace, `#stat-decisions` → count rows in approach_log.md, `#stat-files` → files_created count from generation_report.json (0 if not yet generated)
+   f. Update sidebar: set `id="nav-<completed>"` class to `complete`, set `id="nav-<next>"` class to `active`, all later remain `pending`
+   g. Update phase badge: find `id="badge-<phaseNum>"`, change class to `complete`, update text to `Complete`
+   h. Replace phase content: find `id="content-<phaseNum>"`, replace innerHTML with phase-specific content from `skills/live-dashboard-template/SKILL.md` Phase-Specific Content Templates section
+   i. **For Phase 12 (Visual QA)**: Read `visual_qa_report.json` and generate the detailed iteration tracker HTML:
+      - Summary row: fidelity badge + discrepancy counts (critical/major/minor)
+      - Iteration table: one row per iteration with mismatch %, improvement delta, fixes count, remaining count
+      - Iteration detail blocks: each with mismatch bar, fix list with severity badges
+      - Remaining discrepancies table
+      - Use CSS classes from template: `vqa-mismatch high/medium/low`, `vqa-improvement positive/negative`, `fidelity-badge HIGH/MEDIUM/LOW`
+      - Mismatch level: `high` if >10%, `medium` if 5-10%, `low` if <5%
+      - Improvement: calculate delta from previous iteration's mismatch %; positive delta = `positive` class (green), negative = `negative` class (red)
+   j. Write the updated HTML back to `live-dashboard.html`
+   k. The browser auto-refreshes every 10 seconds via `<meta http-equiv="refresh" content="10">` in the HTML head — no manual refresh needed
+6. **Resolve pending queries** — check `{workspacePath}/pending_queries.json`:
+   a. Read the file. If it doesn't exist or `queries` array is empty: skip to step 7
+   b. For each query with `blocking: true` that doesn't have an answer in `query_answers.json`:
+      - Print the query to the user:
+        ```
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        Query from Phase <N> (<agent name>):
+        Category: <category>  |  Confidence: <C1/C2/C3>
+
+        <question>
+
+        Context: <context>
+
+        Options:
+          [A] <label> — <implication>
+          [B] <label> — <implication>
+
+        Enter your choice: ___
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        ```
+      - Wait for user response
+      - Write answer to `{workspacePath}/query_answers.json`:
+        ```json
+        { "answers": [{ "query_id": "<id>", "selected_option": "<key>", "user_note": "<any extra text>", "answered_at": "<ISO>" }] }
+        ```
+      - Log the decision to `approach_log.md`
+   c. For each query with `blocking: false` (provisional assumptions):
+      - Print as reviewable: `"Assumption made: <question> → chose <default>. Correct? (Y/N)"`
+      - If user corrects: write correction to `query_answers.json`, flag phase for re-run
+      - If user confirms: write confirmation to `query_answers.json`
+   d. If any blocking query was answered AND the answer affects already-completed work in this phase:
+      - Print: `Re-running <phase> with your answers...`
+      - Re-spawn the agent with the same inputs (agent reads `query_answers.json` on start)
+   e. Clear resolved queries from `pending_queries.json`
+   f. Update `pipeline_state.json` query tracking:
+      ```json
+      "queries": { "total_asked": N, "total_answered": N, "total_pending": 0, "phases_with_queries": ["hld_generation", ...] }
+      ```
+7. **Confluence publish** — spawn `confluence-publisher` (non-blocking) with this phase's artifact
+8. **Update HOW TO RESUME block** — in session_journal.md
+9. **Show pause prompt** — with available commands
 
 ## Prerequisite Map
 
@@ -616,6 +760,13 @@ When the orchestrator or any interactive phase needs to ask the user a question,
 
 3. **Human-intent questions** (about preferences, priorities, scope decisions):
    - Always ask the user — these can't be resolved by agents
+   - If inside an agent: write to `pending_queries.json` (resolved in Post-Phase Protocol step 6)
+   - If in the orchestrator directly: ask the user immediately
+
+4. **Agent-escalated queries** (from `pending_queries.json`):
+   - Agents follow `skills/ask-before-assume.md` — they write queries when confidence is C3 or below
+   - The orchestrator resolves these in Post-Phase Protocol step 6 after each phase
+   - Answers are written to `query_answers.json` so agents can read them on re-run or in subsequent phases
 
 ## Incremental Session Memory Protocol
 
@@ -685,13 +836,15 @@ Create lightweight git tags after each phase completes, enabling safe rollback:
 
 If `dashboard_enabled: true` in pipeline_state.json (set during Phase 0 based on user choice):
 
-After EVERY phase completes, the orchestrator MUST update `live-dashboard.html`:
-1. Update progress bar percentage
-2. Update sidebar (completed = green, next = active)
-3. Update phase section with summary, key numbers, diagrams
-4. Update stats bar (artifacts count, decisions count, files count)
+After EVERY phase completes, the orchestrator MUST update `live-dashboard.html` using the detailed instructions in Post-Phase Protocol step 5 (a-k).
 
-See `skills/live-dashboard-template.md` for the full template and update rules.
+**Key rules:**
+- The HTML file auto-refreshes every 10 seconds via `<meta http-equiv="refresh" content="10">` — the user just keeps the browser tab open
+- Phase-specific content templates are in `skills/live-dashboard-template/SKILL.md`
+- Phase 12 (Visual QA) gets the most detailed treatment: iteration-by-iteration mismatch improvement, fixes applied per iteration, discrepancy breakdown, fidelity badge
+- On pipeline completion (Phase 15): remove the `<meta http-equiv="refresh">` tag, add the Pipeline Complete banner with link to blueprint HTML, set progress to 100%
+
+See `skills/live-dashboard-template/SKILL.md` for the full template, CSS classes, and phase-specific content templates.
 
 ## HOW TO RESUME Block
 

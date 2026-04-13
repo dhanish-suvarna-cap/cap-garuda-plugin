@@ -40,7 +40,7 @@ Parse `$ARGUMENTS` to extract:
    - `feedback`: `<feedback or "none">`
    - `previousVersion`: `<workspacePath>/hld_artifact.json` (if exists and feedback provided)
 
-   Give the Agent these tools: `Read, Write, Bash, mcp__mcp-atlassian__confluence_create_page`
+   Give the Agent these tools: `Read, Write, Bash, mcp__claude_ai_Atlassian__createConfluencePage`
 
 ## Step 4 — Gate Check & Display Summary
 

@@ -103,6 +103,15 @@ Rate the test results:
 - **Do NOT re-run** tests — run once, report results
 - **Report only** — the orchestrator decides whether to re-invoke test-writer
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `test_report.json` is valid JSON and written to workspace
@@ -112,6 +121,7 @@ Rate the test results:
 5. Assessment rating assigned: PASS/PARTIAL/FAIL using thresholds from `skills/config.md`
 6. `evaluated_at` is a valid ISO 8601 timestamp
 7. Log any parse failures or unexpected output to `guardrail_warnings`
+8. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

@@ -11,6 +11,19 @@
 | `dev_port` | 8000 | visual-qa, dev-execute |
 | `url_prefix` | /loyalty/ui/v3 | visual-qa, dev-execute |
 | `dev_url` | http://localhost:8000/loyalty/ui/v3 | visual-qa |
+| `figma_access_token_env_var` | FIGMA_ACCESS_TOKEN | visual-qa (pixel diff mode) |
+
+## Authentication Config
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `auth_browser_login_url` | /auth/login | visual-qa (browser login page URL) |
+| `auth_api_endpoint_path` | /arya/api/v1/auth/login | visual-qa login.js (API endpoint) |
+| `auth_username_env_var` | GARUDA_USERNAME | visual-qa login.js |
+| `auth_password_env_var` | GARUDA_PASSWORD | visual-qa login.js |
+| `auth_base_url_env_var` | GARUDA_INTOUCH_BASE_URL | visual-qa login.js |
+| `auth_org_id_env_var` | GARUDA_ORG_ID | visual-qa login.js (optional override) |
+| `auth_default_base_url` | nightly.intouch.capillarytech.com | visual-qa login.js (fallback) |
 
 ## Confluence Config
 
@@ -29,6 +42,16 @@
 | `max_code_gen_retries` | 3 | dev-execute |
 | `max_organisms_per_lld` | 3 | lld-generator |
 | `dev_server_startup_wait_seconds` | 60 | visual-qa |
+| `visual_qa_mismatch_threshold` | 5 | visual-qa (exit loop when mismatch < this %) |
+| `visual_qa_viewport_width` | 1280 | visual-qa (Playwright viewport) |
+| `visual_qa_viewport_height` | 800 | visual-qa (Playwright viewport) |
+| `visual_qa_page_load_wait_ms` | 3000 | visual-qa (wait after page load before screenshot) |
+| `visual_qa_pixelmatch_threshold` | 0.1 | visual-qa (per-pixel tolerance for pixelmatch) |
+| `figma_decompose_max_depth` | 2 | figma-decomposer (max recursive decomposition depth) |
+| `figma_decompose_max_sections` | 20 | figma-decomposer (max sub-frames to fetch per frame) |
+| `confluence_max_page_size_kb` | 50 | hld-generator, lld-generator, confluence-publisher (chunk if content exceeds this) |
+| `max_queries_per_phase` | 5 | All agents (prevent query flooding — group related queries) |
+| `auto_resolve_confidence_threshold` | C4 | All agents (below this = must query user if not documented) |
 
 ## Transcript Processing
 

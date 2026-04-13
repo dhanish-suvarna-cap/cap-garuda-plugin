@@ -126,6 +126,15 @@ Append to `session_memory.md`:
 - **Key Decisions**: migration vs rebuild recommendations
 - **Constraints**: API contracts that must be preserved for cross-repo compatibility
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. All reference repos were searched (not just the target repo)
@@ -136,6 +145,7 @@ Append to `session_memory.md`:
 6. Recommendations are actionable (migrate, adapt, or rebuild with rationale)
 7. Session memory updated with cross-repo findings
 8. Report is valid JSON
+9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## When This Agent Runs
 

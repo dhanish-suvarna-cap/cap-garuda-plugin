@@ -74,14 +74,16 @@ Complex components extract render logic into local functions:
 ```javascript
 const ExpiryStrategy = ({ formatMessage, data }) => {
   // Render helper function
+  // NOTE: Use Cap UI components (CapRow, CapColumn, CapLabel, CapHeading)
+  // instead of native HTML elements (div, span, p, h1-h6)
   const renderHeader = () => (
-    <div className="header">
+    <CapRow className="header">
       <CapHeading>{formatMessage(messages.title)}</CapHeading>
       <CapInput
         onChange={handleSearchValueChange}
         placeholder={formatMessage(messages.search)}
       />
-    </div>
+    </CapRow>
   );
 
   const renderTable = () => (
@@ -92,10 +94,10 @@ const ExpiryStrategy = ({ formatMessage, data }) => {
   );
 
   return (
-    <div className="expiry-strategy">
+    <CapRow className="expiry-strategy">
       {renderHeader()}
       {renderTable()}
-    </div>
+    </CapRow>
   );
 };
 ```

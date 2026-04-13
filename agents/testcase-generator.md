@@ -1,7 +1,7 @@
 ---
 name: testcase-generator
 description: Generates test case sheet and usecase flows from LLD — writes to Confluence as child page of LLD
-tools: Read, Write, mcp__mcp-atlassian__confluence_create_page
+tools: Read, Write, mcp__claude_ai_Atlassian__createConfluencePage
 ---
 
 # Test Case Generator Agent
@@ -136,6 +136,15 @@ Use coverage targets from `skills/config.md` — Testing section. The unit test 
 
 If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warnings` array in the output JSON rather than silently proceeding.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. `testcase_sheet.json` is valid JSON
@@ -147,6 +156,7 @@ If any Exit Checklist item cannot be satisfied, log it to the `guardrail_warning
 7. Coverage targets match values from `skills/config.md`
 8. Confluence page created OR local markdown fallback written
 9. Test import rule references `skills/shared-rules.md` Section 8
+10. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

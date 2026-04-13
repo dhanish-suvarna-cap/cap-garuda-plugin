@@ -1,7 +1,7 @@
 ---
 name: prototype-analyzer
 description: "Analyzes a live prototype URL (v0.dev, Vercel preview, or any web URL) by navigating to it, taking screenshots, inspecting DOM structure, and mapping visible UI components to Cap UI Library equivalents."
-tools: Read, Write, mcp__Claude_Preview__preview_start, mcp__Claude_Preview__preview_screenshot, mcp__Claude_Preview__preview_eval, mcp__Claude_Preview__preview_inspect
+tools: Read, Write, Bash, Glob, Grep
 ---
 
 # Prototype Analyzer Agent
@@ -20,25 +20,33 @@ You analyze live prototype URLs (v0.dev, Vercel previews, or any web URL) to ext
 
 ## Steps
 
-### Step 1: Navigate to Prototype
+### Step 1: Navigate to Prototype and Screenshot
 
-1. Use Claude Preview to start a browser session
-2. Navigate to `prototypeUrl`
-3. Wait for the page to fully load (check for network idle or a reasonable timeout of 10s)
-4. If the URL is a v0.dev link: check if there's a "Preview" tab or rendered output area — navigate to the actual rendered UI, not the code editor
+Use the Playwright screenshot script to capture the prototype:
 
-### Step 2: Take Screenshots
+```bash
+node {repoRoot}/.claude/scripts/visual-qa/screenshot.js \
+  --url <prototypeUrl> \
+  --output {workspacePath}/prototype_main.png \
+  --viewport 1280x800 \
+  --wait 5000
+```
 
-1. Take a full-page screenshot of the rendered UI
-2. If the page has multiple states/tabs/sections visible, take additional screenshots:
-   - Scroll down for below-the-fold content
-   - If tabs are visible, screenshot each tab state
-   - If there's a modal trigger, click it and screenshot the modal
-3. Save screenshots as references in the workspace
+If the URL is a v0.dev link, the script will capture whatever is rendered at load.
 
-### Step 3: Inspect DOM Structure
+### Step 2: Take Additional Screenshots
 
-Use Claude Preview's inspect capabilities to understand the rendered component structure:
+For multi-state pages, capture additional views:
+- Use `--full-page` flag for below-the-fold content
+- If additional routes/tabs are known, screenshot each:
+  ```bash
+  node screenshot.js --url <prototypeUrl>/tab2 --output {workspacePath}/prototype_tab2.png
+  ```
+- Save all screenshots in the workspace directory
+
+### Step 3: Analyze Screenshot Structure
+
+Use the Read tool to view each screenshot (Claude is multimodal and can analyze images). Identify the rendered component structure:
 
 1. Identify the main layout sections (header, sidebar, content, footer)
 2. For each visible UI element, determine:
@@ -181,6 +189,15 @@ Update `{workspacePath}/context_bundle.json` to include the prototype analysis i
 
 This allows all downstream agents (HLD generator, LLD generator, dev-context-loader, code-generator, visual-qa) to use the same `figma` field without knowing whether the source was Figma or a prototype URL.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. Prototype URL was visited and page loaded successfully
@@ -191,6 +208,7 @@ This allows all downstream agents (HLD generator, LLD generator, dev-context-loa
 6. Design tokens estimated from visual analysis
 7. context_bundle.json updated with results in `figma` section
 8. If v0.dev: source code analyzed for higher-confidence mapping
+9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

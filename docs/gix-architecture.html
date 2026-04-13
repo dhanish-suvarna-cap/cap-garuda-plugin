@@ -85,7 +85,7 @@
   <h3>Agent System</h3>
   <a href="#agent-comm">Agent Communication</a>
   <a href="#agent-lifecycle">Agent Lifecycle</a>
-  <a href="#agent-catalog">Agent Catalog (17)</a>
+  <a href="#agent-catalog">Agent Catalog (19)</a>
   <a href="#parallel">Parallel Execution</a>
 
   <h3>Skills & Context</h3>
@@ -102,7 +102,7 @@
   <a href="#workspace">Workspace Layout</a>
 
   <h3>Quality & Verification</h3>
-  <a href="#guardrails">Guardrails (FG-01..12)</a>
+  <a href="#guardrails">Guardrails (FG-01..14)</a>
   <a href="#productex">ProductEx Verification</a>
   <a href="#build-verify">Build Verification</a>
   <a href="#visual-qa">Visual Self-Evaluation</a>
@@ -119,6 +119,12 @@
   <a href="#blueprint">Blueprint</a>
   <a href="#confluence">Confluence Publishing</a>
   <a href="#git">Git Integration</a>
+
+  <h3>New in v4.0</h3>
+  <a href="#figma-decomposer">Figma Decomposer</a>
+  <a href="#ask-before-assume">Ask-Before-Assume</a>
+  <a href="#visual-qa-pixel">Visual QA (Pixel Diff)</a>
+  <a href="#login-auth">Login & Auth</a>
 </nav>
 
 <div class="main">
@@ -126,7 +132,7 @@
 <!-- ===== HERO ===== -->
 <div class="hero">
   <h2>GIX — Complete Technical Architecture</h2>
-  <p>A 15-phase AI pipeline that transforms a Jira ticket into verified, tested React code. 18 specialized agents, 25+ skills, 12 guardrail categories, incremental state management, and multi-layer verification. Accepts Figma, v0.dev prototypes, or screenshots as design input.</p>
+  <p>A 15-phase AI pipeline that transforms a Jira ticket into verified, tested React code. 19 specialized agents, 25+ skills, 14 guardrail categories, pixel-level visual QA with Playwright + pixelmatch, Figma frame decomposition, ask-before-assume query protocol, and multi-layer verification. All MCP integrations use Claude.ai built-in servers — no local configuration needed.</p>
 </div>
 
 <!-- ===== ARCHITECTURE ===== -->
@@ -735,7 +741,7 @@ flowchart LR
 </table>
 
 <!-- ===== GUARDRAILS ===== -->
-<h2 id="guardrails">Frontend Guardrails (FG-01 through FG-12)</h2>
+<h2 id="guardrails">Frontend Guardrails (FG-01 through FG-14)</h2>
 
 <table>
   <tr><th>ID</th><th>Category</th><th>Priority</th><th>Key Rule</th><th>Detection</th></tr>
@@ -751,6 +757,8 @@ flowchart LR
   <tr><td>FG-10</td><td>i18n</td><td><span class="badge high">HIGH</span></td><td>formatMessage, no hardcoded strings</td><td>Grep Component.js for raw strings in JSX</td></tr>
   <tr><td>FG-11</td><td>CSS Naming</td><td><span class="badge high">HIGH</span></td><td>Cap UI tokens, no hardcoded pixels/hex</td><td>Grep styles.js for px/# values</td></tr>
   <tr><td>FG-12</td><td>AI-Specific</td><td><span class="badge critical">CRITICAL</span></td><td>Read before write, verify imports exist</td><td>Agent exit checklist</td></tr>
+  <tr><td>FG-13</td><td>No Native HTML</td><td><span class="badge critical">CRITICAL</span></td><td>Use CapRow, CapColumn, CapLabel, CapHeading — never div, span, p, h1-h6 in Component.js</td><td>Grep Component.js for &lt;div, &lt;span, &lt;p, &lt;h[1-6]</td></tr>
+  <tr><td>FG-14</td><td>index.js Purity</td><td><span class="badge critical">CRITICAL</span></td><td>index.js contains ONLY <code>export { default }</code> — compose chain in Component.js</td><td>Grep index.js for import/compose/connect</td></tr>
 </table>
 
 <div class="mermaid">
@@ -846,6 +854,29 @@ flowchart TD
 <div class="callout warn">
   <strong>CSS/layout only:</strong> Visual QA never modifies business logic, Redux state, or component behavior. It only adjusts styling using Cap UI design tokens.
 </div>
+
+<h3 id="visual-qa-pixel">Pixel Diff Pipeline (v4.0)</h3>
+<div class="card">
+  <h4>Two-Layer Comparison</h4>
+  <p><strong>Quantitative</strong> (pixelmatch): Pixel-level diff producing mismatch percentage and a red-overlay diff image.</p>
+  <p><strong>Semantic</strong> (Claude vision): Claude reads all 3 images (Figma, localhost, diff) and produces actionable fix instructions using Cap UI design tokens.</p>
+</div>
+
+<h4 id="login-auth">Login & Auth Injection</h4>
+<p>The app requires authentication. <code>login.js</code> calls the Arya login API (<code>POST /arya/api/v1/auth/login</code>), outputs <code>auth.json</code> with localStorage entries (token, orgID, user, isLoggedIn). <code>screenshot.js</code> injects these via Playwright's <code>page.evaluate()</code> before navigating to the feature URL.</p>
+<p>Reads <code>app-config.js</code> from the repo root for <code>intouchBaseUrl</code> (API target) and <code>prefix</code> (URL prefix like <code>/loyalty/ui/v3</code>).</p>
+<p>Env vars: <code>GARUDA_USERNAME</code>, <code>GARUDA_PASSWORD</code> (required), <code>GARUDA_ORG_ID</code> (optional override).</p>
+
+<h4>Visual QA Scripts</h4>
+<table>
+  <thead><tr><th>Script</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>login.js</code></td><td>Arya API login → auth.json</td></tr>
+    <tr><td><code>screenshot.js</code></td><td>Playwright headless screenshot with <code>--auth-json</code> flag</td></tr>
+    <tr><td><code>figma-download.js</code></td><td>Figma REST API image download</td></tr>
+    <tr><td><code>diff.js</code></td><td>pixelmatch pixel diff with sharp resizing</td></tr>
+  </tbody>
+</table>
 
 <!-- ===== GATE CHECKS ===== -->
 <h2 id="gate-checks">Gate Checks &amp; Exit Checklists</h2>
@@ -967,6 +998,92 @@ flowchart TD
   <strong>Reversibility matrix:</strong> Reversible + C4 = act. Irreversible + below C4 = STOP and escalate. This eliminates analysis paralysis while protecting against real damage.
 </div>
 
+<!-- ===== ASK BEFORE ASSUME ===== -->
+<h2 id="ask-before-assume">Ask-Before-Assume Protocol</h2>
+
+<div class="callout">
+  <strong>Core Rule:</strong> If confidence is C3 or below (&lt;60%) on an irreversible decision, the agent MUST escalate to the user. Never silently assume.
+</div>
+
+<p>Every agent writes unresolved queries to <code>pending_queries.json</code>. The orchestrator resolves them with the user after each phase completes.</p>
+
+<h3>When Agents Must Ask</h3>
+<table>
+  <thead><tr><th>Category</th><th>Examples</th><th>Always Ask?</th></tr></thead>
+  <tbody>
+    <tr><td>Requirements ambiguity</td><td>"Should this field be editable or read-only?"</td><td>YES</td></tr>
+    <tr><td>Architecture decisions</td><td>"New organism or extend existing?"</td><td>YES</td></tr>
+    <tr><td>API contract gaps</td><td>"What's the error response shape?"</td><td>YES</td></tr>
+    <tr><td>Component choice</td><td>"CapSelect or CapRadioGroup for 4 options?"</td><td>If not in LLD/Figma</td></tr>
+    <tr><td>Business logic</td><td>"What happens on empty form submit?"</td><td>YES</td></tr>
+    <tr><td>Scope boundaries</td><td>"Handle this edge case?"</td><td>YES</td></tr>
+  </tbody>
+</table>
+
+<h3>When Agents Decide Autonomously</h3>
+<p>Code patterns, Cap UI props, file structure, import order, design tokens — all documented in skills files. No need to ask.</p>
+
+<h3>Resolution Flow</h3>
+<div class="mermaid">
+graph LR
+  A["Agent hits ambiguity"] --> B{"Confidence?"}
+  B -->|"C4+"| C["Agent decides"]
+  B -->|"C3 or below"| D["Write pending_queries.json"]
+  D --> E["Phase completes"]
+  E --> F["Orchestrator reads queries"]
+  F --> G["Present to user"]
+  G --> H["User answers"]
+  H --> I["query_answers.json"]
+  I --> J{"Changes work?"}
+  J -->|"Yes"| K["Re-run phase"]
+  J -->|"No"| L["Continue"]
+</div>
+
+<!-- ===== FIGMA DECOMPOSER ===== -->
+<h2 id="figma-decomposer">Figma Frame Decomposer</h2>
+
+<p>Standard Figma processing flow for <strong>all</strong> frames — handles both small and large designs. Replaces the single <code>get_design_context</code> call that fails on large frames.</p>
+
+<div class="mermaid">
+graph TB
+  A["get_screenshot (full frame)"] --> C["Claude analyzes both"]
+  B["get_metadata (child node IDs)"] --> C
+  C --> D["Identify sections: Header, Form, Table..."]
+  D --> E["get_design_context per section"]
+  E --> F["Map sections → Cap UI components"]
+  F --> G["figma_decomposition.json"]
+  G --> H["HLD / LLD / dev-context-loader"]
+</div>
+
+<h3>Key Benefits</h3>
+<div class="grid">
+  <div class="card">
+    <h4>Solves FIGMA_LARGE_FRAME</h4>
+    <p>Individual sections are small enough for the API, even when the full frame is too large.</p>
+  </div>
+  <div class="card">
+    <h4>Richer Metadata</h4>
+    <p>Each component section gets individually detailed code, tokens, and component tree.</p>
+  </div>
+  <div class="card">
+    <h4>Better Cap UI Mapping</h4>
+    <p>Per-section mapping is more accurate than whole-frame analysis.</p>
+  </div>
+</div>
+
+<h3>Decomposition Rules</h3>
+<table>
+  <thead><tr><th>Pattern</th><th>Decomposition</th></tr></thead>
+  <tbody>
+    <tr><td>Page header (title + buttons)</td><td>One section</td></tr>
+    <tr><td>Form with field groups</td><td>One section per group</td></tr>
+    <tr><td>Data table</td><td>One section</td></tr>
+    <tr><td>Card grid (repeated cards)</td><td>One representative card</td></tr>
+    <tr><td>Modal/drawer content</td><td>One section</td></tr>
+    <tr><td>Tab panels</td><td>One section per unique panel</td></tr>
+  </tbody>
+</table>
+
 <!-- ===== DASHBOARD ===== -->
 <h2 id="dashboard">Live Dashboard</h2>
 
@@ -1017,6 +1134,11 @@ flowchart TD
 
 <p>The <code>confluence-publisher</code> agent runs after every phase (non-blocking). It creates a run folder at Phase 0 and publishes each artifact as a child page. Re-publishing updates existing pages (idempotent).</p>
 
+<h3>Chunked Publishing (Large Content)</h3>
+<div class="callout warn">
+  <strong>Confluence upload is mandatory</strong> — never silently skipped to local-only. If HLD/LLD content exceeds ~50KB, the publisher creates a parent page (summary + table of contents) with child pages per section. Config: <code>confluence_max_page_size_kb: 50</code>.
+</div>
+
 <!-- ===== GIT ===== -->
 <h2 id="git">Git Integration</h2>
 
@@ -1063,6 +1185,10 @@ gitGraph
 ├── generation_report.json       # Files created/modified (incremental)
 ├── build_report.json            # Build verification (attempts + fixes)
 ├── visual_qa_report.json        # Figma comparison (iterations[])
+├── figma_decomposition.json    # Figma frame decomposed into component sections
+├── pending_queries.json        # Agent queries awaiting user answers
+├── query_answers.json          # User answers to agent queries
+├── auth.json                   # Visual QA login credentials (auto-generated)
 ├── test_report.json             # Jest results + coverage
 ├── CAP-12345-blueprint.html     # Final stakeholder document
 └── verification_reports/
@@ -1078,7 +1204,7 @@ gitGraph
 
 <!-- ===== FOOTER ===== -->
 <div style="margin-top:64px;padding:24px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;">
-  <p>GIX v3.2.0 — cap-garuda-plugin | 18 agents | 25+ skills | 131 component specs | 12 guardrails | 10 JSON schemas</p>
+  <p>GIX v4.0.0 — cap-garuda-plugin | 19 agents | 25+ skills | 131 component specs | 14 guardrails | 12 JSON schemas</p>
   <p>Architecture inspired by <a href="#" style="color:var(--accent);">kalpavriksha</a> (Capillary backend pipeline) — adapted for React/Redux frontend.</p>
 </div>
 

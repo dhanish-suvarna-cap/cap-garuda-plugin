@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pending Queries",
+  "description": "Queries from agents to the user — unresolved ambiguities that need human input before proceeding",
+  "type": "object",
+  "required": ["queries"],
+  "properties": {
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "phase", "agent", "category", "question", "options", "blocking", "confidence", "asked_at"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^q-[a-z_]+-\\d{3}$",
+            "description": "Unique query ID: q-<phase>-<NNN>"
+          },
+          "phase": {
+            "type": "string",
+            "description": "Pipeline phase that generated this query"
+          },
+          "agent": {
+            "type": "string",
+            "description": "Agent name that generated this query"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["requirements", "architecture", "api_contract", "component_choice", "business_logic", "scope", "data"],
+            "description": "Category of ambiguity"
+          },
+          "question": {
+            "type": "string",
+            "description": "Clear, specific question for the user"
+          },
+          "context": {
+            "type": "string",
+            "description": "Why this matters, what was already checked, implications"
+          },
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "required": ["key", "label", "implication"],
+              "properties": {
+                "key": { "type": "string", "description": "Option identifier (A, B, C, D)" },
+                "label": { "type": "string", "description": "Short option label" },
+                "implication": { "type": "string", "description": "What changes if this option is chosen" }
+              }
+            }
+          },
+          "default": {
+            "type": ["string", "null"],
+            "description": "Default option key if there's a natural default, null otherwise"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["C1", "C2", "C3"],
+            "description": "Agent's confidence level (must be C3 or below to warrant a query)"
+          },
+          "blocking": {
+            "type": "boolean",
+            "description": "true = agent cannot complete without answer. false = agent made provisional choice, user should review."
+          },
+          "asked_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

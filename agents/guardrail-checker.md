@@ -84,7 +84,7 @@ grep -n 'X-CAP-API-AUTH-ORG-ID' <file>
 
 #### FG-07: Compose Chain (HIGH)
 
-In index.js: verify compose order is withSaga → withReducer → withConnect.
+In Component.js (NOT index.js): verify compose order is withSaga → withReducer → withConnect.
 
 #### FG-08: Test Imports (HIGH)
 
@@ -109,6 +109,33 @@ In styles.js: check for hardcoded pixel values or hex colors (should use Cap tok
 #### FG-12: AI-Specific (CRITICAL)
 
 Check that no pre-existing files were modified (only files in generation_report should have changes).
+
+#### FG-13: No Native HTML Elements (CRITICAL)
+
+In Component.js files: scan for native HTML tags that should be Cap UI components.
+
+```bash
+# Check for native HTML elements in JSX (Component.js files only)
+grep -nE '<(div|span|p|h[1-6]|label|a |button|input|select|table|hr)[ >]' <Component.js>
+# Should NOT match — use CapRow, CapColumn, CapLabel, CapHeading, CapLink, CapButton, etc.
+```
+
+**Exceptions**: `<Fragment>`, `<>`, styled-component wrappers from styles.js.
+
+If native HTML found: CRITICAL violation — must replace with Cap UI equivalent per `skills/shared-rules.md` Section 15.
+
+#### FG-14: index.js Purity (CRITICAL)
+
+In index.js files: verify it contains ONLY the re-export line.
+
+```bash
+# index.js should contain ONLY: export { default } from './ComponentName';
+# Check for violations:
+grep -nE '^import |^const |^function |compose|connect|mapState|mapDispatch|withSaga|withReducer' <index.js>
+# Should NOT match — all of this belongs in Component.js
+```
+
+If compose chain, imports, or Redux wiring found in index.js: CRITICAL violation — must move to Component.js.
 
 ### Step 4: Write Violation Report
 
@@ -143,6 +170,15 @@ Append violations to `{workspacePath}/verification_reports/verify-code.json`:
 
 HIGH violations go into `guardrail_warnings` but don't change status to `changes_needed`.
 
+## Query Protocol
+
+Before making any assumption on ambiguous requirements, architecture decisions, API contracts, or component choices, follow the **ask-before-assume protocol** in `skills/ask-before-assume.md`. If your confidence is C3 or below on an irreversible decision:
+1. Write the query to `{workspacePath}/pending_queries.json`
+2. Continue working on parts that don't depend on the answer
+3. The orchestrator will present the query to the user after this phase completes
+
+Read `{workspacePath}/query_answers.json` before starting — it may contain answers to previously asked queries.
+
 ## Exit Checklist
 
 1. All files from generation_report.json were checked
@@ -151,6 +187,7 @@ HIGH violations go into `guardrail_warnings` but don't change status to `changes
 4. No false positives from pre-existing code (only generated files scanned)
 5. Fix suggestions provided for each violation
 6. Report is valid JSON matching `schemas/verification_report.schema.json`
+7. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 

@@ -91,19 +91,21 @@ const ComponentName = ({
 
   // --- Render Helpers (inline or extracted) ---
   const renderHeader = () => (
-    <div className="header">
-      {formatMessage(messages.title)}
-    </div>
+    <CapRow className="header">
+      <CapHeading type="h3">{formatMessage(messages.title)}</CapHeading>
+    </CapRow>
   );
 
   // --- Return JSX ---
+  // NEVER use native HTML elements (div, span, p, h1-h6, label, a)
+  // Use Cap UI: CapRow, CapColumn, CapLabel, CapHeading, CapLink, etc.
   return (
-    <div className={classnames(className, 'component-root')}>
+    <CapRow className={classnames(className, 'component-root')}>
       {renderHeader()}
       <CapButton onClick={handleClick}>
         {formatMessage(messages.action)}
       </CapButton>
-    </div>
+    </CapRow>
   );
 };
 
@@ -150,6 +152,18 @@ export default compose(
   withConnect,
 )(injectIntl(withStyles(ComponentName, styles)));
 ```
+
+**IMPORTANT — index.js is NOT this file.**
+
+The above compose chain, mapStateToProps, mapDispatchToProps all live in `Component.js`.
+
+The `index.js` file ONLY contains a single re-export:
+```js
+// index.js — this is ALL it contains
+export { default } from './ComponentName';
+```
+
+See `skills/shared-rules.md` Section 1 and Section 3 for the authoritative rule.
 
 ## Function Declaration Style
 
