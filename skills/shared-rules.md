@@ -3,6 +3,29 @@
 > All agents MUST reference this file instead of embedding these rules inline.
 > These are non-negotiable patterns for the target codebase.
 
+---
+
+## CONSTITUTION — Non-Negotiable Principles
+
+> These principles override ALL other rules. Every agent that generates code MUST enforce them. No exceptions. No workarounds.
+
+**Principle I: ALL UI is built from Cap-* components from @capillarytech/cap-ui-library.**
+- Raw HTML tags (`<div>`, `<span>`, `<p>`, `<h1>`-`<h6>`, `<label>`, `<a>`, `<button>`, `<input>`, `<select>`, `<table>`, `<ul>`, `<li>`, `<ol>`, `<hr>`, `<nav>`, `<form>`, `<img>`) are NEVER acceptable in Component.js.
+- For every UI element, consult `skills/cap-ui-composition-patterns.md` for the Cap* equivalent.
+- Follow the Fallback Priority Chain: Cap* primitives → styled(Cap*) → styled.div in styles.js only → NEVER raw HTML.
+
+**Principle II: ALL styling values use Cap UI design tokens.**
+- No raw hex colors — use `CAP_G*`, `CAP_PRIMARY`, `FONT_COLOR_*`, etc. from `@capillarytech/cap-ui-library/styled/variables`
+- No hardcoded px for spacing — use `CAP_SPACE_*` tokens
+- No hardcoded font sizes — use `FONT_SIZE_*` tokens
+- Exception: `1px` for borders, values with `/* no token */` comment
+
+**Principle III: Cap* components are imported via individual file paths ONLY.**
+- `import CapButton from '@capillarytech/cap-ui-library/CapButton'` — CORRECT
+- `import { CapButton } from '@capillarytech/cap-ui-library'` — NEVER
+
+---
+
 ## 1. Organism 10-File Anatomy
 
 Every organism MUST have exactly these 10 files in this dependency order:
@@ -186,11 +209,32 @@ export const makeSelectField = () =>
 
 Selectors that return objects/arrays MUST call `.toJS()` to prevent Immutable leaking into components.
 
-## 12. CSS Class Naming
+## 12. CSS Class Naming & Token Enforcement
 
 - kebab-case, prefixed with organism name: `.tier-benefit-config-wrapper`
-- Cap UI design tokens: `CAP_SPACE_*` for spacing, `CAP_G*` for greys, `FONT_SIZE_*`, `FONT_WEIGHT_*`
-- When token doesn't exist: use `rem` at base 14 with comment `/* no token */`
+
+### 12.1 Mandatory Token Usage (Constitution Principle II)
+
+ALL styling values MUST use Cap UI design tokens from `@capillarytech/cap-ui-library/styled/variables`:
+
+```js
+import * as styledVars from '@capillarytech/cap-ui-library/styled/variables';
+```
+
+| Category | NEVER Use | ALWAYS Use | Examples |
+|---|---|---|---|
+| **Colors** | Raw hex (`#091e42`, `#fff`) | Token variables | `styledVars.CAP_G01`, `styledVars.CAP_PRIMARY.base`, `styledVars.FONT_COLOR_01` |
+| **Spacing** | Raw px (`16px`, `24px`) | `CAP_SPACE_*` tokens | `styledVars.CAP_SPACE_04`, `CAP_SPACE_08`, `CAP_SPACE_12`, `CAP_SPACE_16`, `CAP_SPACE_20`, `CAP_SPACE_24`, `CAP_SPACE_32` |
+| **Font Size** | Raw px (`14px`, `16px`) | `FONT_SIZE_*` tokens | `styledVars.FONT_SIZE_VS` (10px), `FONT_SIZE_S` (12px), `FONT_SIZE_M` (14px), `FONT_SIZE_L` (16px), `FONT_SIZE_VL` (24px) |
+| **Font Weight** | Raw numbers (`400`, `500`) | `FONT_WEIGHT_*` tokens | `styledVars.FONT_WEIGHT_REGULAR` (400), `FONT_WEIGHT_MEDIUM` (500) |
+| **Border** | `1px` is acceptable | Use token for color | `border: 1px solid ${styledVars.CAP_G05}` |
+
+**Exceptions**:
+- `1px` for border widths (no token equivalent)
+- Values with explicit `/* no token */` comment + `rem` at base 14
+- `0` (zero values need no token)
+- Percentage values (`100%`, `50%`)
+- `auto`, `inherit`, `none`
 
 ## 13. Banned Packages
 

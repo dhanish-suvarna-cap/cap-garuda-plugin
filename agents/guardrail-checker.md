@@ -102,27 +102,90 @@ In constants.js: verify pattern `garuda/<Name>/VERB_NOUN_REQUEST|SUCCESS|FAILURE
 
 In Component.js: check for hardcoded strings in JSX (strings not wrapped in formatMessage).
 
-#### FG-11: CSS Naming (HIGH)
+#### FG-11: CSS Naming & Token Enforcement (HIGH) — Constitution Principle II
 
-In styles.js: check for hardcoded pixel values or hex colors (should use Cap tokens).
+In styles.js: comprehensive token usage validation.
+
+**Check 11.1 — Raw hex colors**:
+```bash
+# Detect hardcoded hex colors (should use Cap UI token variables)
+grep -nE ":\s*#[0-9a-fA-F]{3,8}" <styles.js>
+grep -nE "color:\s*'#|background:\s*'#|border.*#[0-9a-f]" <styles.js>
+# Should NOT match — use styledVars.CAP_G01, styledVars.CAP_PRIMARY.base, etc.
+```
+
+**Check 11.2 — Raw px for spacing/sizing**:
+```bash
+# Detect hardcoded px values for spacing (should use CAP_SPACE_* tokens)
+grep -nE "(padding|margin|gap|top|right|bottom|left):\s*\d{2,}px" <styles.js>
+# Should NOT match (except 1px borders) — use styledVars.CAP_SPACE_04/08/12/16/20/24/32
+```
+
+**Check 11.3 — Raw font sizes**:
+```bash
+# Detect hardcoded font-size px values
+grep -nE "font-size:\s*\d+px" <styles.js>
+# Should NOT match — use styledVars.FONT_SIZE_VS/S/M/L/VL
+```
+
+**Check 11.4 — Styled HTML base in styles.js** (prefer styled Cap*):
+```bash
+# Detect styled.div/styled.span that could be styled(CapRow)/styled(CapLabel)
+grep -nE "styled\.(div|span|p)" <styles.js>
+# Each must have a /* No Cap* equivalent — <reason> */ comment justifying raw HTML base
+```
+
+Exceptions: `1px` for borders, values with `/* no token */` comment, `0`, percentages, `auto`/`inherit`/`none`.
 
 #### FG-12: AI-Specific (CRITICAL)
 
 Check that no pre-existing files were modified (only files in generation_report should have changes).
 
-#### FG-13: No Native HTML Elements (CRITICAL)
+#### FG-13: No Native HTML Elements (CRITICAL) — Constitution Principle I
 
-In Component.js files: scan for native HTML tags that should be Cap UI components.
+In Component.js files: comprehensive scan for all native HTML usage.
 
+**Check 13.1 — Raw HTML tags in JSX**:
 ```bash
 # Check for native HTML elements in JSX (Component.js files only)
-grep -nE '<(div|span|p|h[1-6]|label|a |button|input|select|table|hr)[ >]' <Component.js>
-# Should NOT match — use CapRow, CapColumn, CapLabel, CapHeading, CapLink, CapButton, etc.
+grep -nE '<(div|span|p|h[1-6]|label|a |a>|button|input|select|table|ul|ol|li|hr|nav|form|img)[ >/]' <Component.js>
+# Should NOT match — use Cap* equivalents from skills/cap-ui-composition-patterns.md
 ```
 
-**Exceptions**: `<Fragment>`, `<>`, styled-component wrappers from styles.js.
+**Check 13.2 — styled.* definitions in Component.js** (must be in styles.js):
+```bash
+# styled-components using raw HTML base should NEVER be in Component.js
+grep -nE 'styled\.(div|span|p|section|header|footer|main|aside|article|nav|ul|ol|li|label|form)' <Component.js>
+# Should NOT match — move styled definitions to styles.js and import
+```
 
-If native HTML found: CRITICAL violation — must replace with Cap UI equivalent per `skills/shared-rules.md` Section 15.
+**Check 13.3 — React.createElement with HTML strings**:
+```bash
+# Detect programmatic HTML element creation
+grep -nE "React\.createElement\(['\"]" <Component.js>
+grep -nE "createElement\(['\"]div|createElement\(['\"]span|createElement\(['\"]p" <Component.js>
+# Should NOT match — use Cap* component references
+```
+
+**Exceptions**: `<Fragment>`, `<>`, `<React.Fragment>`, named styled-components imported from styles.js.
+
+**Fix guidance for each violation**:
+| Found | Replace With | Reference |
+|-------|-------------|-----------|
+| `<div>` | `<CapRow>` or `<CapColumn>` | `skills/cap-ui-composition-patterns.md` → Layout Patterns |
+| `<span>`, `<p>` | `<CapLabel>` | → Typography Patterns |
+| `<h1>`-`<h6>` | `<CapHeading type="hN">` | → Typography Patterns |
+| `<a>` | `<CapLink>` | → Typography Patterns |
+| `<button>` | `<CapButton>` | → Common Component Patterns |
+| `<input>` | `<CapInput>` | `skills/figma-component-map/SKILL.md` |
+| `<select>` | `<CapSelect>` | `skills/figma-component-map/SKILL.md` |
+| `<table>` | `<CapTable>` | `skills/figma-component-map/SKILL.md` |
+| `<ul>/<ol>/<li>` | `<CapList>` or `<CapColumn>` | → Common Component Patterns |
+| `<hr>` | `<CapDivider>` | `skills/figma-component-map/SKILL.md` |
+| `<img>` | `<CapImage>` or `<CapIcon>` | `skills/figma-component-map/SKILL.md` |
+| `styled.div` in Component.js | Move to styles.js, import as named component | → Styled-Components Patterns |
+
+If ANY native HTML found: CRITICAL violation — must replace with Cap UI equivalent per `skills/cap-ui-composition-patterns.md`.
 
 #### FG-14: index.js Purity (CRITICAL)
 

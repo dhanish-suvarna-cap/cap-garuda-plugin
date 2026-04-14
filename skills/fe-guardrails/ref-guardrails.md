@@ -336,3 +336,88 @@ expect(screen.getByText('Dashboard')).toBeInTheDocument(); // proves UI renders
 ### FG-12.7: All AI changes must pass existing tests before commit
 
 ### FG-12.8: Do not introduce new dependencies without explicit approval
+
+---
+
+## FG-13: No Native HTML Elements — Constitution Principle I
+
+**Priority**: CRITICAL
+
+### FG-13.1: ZERO raw HTML tags in Component.js
+
+```js
+// WRONG — raw HTML
+<div className="header">
+  <span>{title}</span>
+  <p>{description}</p>
+</div>
+
+// CORRECT — Cap* components
+<CapRow type="flex" justify="space-between" align="middle">
+  <CapLabel type="label1">{formatMessage(messages.title)}</CapLabel>
+  <CapLabel type="label2">{formatMessage(messages.description)}</CapLabel>
+</CapRow>
+```
+
+**Banned tags**: `<div>`, `<span>`, `<p>`, `<h1>`-`<h6>`, `<label>`, `<a>`, `<button>`, `<input>`, `<select>`, `<table>`, `<ul>`, `<ol>`, `<li>`, `<hr>`, `<nav>`, `<form>`, `<img>`
+
+**Replacements**: See `skills/cap-ui-composition-patterns.md` for complete lookup table.
+
+**Detection**: Grep for `<(div|span|p|h[1-6]|label|a |a>|button|input|select|table|ul|ol|li|hr|nav|form|img)[ >/]` in Component.js files.
+
+### FG-13.2: No styled.* definitions in Component.js
+
+```js
+// WRONG — styled definition in Component.js
+const Wrapper = styled.div`padding: 16px;`;
+
+// CORRECT — import from styles.js
+import { Wrapper } from './styles';
+// In styles.js: export const Wrapper = styled(CapRow)`padding: ${CAP_SPACE_16};`;
+```
+
+**Detection**: Grep for `styled\.(div|span|p|section|header|footer)` in Component.js files.
+
+### FG-13.3: styled.div in styles.js requires justification
+
+```js
+// WRONG — unjustified styled.div
+export const Overlay = styled.div`position: absolute;`;
+
+// CORRECT — justified with comment
+export const GradientOverlay = styled.div`
+  /* No Cap* equivalent — gradient overlay for image backgrounds */
+  background: linear-gradient(transparent, rgba(0,0,0,0.6));
+  position: absolute;
+  inset: 0;
+`;
+
+// BETTER — use styled(Cap*) when possible
+export const Overlay = styled(CapRow)`position: absolute;`;
+```
+
+**Detection**: Grep for `styled\.(div|span|p)` in styles.js. Each must have `/* No Cap* equivalent` comment.
+
+**Exceptions**: `<Fragment>`, `<>`, `<React.Fragment>`, named styled-components imported from styles.js.
+
+---
+
+## FG-14: index.js Purity
+
+**Priority**: CRITICAL
+
+### FG-14.1: index.js contains ONLY a single re-export line
+
+```js
+// CORRECT — the ONLY content allowed in index.js
+export { default } from './ComponentName';
+
+// WRONG — compose chain, Redux wiring, imports do NOT belong in index.js
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+const mapStateToProps = ...;
+export default compose(withSaga, withReducer, withConnect)(...);
+// All of this must be in Component.js
+```
+
+**Detection**: Grep for `import `, `const `, `function `, `compose`, `connect`, `mapState`, `mapDispatch`, `withSaga`, `withReducer` in index.js files.

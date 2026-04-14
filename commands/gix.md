@@ -819,13 +819,7 @@ Create lightweight git tags after each phase completes, enabling safe rollback:
    ```
    Where NN is the phase number (01 for PRD Ingestion, 02 for Codebase Scout, etc.)
 
-3. **Before code-writing phases** (Phase 10 Code Generation): commit all current artifact files
-   ```bash
-   git add .claude/workspace/<jiraTicketId>/*.json .claude/workspace/<jiraTicketId>/*.md
-   git commit -m "gix: artifacts before code generation"
-   ```
-
-4. **After code-writing phases** (Phase 10, 13): commit code + artifacts together
+3. **After code-writing phases** (Phase 10, 13): commit code + artifacts together
    ```bash
    git add -A
    git commit -m "gix: <phase-name> complete — <brief summary>"

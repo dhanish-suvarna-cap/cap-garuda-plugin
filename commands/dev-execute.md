@@ -42,6 +42,7 @@ Parse `$ARGUMENTS`:
     "context_loading": { "status": "not_started" },
     "codebase_comprehension": { "status": "not_started" },
     "planning": { "status": "not_started", "approved": false },
+    "structure_preview": { "status": "not_started", "approved": false },
     "code_generation": { "status": "not_started", "files_completed": 0, "files_total": 0 },
     "visual_qa": { "status": "not_started", "iteration": 0 },
     "test_writing": { "status": "not_started" },
@@ -103,7 +104,7 @@ Parse `$ARGUMENTS`:
    d. Print: `Requirements captured. Starting pipeline...`
 
 6. If `--from` is specified:
-   a. Validate the phase name is one of: context_loading, codebase_comprehension, planning, code_generation, visual_qa, test_writing, test_evaluation
+   a. Validate the phase name is one of: context_loading, codebase_comprehension, planning, structure_preview, code_generation, visual_qa, test_writing, test_evaluation
    b. Read `{workspacePath}/session_journal.md` if it exists — print it so context is restored
    c. Read `{workspacePath}/requirements_context.md` if it exists — print it so feature context is restored
    d. Read `{workspacePath}/dev_state.json` — verify the prerequisite phases are completed
@@ -111,7 +112,8 @@ Parse `$ARGUMENTS`:
       - `context_loading` requires: nothing (entry point)
       - `codebase_comprehension` requires: `dev_context.json`
       - `planning` requires: `comprehension.json`, `dev_context.json`
-      - `code_generation` requires: `plan.json`, `comprehension.json`, `dev_context.json`
+      - `structure_preview` requires: `plan.json`, `dev_context.json`
+      - `code_generation` requires: `plan.json`, `comprehension.json`, `dev_context.json`, structure_preview approved
       - `visual_qa` requires: `generation_report.json`, `dev_context.json`
       - `test_writing` requires: `generation_report.json`
       - `test_evaluation` requires: test files in organism/tests/
@@ -311,44 +313,448 @@ Update the HOW TO RESUME block at the bottom of session_journal.md (replace exis
 ## HOW TO RESUME (if session interrupted)
 1. Open terminal in the target repo directory  
 2. Start Claude Code
-3. Say: "Resume dev pipeline" or run: `/dev-execute --from=code_generation`
-4. Next action: Generate code from approved plan
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=structure_preview`
+4. Next action: Generate structure preview for user confirmation
 ```
 
 ---
 
-## Phase 4 — Code Generation
+## Phase 3.5 — Structure Preview Gate
 
-Spawn agent: `code-generator`
+**Purpose**: Before writing ANY production code, show the user a layout preview so they can catch structural mistakes BEFORE 10+ files are generated. This is the cheapest point to fix layout issues.
+
+**Skip if**: `--from` is set to a later phase AND `structure_preview` is already approved in dev_state.json.
+
+### Step 1: Generate ASCII Wireframe
+
+Read `{workspacePath}/plan.json` and generate `{workspacePath}/preview-wireframe.txt`.
+
+Build an ASCII wireframe from the `component_tree` and `content_plan` for Component.js. Show:
+- Every Cap* component as a labeled box with its type
+- Layout structure (CapRow horizontal, CapColumn vertical)
+- Nesting depth reflecting the JSX hierarchy
+- Key props (CapTable columns, CapButton type, CapHeading type)
+
+**Example format**:
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Page: BenefitsSettings                                           │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ CapRow [header] justify="space-between" align="middle"       │ │
+│ │ ├── CapHeading type="h3" "Benefits Settings"                 │ │
+│ │ └── CapButton type="primary" "Create New"                    │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ CapRow [filters] gutter={16}                                 │ │
+│ │ ├── CapInput.Search                                          │ │
+│ │ ├── CapSelect [status filter]                                │ │
+│ │ └── CapDateRangePicker                                       │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ CapTable [benefits list]                                     │ │
+│ │ columns: Name | Category | Status | Actions                  │ │
+│ │ pagination: yes                                              │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ CapModal [create/edit] (conditional)                         │ │
+│ │ ├── CapInput [name field]                                    │ │
+│ │ ├── CapSelect [category]                                     │ │
+│ │ └── CapRow [footer] → CapButton "Cancel" + "Save"            │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Step 2: Generate Skeleton JSX
+
+Write `{workspacePath}/preview-skeleton.jsx` — a minimal JSX file showing the Cap* component tree WITHOUT:
+- No Redux wiring (no connect, compose, mapStateToProps)
+- No saga/reducer/selector imports
+- No real data or API calls
+- No i18n (use plain strings for readability)
+- No event handlers (use `{/* HANDLER: description */}` comments)
+- No PropTypes
+
+The skeleton should:
+- Use ONLY Cap* components (ZERO raw HTML tags)
+- Use styled components from styles.js where needed
+- Show the complete layout hierarchy
+- Include `// recipe: <ComponentName> — <purpose>` comments on each Cap* component
+- Follow the typography hierarchy from `skills/cap-ui-composition-patterns.md`
+
+**Example**:
+```jsx
+// preview-skeleton.jsx — LAYOUT PREVIEW ONLY (no Redux, no i18n, no handlers)
+import CapRow from '@capillarytech/cap-ui-library/CapRow';
+import CapColumn from '@capillarytech/cap-ui-library/CapColumn';
+import CapHeading from '@capillarytech/cap-ui-library/CapHeading';
+import CapButton from '@capillarytech/cap-ui-library/CapButton';
+import CapTable from '@capillarytech/cap-ui-library/CapTable';
+import CapInput from '@capillarytech/cap-ui-library/CapInput';
+import CapSelect from '@capillarytech/cap-ui-library/CapSelect';
+import CapModal from '@capillarytech/cap-ui-library/CapModal';
+
+const BenefitsSettingsPreview = () => (
+  <CapColumn span={24}> {/* recipe: CapColumn — page container */}
+    <CapRow type="flex" justify="space-between" align="middle"> {/* recipe: CapRow — header bar */}
+      <CapHeading type="h3">Benefits Settings</CapHeading> {/* recipe: CapHeading — page title */}
+      <CapButton type="primary">{/* HANDLER: Create new benefit */}Create New</CapButton>
+    </CapRow>
+
+    <CapRow type="flex" gutter={16}> {/* recipe: CapRow — filter bar */}
+      <CapInput.Search placeholder="Search benefits" />
+      <CapSelect placeholder="Filter by status" />
+    </CapRow>
+
+    <CapTable  {/* recipe: CapTable — benefits list */}
+      columns={[
+        { title: 'Name', dataIndex: 'name' },
+        { title: 'Category', dataIndex: 'category' },
+        { title: 'Status', dataIndex: 'status' },
+        { title: 'Actions', dataIndex: 'actions' },
+      ]}
+      dataSource={[]}
+    />
+
+    <CapModal title="Create Benefit" visible={false}> {/* recipe: CapModal — create/edit form */}
+      <CapInput label="Name" />
+      <CapSelect label="Category" />
+      <CapRow type="flex" justify="end" gutter={12}>
+        <CapButton type="flat">Cancel</CapButton>
+        <CapButton type="primary">Save</CapButton>
+      </CapRow>
+    </CapModal>
+  </CapColumn>
+);
+
+export default BenefitsSettingsPreview;
+```
+
+### Step 3: Validate Skeleton
+
+Run a quick validation on the skeleton:
+1. **Check 1**: Grep for raw HTML tags (`<div`, `<span`, `<p`, etc.) — MUST be zero
+2. **Check 2**: Verify every Cap* component in plan.json's `cap_components` list appears in skeleton
+3. **Check 3**: Verify Cap* imports are individual file paths (not barrel)
+
+If any check fails: fix the skeleton before presenting to user.
+
+### Step 4: Present to User and Wait for Approval
+
+Print:
+
+```
+Phase 3.5 — Structure Preview
+===============================
+
+Layout wireframe written to: {workspacePath}/preview-wireframe.txt
+Skeleton JSX written to: {workspacePath}/preview-skeleton.jsx
+
+[Display the ASCII wireframe inline]
+
+Cap* Components Used:
+  - CapRow (layout: header, filters, footer)
+  - CapColumn (page container)
+  - CapHeading type="h3" (page title)
+  - CapButton type="primary" (CTA), type="flat" (cancel)
+  - CapTable (data display)
+  - CapInput.Search (search filter)
+  - CapSelect (status filter)
+  - CapModal (create/edit form)
+
+Raw HTML tags: 0 ✓
+
+Does this layout structure match your design?
+  (a) Yes — proceed to full code generation
+  (b) No — I'll describe what needs to change
+  (c) Skip preview — proceed directly to code generation
+```
+
+**PAUSE CHECKPOINT — wait for user response.**
+
+**If (a) "Yes"**: 
+- Update `dev_state.json`: `structure_preview.status = "completed"`, `structure_preview.approved = true`
+- Append to requirements_context.md: `### Structure Preview — <timestamp>\n- Decision: approved\n- Components: <list>`
+- Proceed to Phase 4
+
+**If (b) "No"**:
+- Ask user what needs to change
+- Regenerate wireframe + skeleton with corrections
+- Re-present for approval (loop until approved or user aborts)
+- Append to requirements_context.md: `### Structure Preview — <timestamp>\n- Decision: revised\n- Changes: <user's description>`
+
+**If (c) "Skip"**: 
+- Update `dev_state.json`: `structure_preview.status = "skipped"`
+- Proceed to Phase 4
+
+Append to `{workspacePath}/session_journal.md`:
+```markdown
+## Phase 3.5: Structure Preview — <APPROVED/REVISED/SKIPPED> at <timestamp>
+- Wireframe: preview-wireframe.txt
+- Skeleton: preview-skeleton.jsx
+- Cap* components: <count> used, 0 raw HTML
+- User decision: <approved/revised N times/skipped>
+```
+
+Update the HOW TO RESUME block:
+```markdown
+---
+## HOW TO RESUME (if session interrupted)
+1. Open terminal in the target repo directory  
+2. Start Claude Code
+3. Say: "Resume dev pipeline" or run: `/dev-execute --from=code_generation`
+4. Next action: Generate code from approved plan and confirmed structure
+```
+
+---
+
+## Phase 4 — Code Generation (Delegated: 3 Sub-Phases)
+
+Code generation is split into three specialized sub-phases to improve accuracy. Each sub-phase focuses on ONE concern, preventing attention split between visual fidelity and state management.
+
+```
+Phase 4a — UI Generation (VISUAL FOCUS)
+  Agent focuses ONLY on: Component.js JSX + styles.js
+  Does NOT touch: Redux, i18n, compose chain
+  Output: Component.js (with callback stubs + raw strings) + styles.js
+
+Phase 4b — Redux Generation (STATE FOCUS)
+  Agent focuses ONLY on: constants, actions, reducer, saga, selectors, messages
+  Does NOT touch: Component.js
+  Output: 6 Redux infrastructure files
+
+Phase 4c — Integration Pass (WIRING FOCUS)
+  Agent EDITS Phase 4a output: wires Redux, fills callbacks, i18nizes strings
+  Output: Fully wired Component.js + index.js + Loadable.js
+```
+
+### Phase 4a — UI Generation (Component.js + styles.js ONLY)
+
+Spawn agent: `code-generator` with `phase: "4a"`
 
 Pass:
-- `workspacePath`: session workspace (contains plan.json, comprehension.json, dev_context.json)
+- `workspacePath`: session workspace
+- `phase`: `"4a"` — UI generation only
+- `previewSkeleton`: path to `preview-skeleton.jsx` (if Phase 3.5 was approved — use as layout reference)
 
-Wait for source files to be generated and `generation_report.json` to be written.
+**What code-generator does in Phase 4a:**
+1. Read plan.json — focus ONLY on Component.js and styles.js entries
+2. Read preview-skeleton.jsx if it exists — use as the approved layout structure
+3. Read `skills/cap-ui-composition-patterns.md` — mandatory for every JSX element
+4. Read component_mapping from dev_context.json
+5. Generate `styles.js`:
+   - All styled components using Cap* bases (styled(CapRow), styled(CapLabel), etc.)
+   - All Cap UI tokens — ZERO raw hex or px values
+6. Generate `Component.js` with these constraints:
+   - **ONLY Cap* components** — zero raw HTML (Constitution Principle I)
+   - **NO Redux wiring** — no connect, compose, mapStateToProps, mapDispatchToProps, withSaga, withReducer
+   - **NO i18n** — use plain string literals (Phase 4c will replace them)
+   - **Callback stubs** instead of real handlers: `onClick={/* HANDLER: Create new benefit */}`
+   - **Prop stubs** instead of real Redux data: `data={/* PROP: benefits list from Redux */}`
+   - **Recipe comments** on every Cap* component: `{/* recipe: CapTable — benefits list */}`
+   - Export bare component: `export default ComponentName;` (no HOC wrapping)
+7. Run pre-emission validation (Check 1–4 from Step 3b)
+8. Write `{workspacePath}/ui-generation-manifest.json`:
+
+```json
+{
+  "version": "1.0",
+  "rootComponent": "BenefitsSettings",
+  "filesWritten": ["<path>/Component.js", "<path>/styles.js"],
+  "callbackSlots": [
+    {
+      "file": "<path>/Component.js",
+      "marker": "HANDLER: Create new benefit",
+      "proposedAction": "openCreateModal",
+      "line": 42
+    }
+  ],
+  "stringSlots": [
+    {
+      "file": "<path>/Component.js",
+      "literal": "Benefits Settings",
+      "suggestedIntlKey": "pageTitle",
+      "line": 15
+    },
+    {
+      "file": "<path>/Component.js",
+      "literal": "Create New",
+      "suggestedIntlKey": "createNewButton",
+      "line": 18
+    }
+  ],
+  "propSlots": [
+    {
+      "file": "<path>/Component.js",
+      "marker": "PROP: benefits list from Redux",
+      "suggestedSelector": "makeSelectBenefits",
+      "suggestedPropName": "benefits"
+    }
+  ],
+  "capComponentsUsed": ["CapRow", "CapColumn", "CapHeading", "CapButton", "CapTable", "CapModal", "CapInput", "CapSelect"],
+  "tokensUsed": ["CAP_SPACE_16", "CAP_SPACE_24", "CAP_G01", "CAP_G05"]
+}
+```
+
+9. Update generation_report.json with files from Phase 4a
+
+**Gate Check for 4a:**
+- Grep Component.js for raw HTML tags — MUST be zero
+- Grep Component.js for `connect`, `compose`, `mapStateToProps` — MUST be zero (Redux belongs in 4c)
+- Verify ui-generation-manifest.json is valid JSON with `filesWritten`, `callbackSlots`, `stringSlots`
+- Verify all Cap* imports are individual file paths
+
+Print: `Phase 4a complete — UI generated (Component.js + styles.js) with <N> callback stubs, <N> string slots`
+
+### Phase 4b — Redux Generation (Infrastructure Files ONLY)
+
+Spawn agent: `code-generator` with `phase: "4b"`
+
+Pass:
+- `workspacePath`: session workspace
+- `phase`: `"4b"` — Redux generation only
+
+**What code-generator does in Phase 4b:**
+1. Read plan.json — focus ONLY on: constants.js, actions.js, reducer.js, saga.js, selectors.js, messages.js
+2. Generate files in dependency order:
+   - `constants.js` — action type constants (shared-rules.md Section 2)
+   - `actions.js` — action creators with (payload, callback) signature
+   - `reducer.js` — ImmutableJS reducer (shared-rules.md Section 5)
+   - `saga.js` — workers with notifyHandledException (shared-rules.md Section 6)
+   - `selectors.js` — reselect selectors with .toJS() (shared-rules.md Section 11)
+   - `messages.js` — react-intl messages including keys from ui-generation-manifest.json `stringSlots`
+3. Read ui-generation-manifest.json — use `stringSlots` to generate matching message keys in messages.js
+4. Run pre-emission validation on each file
+5. Handle mock APIs if plan contains ASSUMED endpoints
+6. Update generation_report.json with files from Phase 4b
+
+**Gate Check for 4b:**
+- All 6 Redux files exist
+- Every action type has REQUEST/SUCCESS/FAILURE triplet
+- Every saga has notifyHandledException in catch
+- Reducer uses ImmutableJS only
+- messages.js includes keys for all stringSlots from manifest
+
+Print: `Phase 4b complete — Redux infrastructure generated (6 files)`
+
+### Phase 4c — Integration Pass (Wire Redux into Component.js)
+
+Spawn agent: `code-generator` with `phase: "4c"`
+
+Pass:
+- `workspacePath`: session workspace
+- `phase`: `"4c"` — integration wiring only
+
+**What code-generator does in Phase 4c — EDITS Component.js from Phase 4a:**
+
+1. **Read the manifest**: `{workspacePath}/ui-generation-manifest.json`
+2. **Read Phase 4a's Component.js** (the one with stubs)
+3. **Read Phase 4b's files** (constants, actions, reducer, saga, selectors, messages)
+
+4. **Add Redux imports** at the top of Component.js:
+   ```js
+   import { connect } from 'react-redux';
+   import { compose, bindActionCreators } from 'redux';
+   import { createStructuredSelector } from 'reselect';
+   import injectSaga from 'utils/injectSaga';
+   import injectReducer from 'utils/injectReducer';
+   import { injectIntl } from 'react-intl';
+   import withStyles from 'utils/withStyles';
+   // + local imports: constants, actions, reducer, saga, selectors, styles, messages
+   ```
+
+5. **Fill callback stubs**: For each `callbackSlots` entry in manifest:
+   - Find the `/* HANDLER: <marker> */` comment in Component.js
+   - Replace with: `props.actions.<proposedAction>` (mapped to action creator from actions.js)
+   - Example: `onClick={/* HANDLER: Create new benefit */}` → `onClick={() => actions.openCreateModal()}`
+
+6. **Fill prop stubs**: For each `propSlots` entry in manifest:
+   - Find the `/* PROP: <marker> */` comment in Component.js
+   - Replace with the actual prop name: `data={/* PROP: benefits list */}` → `data={benefits}`
+
+7. **Replace string literals with i18n**: For each `stringSlots` entry in manifest:
+   - Find the literal string in Component.js
+   - Replace with: `{formatMessage(messages.<suggestedIntlKey>)}`
+   - Example: `"Benefits Settings"` → `{formatMessage(messages.pageTitle)}`
+
+8. **Add mapStateToProps + mapDispatchToProps** at the bottom of Component.js:
+   ```js
+   const mapStateToProps = createStructuredSelector({
+     benefits: makeSelectBenefits(),
+     loading: makeSelectLoading(),
+     // ... one entry per propSlot
+   });
+   
+   const mapDispatchToProps = (dispatch) => ({
+     actions: bindActionCreators({ openCreateModal, fetchBenefits, ... }, dispatch),
+   });
+   ```
+
+9. **Add compose chain** (shared-rules.md Section 3):
+   ```js
+   const withConnect = connect(mapStateToProps, mapDispatchToProps);
+   const withSagaInjection = injectSaga({ key: INJECT_KEY, saga });
+   const withReducerInjection = injectReducer({ key: INJECT_KEY, reducer });
+   
+   export default compose(
+     withSagaInjection,
+     withReducerInjection,
+     withConnect,
+   )(injectIntl(withStyles(ComponentName, styles)));
+   ```
+
+10. **Add PropTypes** for all props from manifest
+
+11. **Generate index.js**: `export { default } from './ComponentName';`
+
+12. **Generate Loadable.js**: Standard lazy loading wrapper
+
+13. **Run final pre-emission validation** on the edited Component.js
+
+14. **Write integration-patches.md** documenting every edit:
+    ```markdown
+    ## Phase 4c Integration Patches
+    
+    ### <path>/Component.js
+    + imports: connect, compose, bindActionCreators, createStructuredSelector, ...
+    + mapStateToProps: <N> selectors wired
+    + mapDispatchToProps: <N> action creators bound
+    - callback "HANDLER: Create new benefit" → actions.openCreateModal
+    - callback "HANDLER: Sort change" → actions.setSortOrder
+    - string "Benefits Settings" → formatMessage(messages.pageTitle)
+    - string "Create New" → formatMessage(messages.createNewButton)
+    + compose chain: withSaga → withReducer → withConnect
+    + PropTypes: <N> props declared
+    + export: replaced bare export with compose-wrapped export
+    
+    ### <path>/index.js — GENERATED
+    ### <path>/Loadable.js — GENERATED
+    ```
+
+15. **Update generation_report.json** with all files from Phase 4c
+
+**Gate Check for 4c:**
+- Component.js has ZERO callback stubs remaining (`/* HANDLER:` markers)
+- Component.js has ZERO prop stubs remaining (`/* PROP:` markers)
+- Component.js has ZERO raw string literals that match stringSlots
+- Component.js has compose chain in correct order
+- index.js contains ONLY re-export line
+- Grep for raw HTML tags — MUST still be zero (regression check)
+- All imports reference files that exist
 
 **Recovery check**: If the agent returns with an error or partial completion:
 1. Read `generation_report.json` to see how many files were completed
-2. If partial (some files created but not all):
-   - Log: "Code generation partially completed (<N>/<total> files)"
-   - Spawn a NEW code-generator instance with instructions to generate only the remaining files
-   - Repeat until all files are done or `max_code_gen_retries` attempts fail (see `skills/config.md`)
-
-**Gate Check**:
-- Read `{workspacePath}/generation_report.json`
-- Count `files_created` + `files_modified` vs plan.json total
-- Quick grep on all generated files for banned patterns:
-  - `from '@capillarytech/cap-ui-library'` (barrel import — NOT individual file imports)
-  - `import axios` (banned)
-  - `from '@testing-library/react'` (wrong import)
-- If banned patterns found: print warnings with file:line
-- If `guardrail_warnings` exist: print them
-- If file count mismatch: check if partial (attempt recovery) or failed
+2. If partial: spawn a NEW code-generator instance with `phase: "4c"` and `resumeFrom` flag
+3. Repeat until done or `max_code_gen_retries` fail (see `skills/config.md`)
 
 Update `dev_state.json`: set `code_generation.status = "completed"`, set `phases.code_generation.summary = "<one-line summary>"`, `phases.code_generation.guardrail_result = "PASS" or "PASS with N warnings"`, `recovery.last_successful_phase = "code_generation"`, `recovery.can_resume_from = "visual_qa"`.
 
 Print:
 ```
-Phase 4 complete — Code generation finished
+Phase 4 complete — Code generation finished (3 sub-phases)
+  4a — UI: Component.js + styles.js (Cap* only, 0 raw HTML)
+  4b — Redux: constants + actions + reducer + saga + selectors + messages
+  4c — Integration: <N> callbacks wired, <N> strings i18nized, compose chain added
+  
   Files created: <list>
   Files modified: <list>
   Plan deviations: <list or "none">
@@ -358,11 +764,13 @@ Phase 4 complete — Code generation finished
 Append to `{workspacePath}/session_journal.md`:
 ```markdown
 ## Phase 4: Code Generation — COMPLETED at <timestamp>
+- Phase 4a (UI): Component.js + styles.js — <N> Cap* components, 0 raw HTML
+- Phase 4b (Redux): 6 infrastructure files
+- Phase 4c (Integration): <N> callbacks wired, <N> strings i18nized
 - Files created: <list>
 - Files modified: <list>
 - Plan deviations: <count>
-- Unresolved items: <count>
-- Output: generation_report.json
+- Output: generation_report.json, ui-generation-manifest.json, integration-patches.md
 ```
 
 Update the HOW TO RESUME block at the bottom of session_journal.md (replace existing block):
