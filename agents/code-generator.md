@@ -10,10 +10,9 @@ You are the code generator for the GIX dev pipeline. You read the plan and gener
 
 ## Inputs (provided via prompt)
 
-- `workspacePath` — session workspace (contains `plan.json`, `comprehension.json`, `dev_context.json`)
-- `phase` — which sub-phase to execute: `"4a"` (UI only), `"4b"` (Redux only), `"4c"` (integration), or omitted for legacy full-pass mode
+- `workspacePath` — session workspace (contains `plan.json`, `comprehension.json`, `lld_artifact.json`, and optionally `figma_decomposition.json`, `prototype_analysis.json`)
+- `phase` — which pass to execute: `"pass_1"` (UI only), `"pass_2"` (Redux only), `"pass_3"` (integration)
 - `resumeFrom` — (optional) file index to resume from if recovering from partial generation
-- `previewSkeleton` — (optional, Phase 4a only) path to approved `preview-skeleton.jsx` from Phase 3.5
 
 ## CONSTITUTION — Non-Negotiable Principles
 
@@ -46,7 +45,7 @@ Consult `skills/shared-rules.md` for all non-negotiable patterns. Additionally:
 - **skills/fe-guardrails/** — FG-01 through FG-14 frontend guardrails (CRITICAL/HIGH)
 - **skills/cap-ui-library/** — Component specs: read SKILL.md index to find component, then ref-<Name>.md for props
 - **skills/figma-component-map/SKILL.md** — Figma element → Cap UI component mapping
-- **skills/fe-principles.md** — C1-C7 confidence levels for uncertain decisions
+- **skills/ask-before-assume.md** — C1-C7 confidence levels and query protocol for uncertain decisions
 - **coding-dna-architecture** — ref-import-order.md, ref-naming.md
 - **coding-dna-components** — ref-anatomy.md, ref-props.md
 - **coding-dna-styling** — ref-tokens-and-theme.md
@@ -59,12 +58,13 @@ Consult `skills/shared-rules.md` for all non-negotiable patterns. Additionally:
 
 1. Read `{workspacePath}/plan.json` — the implementation plan
 2. Read `{workspacePath}/comprehension.json` — existing code patterns to match
-3. Read `{workspacePath}/dev_context.json` — LLD details and component_mapping
-4. Read `{workspacePath}/session_memory.md` — shared context, decisions, constraints
-5. If `dev_context.json` contains `component_mapping`: load the mapping so you know which Cap UI components to use for each UI element
+3. Read `{workspacePath}/lld_artifact.json` — design spec (state, actions, sagas, API contracts, component inventory)
+4. If exists: read `{workspacePath}/figma_decomposition.json` — component_mapping with verified Cap UI components and design tokens
+5. If exists: read `{workspacePath}/prototype_analysis.json` — interaction flows, state patterns
+6. Read `{workspacePath}/session_memory.md` — shared context, decisions, constraints
 
 **Cap UI Component Lookup** — MANDATORY for every JSX element in Component.js:
-1. Check `component_mapping` in dev_context.json for the Figma-mapped component
+1. Check `figma_decomposition.json → sections[].component_mapping` for the Figma-verified component
 2. Check `skills/cap-ui-composition-patterns.md` for the Cap* composition pattern
 3. Read `skills/cap-ui-library/ref-<ComponentName>.md` for props and usage pattern
 4. Use ONLY the mapped Cap UI component with the correct individual file import
@@ -92,44 +92,115 @@ If `resumeFrom` is provided:
 
 ### Phase-Specific Behavior
 
-The code-generator supports three sub-phases for delegated generation. When `phase` is provided, follow the phase-specific rules below. When `phase` is omitted, run the legacy full-pass mode (all files in one pass).
+The code-generator executes three passes matching the 3-pass plan from `plan.json`. Each pass reads its corresponding section from the plan. **Pass 2 cannot start until Pass 1 is complete. Pass 3 cannot start until Pass 2 is complete.**
 
-#### Phase 4a — UI Generation Only
+#### Pass 1 (phase="pass_1") — UI Generation Only
+
+**Read**: `plan.json → pass_1_ui`
 **Files to generate**: `styles.js`, `Component.js` ONLY
+
+**For styles.js**: Follow `pass_1_ui.files[0].content_plan.styled_exports` — each entry specifies the styled component name, Cap* base, and exact tokens.
+
+**For Component.js**: Follow `pass_1_ui.files[1].content_plan.layout_recipe` — this is the EXACT layout to produce. Each entry in the recipe specifies:
+- `use`: the exact Cap* component and props → just write this
+- `instead_of`: what NOT to use → if you catch yourself writing this, stop
+- `import`: the exact import path
+- `children`: nested Cap* components
+- `handler_stub` / `prop_stub` / `condition_stub`: the exact stub comment to insert
+
 **Constraints on Component.js**:
 - ZERO Redux wiring (no connect, compose, mapStateToProps, mapDispatchToProps, withSaga, withReducer)
-- ZERO i18n (use plain string literals — Phase 4c will replace them)
-- Use `{/* HANDLER: <description> */}` comments instead of real event handlers
-- Use `{/* PROP: <description> */}` comments instead of real Redux props
+- ZERO i18n (use plain string literals — Pass 3 will replace them)
+- Write the stubs exactly as specified in the recipe: `{/* HANDLER: <exact stub text from recipe> */}`
 - Add `// recipe: <ComponentName> — <purpose>` on every Cap* component
 - Export bare component: `export default ComponentName;`
-- If `previewSkeleton` path is provided: use it as the approved layout reference
-- After writing: emit `{workspacePath}/ui-generation-manifest.json` with `callbackSlots`, `stringSlots`, `propSlots`, `capComponentsUsed`, `tokensUsed`
 
-#### Phase 4b — Redux Generation Only
+**After writing**: Run pre-emission validation (Checks 1-4). If any check fails, fix and re-validate before writing to disk.
+
+#### Pass 2 (phase="pass_2") — Redux Generation Only
+
+**Read**: `plan.json → pass_2_redux`
 **Files to generate**: `constants.js`, `actions.js`, `reducer.js`, `saga.js`, `selectors.js`, `messages.js` ONLY
-**Additional input**: Read `{workspacePath}/ui-generation-manifest.json` from Phase 4a
-- Use `stringSlots` from manifest to include matching intl keys in `messages.js`
-- Use `callbackSlots` to ensure matching action creators exist in `actions.js`
-- Do NOT read or modify Component.js
+**Also read**: the Pass 1 Component.js (to verify stubs match manifest entries)
 
-#### Phase 4c — Integration Pass Only
-**Files to generate/edit**: Edit `Component.js` (from 4a), generate `index.js`, `Loadable.js`
-**Additional inputs**: 
-- Read `{workspacePath}/ui-generation-manifest.json` (manifest from 4a)
-- Read Phase 4a's `Component.js` and `styles.js`
-- Read Phase 4b's Redux files (constants, actions, reducer, saga, selectors, messages)
-**Edits to Component.js**:
-1. Add Redux imports (connect, compose, bindActionCreators, createStructuredSelector, injectSaga, injectReducer, injectIntl, withStyles)
-2. Add local imports (constants, actions, reducer, saga, selectors, styles, messages)
-3. Fill callback stubs: `{/* HANDLER: X */}` → `() => actions.X()`
-4. Fill prop stubs: `{/* PROP: X */}` → actual prop name
-5. Replace string literals: `"text"` → `{formatMessage(messages.key)}`
-6. Add mapStateToProps, mapDispatchToProps, compose chain at bottom
-7. Add PropTypes and defaultProps
-8. Replace `export default ComponentName;` with compose-wrapped export
-**Generate**: `index.js` (re-export only), `Loadable.js` (lazy wrapper)
-**Output**: `{workspacePath}/integration-patches.md` documenting every edit
+**For each file**: Follow the corresponding entry in `pass_2_redux.files[]` — each has a `content_plan` specifying exact exports, constants, cases, workers, selectors, and messages.
+
+**For messages.js specifically**: Ensure every string literal from `pass_2_redux.integration_manifest.string_map` has a matching message key.
+
+**For actions.js specifically**: Ensure every action referenced in `pass_2_redux.integration_manifest.handler_map` has a matching action creator.
+
+**For selectors.js specifically**: Ensure every selector referenced in `pass_2_redux.integration_manifest.prop_map` has a matching makeSelect* function.
+
+**Do NOT read or modify Component.js** — only generate Redux infrastructure files.
+
+**Also generate supporting files** from `pass_2_redux.supporting_files[]` (endpoints.js, api.js additions).
+
+#### Pass 3 (phase="pass_3") — Integration Pass Only (ZERO Creative Decisions)
+
+**Read**: `plan.json → pass_3_integration` + `pass_2_redux.integration_manifest`
+**Read**: Pass 1's `Component.js` (the skeleton with stubs)
+**Read**: Pass 2's Redux files (to verify imports will resolve)
+
+This pass makes **ZERO creative decisions**. Every edit is pre-defined in the `integration_manifest`. Follow it mechanically:
+
+**Edits to Component.js** — for each manifest entry:
+
+1. **Handler stubs** → for each `integration_manifest.handler_map` entry:
+   - Find `{/* HANDLER: <stub> */}` in Component.js
+   - Replace with: `() => actions.<action>(<params>)`
+
+2. **Prop stubs** → for each `integration_manifest.prop_map` entry:
+   - Find `{/* PROP: <stub> */}` in Component.js
+   - Replace with: `{<prop_name>}`
+
+3. **String literals** → for each `integration_manifest.string_map` entry:
+   - Find the exact `"<literal>"` string in Component.js
+   - Replace with: `{formatMessage(messages.<message_key>)}`
+
+4. **Condition stubs** → for each `integration_manifest.condition_map` entry:
+   - Find `{/* CONDITION: <stub> */}` in Component.js
+   - Replace with proper conditional: `{<prop> && <renders>}` or ternary
+
+5. **Add Redux imports** at top of Component.js:
+   - `connect` from `react-redux`, `compose`, `bindActionCreators` from `redux`
+   - `createStructuredSelector` from `reselect`
+   - `injectSaga`, `injectReducer`, `injectIntl`, `withStyles`
+   - Local: all action creators from `./actions`, reducer, saga, selectors, styles, messages
+
+6. **Add mapStateToProps** using `integration_manifest.prop_map`:
+   ```
+   createStructuredSelector({ <prop_name>: <selector>(), ... })
+   ```
+
+7. **Add mapDispatchToProps** using `integration_manifest.handler_map`:
+   ```
+   dispatch => ({ actions: bindActionCreators({ <action1>, <action2>, ... }, dispatch) })
+   ```
+
+8. **Add compose chain** at bottom:
+   ```
+   withSaga → withReducer → withConnect wrapping injectIntl(withStyles(Component, styles))
+   ```
+
+9. **Add PropTypes** for all props from manifest
+
+10. **Replace** `export default ComponentName;` with compose-wrapped export
+
+**Generate index.js**: Read `pass_3_integration.index_js.single_line` — write exactly that one line.
+**Generate Loadable.js**: Standard lazy wrapper from `pass_3_integration.loadable_js`.
+
+**Completion verification** — run through `pass_3_integration.completion_checklist`:
+- Grep Component.js for `/* HANDLER:` — must be ZERO remaining
+- Grep Component.js for `/* PROP:` — must be ZERO remaining
+- Grep Component.js for `/* CONDITION:` — must be ZERO remaining
+- Cross-check every `string_map` literal — must be replaced with formatMessage
+- Verify compose chain order
+- Verify ZERO native HTML (regression from Pass 1)
+- Verify index.js is ONLY the barrel re-export
+
+If any check fails → fix and re-verify. Do NOT proceed until all checks pass.
+
+**Output**: `{workspacePath}/integration-patches.md` documenting every edit made
 
 ### Step 2: Initialize Generation Report
 
@@ -146,22 +217,10 @@ Write initial `{workspacePath}/generation_report.json`:
 
 ### Step 3: Generate Files in Dependency Order
 
-**If `phase` is provided**, generate ONLY the files for that phase:
-- **Phase 4a**: `styles.js` → `Component.js` (UI only, no Redux)
-- **Phase 4b**: `constants.js` → `actions.js` → `reducer.js` → `selectors.js` → `saga.js` → `messages.js` (Redux only)
-- **Phase 4c**: Edit `Component.js` → generate `index.js` → `Loadable.js` (integration wiring)
-
-**If `phase` is omitted** (legacy full-pass mode), process ALL files in this exact order:
-1. `constants.js`
-2. `actions.js`
-3. `reducer.js`
-4. `selectors.js`
-5. `saga.js`
-6. `styles.js`
-7. `messages.js`
-8. `Component.js`
-9. `index.js`
-10. `Loadable.js`
+Generate ONLY the files for the specified pass:
+- **pass_1**: `styles.js` → `Component.js` (reads `plan.pass_1_ui`)
+- **pass_2**: `constants.js` → `actions.js` → `reducer.js` → `saga.js` → `selectors.js` → `messages.js` + supporting files (reads `plan.pass_2_redux`)
+- **pass_3**: Edit `Component.js` → generate `index.js` → `Loadable.js` (reads `plan.pass_3_integration` + `plan.pass_2_redux.integration_manifest`)
 
 **For each file:**
 
@@ -176,7 +235,7 @@ For each file, follow the patterns from `skills/shared-rules.md` and the Coding 
 - **styles.js**: CSS naming from shared-rules.md Section 12
 - **messages.js**: Scope format from shared-rules.md Section 10
 - **Component.js**: Use Cap* components, formatMessage for text, destructure props. **Add recipe provenance comments** (see below)
-- **index.js**: Compose chain from shared-rules.md Section 3
+- **index.js**: Barrel re-export ONLY: `export { default } from './ComponentName';` — compose chain lives in Component.js per shared-rules.md Section 3
 - **Loadable.js**: Standard React.lazy + loadable wrapper
 
 #### 3b. Pre-Emission Validation (MANDATORY for Component.js and any JSX file)
@@ -347,7 +406,8 @@ After generating EACH file, verify before writing to disk:
 4. **[FG-03]** If reducer: uses ImmutableJS only — no spread, no Object.assign, no direct mutation
 5. **[FG-04]** If saga: every catch has notifyHandledException
 6. **[FG-04]** If saga: checks res?.success before success dispatch
-7. **[FG-07]** If index.js: compose chain exact order — withSaga → withReducer → withConnect
+7. **[FG-14]** If index.js: ONLY `export { default } from './ComponentName';` — ZERO compose chain, ZERO imports
+7b. **[FG-07]** If Component.js (Pass 3): compose chain exact order — withSaga → withReducer → withConnect
 8. **[FG-05]** No banned package imports (axios, Redux Toolkit, Zustand, etc.)
 9. **[FG-06]** No manual Authorization/X-CAP-* headers
 10. **[FG-09]** If constants.js: action types follow garuda/<Name>/VERB_NOUN pattern

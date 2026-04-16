@@ -252,4 +252,4 @@ Read `{workspacePath}/query_answers.json` before starting — it may contain ans
 
 `figma_decomposition.json` in workspace. Report: section count, components mapped count, unmapped count.
 
-This file is consumed by: `hld-generator`, `lld-generator`, `dev-context-loader`, and indirectly by `code-generator` and `visual-qa`.
+This file is consumed by: `hld-generator`, `lld-generator`, `dev-planner`, `code-generator`, and `visual-qa`. All dev pipeline agents read this file directly from the workspace.

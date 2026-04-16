@@ -10,7 +10,7 @@ You are the test writer for the GIX dev pipeline. You write comprehensive unit t
 
 ## Inputs (provided via prompt)
 
-- `workspacePath` — session workspace (contains `generation_report.json`, optionally `testcase_sheet.json` or test specs from dev_context.json)
+- `workspacePath` — session workspace (contains `generation_report.json`, optionally `testcase_sheet.json`)
 - `batch` — (optional) which batch to generate: `redux` (reducer + saga tests) or `component` (Component tests). If not specified, generate all.
 
 ## TESTING RULES

@@ -46,4 +46,4 @@ description: "Frontend development guardrails for Capillary UI projects. 12 cate
 
 ## Detailed Rules
 
-See `ref-guardrails.md` for complete rules with code examples for each category.
+See `skills/shared-rules.md` for complete rules with code examples and detection hints for each category (FG-01 through FG-14).

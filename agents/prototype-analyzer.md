@@ -10,8 +10,9 @@ You analyze live prototype URLs (v0.dev, Vercel previews, or any web URL) to ext
 
 ## When This Agent Runs
 
-- During **Phase 1 (PRD Ingestion)** — if `designRef.type == "prototype_url"`
-- Replaces the Figma MCP calls. Outputs the same `figma` section in `context_bundle.json` so downstream agents don't need to know the source.
+- During **Phase 1** — spawned directly by the `/gix` orchestrator if `designRef` includes a prototype URL
+- Runs **in parallel** with `prd-ingestion` and `figma-decomposer` (if both Figma and prototype are provided)
+- Produces `prototype_analysis.json` as an independent knowledge artifact (interaction/behaviour knowledge)
 
 ## Inputs (provided via prompt)
 
@@ -167,27 +168,17 @@ Write to `{workspacePath}/prototype_analysis.json`:
 }
 ```
 
-### Step 8: Integrate with Context Bundle
+## How Downstream Agents Use This
 
-Update `{workspacePath}/context_bundle.json` to include the prototype analysis in the `figma` section (using the same structure so downstream agents work without changes):
+Downstream agents read `prototype_analysis.json` directly as an independent knowledge source:
 
-```json
-{
-  "figma": {
-    "file_id": null,
-    "frame_id": null,
-    "component_tree": "<from prototype_analysis.component_tree>",
-    "tokens": "<from prototype_analysis.design_tokens>",
-    "dimensions": null,
-    "status": "fetched",
-    "source": "prototype_url",
-    "prototype_url": "<url>",
-    "prototype_analysis": "<path to prototype_analysis.json>"
-  }
-}
-```
-
-This allows all downstream agents (HLD generator, LLD generator, dev-context-loader, code-generator, visual-qa) to use the same `figma` field without knowing whether the source was Figma or a prototype URL.
+| Agent | What It Uses |
+|-------|-------------|
+| `hld-generator` | Component count + interaction complexity for feasibility/bandwidth |
+| `lld-generator` | Component mappings, state patterns, API patterns for organism spec |
+| `dev-planner` | Interaction flows to plan event handlers and state transitions |
+| `code-generator` | Component tree + v0 source analysis for implementation reference |
+| `visual-qa` | Prototype URL for interaction fidelity comparison (Pass 2) |
 
 ## Query Protocol
 
@@ -206,10 +197,9 @@ Read `{workspacePath}/query_answers.json` before starting — it may contain ans
 4. Every mapping has a confidence level (C1-C7)
 5. Unmapped elements flagged with suggestions
 6. Design tokens estimated from visual analysis
-7. context_bundle.json updated with results in `figma` section
-8. If v0.dev: source code analyzed for higher-confidence mapping
-9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
+7. If v0.dev: source code analyzed for higher-confidence mapping
+8. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
 ## Output
 
-`prototype_analysis.json` in workspace + `context_bundle.json` updated. Summary: components mapped count, unmapped count, v0 source available (yes/no).
+`prototype_analysis.json` in workspace. Summary: components mapped count, unmapped count, v0 source available (yes/no).

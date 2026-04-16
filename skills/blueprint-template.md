@@ -1,12 +1,12 @@
 # Blueprint Template
 
-> Generated at Phase 15 (Final Summary) of the GIX pipeline. This is a read-only stakeholder document — a comprehensive HTML summary of the entire pipeline run.
+> Generated at Phase 14 (Final Summary) of the GIX pipeline. This is a read-only stakeholder document — a comprehensive HTML summary of the entire pipeline run.
 >
 > **Output**: `.claude/workspace/<jira-id>/<ticket>-blueprint.html`
 
 ## When to Generate
 
-During Phase 15 (Final Summary), after all phases complete, generate the blueprint HTML. This is the culminating artifact — shareable via browser without Confluence or repo access.
+During Phase 14 (Final Summary), after all phases complete, generate the blueprint HTML. This is the culminating artifact — shareable via browser without Confluence or repo access.
 
 ## Blueprint HTML Template
 
@@ -244,7 +244,7 @@ The orchestrator reads these workspace files to populate the blueprint:
 | Decisions | approach_log.md |
 | HLD | hld_artifact.json |
 | LLD | lld_artifact.json |
-| Components | dev_context.json (component_mapping) |
+| Components | figma_decomposition.json (component_mapping) |
 | Code | generation_report.json |
 | Build | build_report.json |
 | Visual QA | visual_qa_report.json |

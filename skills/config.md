@@ -24,6 +24,7 @@
 | `auth_base_url_env_var` | GARUDA_INTOUCH_BASE_URL | visual-qa login.js |
 | `auth_org_id_env_var` | GARUDA_ORG_ID | visual-qa login.js (optional override) |
 | `auth_default_base_url` | nightly.intouch.capillarytech.com | visual-qa login.js (fallback) |
+| `runtime_context_file` | runtime_context.json | Orchestrator writes this to workspace with route_params, query_params, full_url_override. Read by build-verifier + visual-qa. |
 
 ## Confluence Config
 
@@ -32,13 +33,20 @@
 | `default_confluence_space` | LOYALTY | pre-dev, generate-hld, generate-lld |
 | `hld_page_title_format` | [HLD] {feature_name} - {jira_id} | hld-generator |
 | `lld_page_title_format` | [LLD] {feature_name} - {jira_id} | lld-generator |
-| `testcase_page_title_format` | [Tests] {feature_name} - {jira_id} | testcase-generator |
+| `testcase_sheet_title_format` | [Test Cases] {feature_name} - {jira_id} | testcase-generator |
+
+## Google Drive Config
+
+| Key | Value | Used By |
+|-----|-------|---------|
+| `google_drive_folder_id` | (user-configured, optional) | testcase-generator — folder to create test case sheets in |
+| `testcase_template_sheet_id` | 1OafzdLCJzGPtlUY2XGwDcOmaDrPw2cdzwImQB33ooF4 | testcase-generator — master Google Sheet file ID. Template structure is pre-extracted in `skills/testcase-template.md`. Pipeline skips asking and uses this directly. |
 
 ## Pipeline Limits
 
 | Key | Value | Used By |
 |-----|-------|---------|
-| `max_qa_iterations` | 3 | visual-qa, dev-execute |
+| `qa_circuit_breaker_stale_limit` | 5 | visual-qa — stop loop if no improvement for this many consecutive iterations |
 | `max_code_gen_retries` | 3 | dev-execute |
 | `max_organisms_per_lld` | 3 | lld-generator |
 | `dev_server_startup_wait_seconds` | 60 | visual-qa |
@@ -95,8 +103,7 @@
 
 | Key | Value | Used By |
 |-----|-------|---------|
-| `pre_dev_workspace` | .claude/pre-dev-workspace/{jiraTicketId}/ | pre-dev commands |
-| `dev_workspace` | .claude/dev-workspace/dev-{timestamp}/ | dev-execute |
+| `workspace` | .claude/workspace/{jiraTicketId}/ | /gix (all modes) |
 
 ## Reference Organisms (for CREATE intent)
 

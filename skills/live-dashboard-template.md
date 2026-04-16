@@ -162,14 +162,14 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <a href="#phase-4" id="nav-4" class="pending">Phase 4: Backend Handoff</a>
     <a href="#phase-5" id="nav-5" class="pending">Phase 5: LLD</a>
     <a href="#phase-6" id="nav-6" class="pending">Phase 6: Test Cases</a>
-    <a href="#phase-7" id="nav-7" class="pending">Phase 7: Dev Context</a>
-    <a href="#phase-8" id="nav-8" class="pending">Phase 8: Comprehension</a>
-    <a href="#phase-9" id="nav-9" class="pending">Phase 9: Planning</a>
-    <a href="#phase-10" id="nav-10" class="pending">Phase 10: Code Gen</a>
-    <a href="#phase-11" id="nav-11" class="pending">Phase 11: Build Verify</a>
-    <a href="#phase-12" id="nav-12" class="pending">Phase 12: Visual QA</a>
-    <a href="#phase-13" id="nav-13" class="pending">Phase 13: Tests</a>
-    <a href="#phase-14" id="nav-14" class="pending">Phase 14: Evaluation</a>
+    <a href="#phase-7" id="nav-7" class="pending">Phase 7: Comprehension</a>
+    <a href="#phase-8" id="nav-8" class="pending">Phase 8: Planning (3-Pass)</a>
+    <a href="#phase-9" id="nav-9" class="pending">Phase 9: Code Gen (3-Pass)</a>
+    <a href="#phase-10" id="nav-10" class="pending">Phase 10: Build + Runtime</a>
+    <a href="#phase-11" id="nav-11" class="pending">Phase 11: Visual QA (MANDATORY)</a>
+    <a href="#phase-12" id="nav-12" class="pending">Phase 12: Tests</a>
+    <a href="#phase-13" id="nav-13" class="pending">Phase 13: Evaluation</a>
+    <a href="#phase-14" id="nav-14" class="pending">Phase 14: Summary</a>
   </nav>
 
   <div class="main">
@@ -181,7 +181,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
 
     <div class="progress-bar"><div class="fill" id="progress-fill" style="width: 0%">0%</div></div>
     <div class="progress-stats" id="progress-stats">
-      <div class="stat-item"><span class="stat-value" id="stat-phases">0</span> <span class="stat-label">/ 15 phases</span></div>
+      <div class="stat-item"><span class="stat-value" id="stat-phases">0</span> <span class="stat-label">/ 14 phases</span></div>
       <div class="stat-item"><span class="stat-value" id="stat-artifacts">0</span> <span class="stat-label">artifacts</span></div>
       <div class="stat-item"><span class="stat-value" id="stat-decisions">0</span> <span class="stat-label">decisions</span></div>
       <div class="stat-item"><span class="stat-value" id="stat-files">0</span> <span class="stat-label">files generated</span></div>
@@ -268,7 +268,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 7: Dev Context -->
     <section class="phase-section" id="phase-7">
       <div class="phase-header">
-        <h2>Phase 7: Dev Context Loading</h2>
+        <h2>Phase 7: Codebase Comprehension</h2>
         <span class="phase-badge pending" id="badge-7">Pending</span>
       </div>
       <div class="phase-content" id="content-7">
@@ -279,7 +279,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 8: Comprehension -->
     <section class="phase-section" id="phase-8">
       <div class="phase-header">
-        <h2>Phase 8: Codebase Comprehension</h2>
+        <h2>Phase 8: Planning (3-Pass)</h2>
         <span class="phase-badge pending" id="badge-8">Pending</span>
       </div>
       <div class="phase-content" id="content-8">
@@ -290,7 +290,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 9: Planning -->
     <section class="phase-section" id="phase-9">
       <div class="phase-header">
-        <h2>Phase 9: Planning</h2>
+        <h2>Phase 9: Code Generation (3-Pass)</h2>
         <span class="phase-badge pending" id="badge-9">Pending</span>
       </div>
       <div class="phase-content" id="content-9">
@@ -301,7 +301,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 10: Code Generation -->
     <section class="phase-section" id="phase-10">
       <div class="phase-header">
-        <h2>Phase 10: Code Generation</h2>
+        <h2>Phase 10: Build Verification + Runtime Check</h2>
         <span class="phase-badge pending" id="badge-10">Pending</span>
       </div>
       <div class="phase-content" id="content-10">
@@ -312,7 +312,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 11: Build Verification -->
     <section class="phase-section" id="phase-11">
       <div class="phase-header">
-        <h2>Phase 11: Build Verification</h2>
+        <h2>Phase 11: Visual QA + Runtime Fix (MANDATORY)</h2>
         <span class="phase-badge pending" id="badge-11">Pending</span>
       </div>
       <div class="phase-content" id="content-11">
@@ -323,7 +323,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 12: Visual QA (detailed iteration tracker) -->
     <section class="phase-section" id="phase-12">
       <div class="phase-header">
-        <h2>Phase 12: Visual QA</h2>
+        <h2>Phase 12: Test Writing</h2>
         <span class="phase-badge pending" id="badge-12">Pending</span>
       </div>
       <div class="phase-content" id="content-12">
@@ -336,7 +336,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 13: Test Writing -->
     <section class="phase-section" id="phase-13">
       <div class="phase-header">
-        <h2>Phase 13: Test Writing</h2>
+        <h2>Phase 13: Test Evaluation</h2>
         <span class="phase-badge pending" id="badge-13">Pending</span>
       </div>
       <div class="phase-content" id="content-13">
@@ -347,7 +347,7 @@ After creating, print: `Dashboard created. Open in browser: <workspacePath>/live
     <!-- Phase 14: Test Evaluation -->
     <section class="phase-section" id="phase-14">
       <div class="phase-header">
-        <h2>Phase 14: Test Evaluation</h2>
+        <h2>Phase 14: Final Summary + Blueprint</h2>
         <span class="phase-badge pending" id="badge-14">Pending</span>
       </div>
       <div class="phase-content" id="content-14">
@@ -547,7 +547,7 @@ This is the most detailed phase section. The orchestrator reads `visual_qa_repor
 
 ### Pipeline Complete Banner
 
-When all phases are done (Phase 15 / Final Summary), prepend this after the progress stats:
+When all phases are done (Phase 14 / Final Summary), prepend this after the progress stats:
 
 ```html
 <div class="pipeline-complete">

@@ -8,24 +8,25 @@
 - **URL prefix:** `/loyalty/ui/v3`
 - **Dev port:** 8000
 
-## 2. Two Independent Pipelines
+## 2. GIX Pipeline (`/gix`)
 
-### Pre-Dev Pipeline (`/pre-dev`)
-PRD + Transcript + Figma → HLD (Confluence) → LLD (Confluence) + Test Cases
+Single unified pipeline with 15 phases and 5 modes:
 
-### Dev Pipeline (`/dev-execute`)
-LLD + Figma + Context → Plan → Code → Visual QA → Tests
-
-Pipelines are **fully independent** — separate workspaces, no shared state.
+| Mode | What It Runs |
+|------|-------------|
+| Full Pipeline | All 15 phases: PRD + Design (parallel) → Scout → HLD → LLD → Tests → Comprehension → Plan → Code → Build → Visual QA → Tests |
+| Pre-Dev Only | Phases 1-6: PRD + Design → Codebase Scout → HLD → LLD → Test Cases |
+| Dev Only | Phases 7-15: Comprehension → Plan → Code → Build → Visual QA → Write Tests → Evaluate |
+| Resume | Continues from last completed phase |
+| Status | Shows current pipeline progress |
 
 ## 3. Workspace Layout
 
 ```
-.claude/pre-dev-workspace/<jira-id>/    # Pre-Dev (per ticket)
-.claude/dev-workspace/<session-id>/      # Dev (per session)
+.claude/workspace/<jira-id>/    # Unified workspace (per ticket)
 ```
 
-Both are gitignored. Safe to delete between runs.
+Gitignored. Safe to delete between runs.
 
 ## 4. Agent Communication
 
@@ -52,33 +53,24 @@ Agents communicate via **JSON files in the workspace directory**. Each agent:
 | Pages | `app/components/pages/` | Minimal — route-level only |
 | Templates | `app/components/templates/` | Never |
 
-## 7. Organism 10-File Anatomy
+## 7. Organism 10-File Anatomy & Key Patterns
 
-Every organism: constants.js, actions.js, reducer.js, saga.js, selectors.js, styles.js, messages.js, Component.js, index.js, Loadable.js
+See `skills/shared-rules.md` for the complete 10-file organism anatomy (Section 1), compose chain (Section 3), action types (Section 2), ImmutableJS patterns (Section 5), saga error handling (Section 6), Cap* imports (Section 4), test imports (Section 8), and all other non-negotiable coding patterns.
 
-## 8. Key Patterns
+## 8. Shared Rules & Config
 
-- Constants: `garuda/<OrganismName>/VERB_NOUN_REQUEST|SUCCESS|FAILURE`
-- Reducer: ImmutableJS only (fromJS, set, get)
-- Saga: Always catch with `notifyHandledException(error)`
-- Imports: Cap* components from individual file paths only
-- Tests: Always from `app/utils/test-utils.js`, never `@testing-library/react`
-- Auth: Never manually add — injected by `requestConstructor.js`
-
-## 9. Shared Rules & Config
-
-- **`skills/shared-rules.md`** — Single source of truth for all non-negotiable coding patterns (organism anatomy, compose chain, action types, Cap* imports, ImmutableJS, bugsnag, test imports, coverage targets, etc.). Agents reference this instead of embedding rules inline.
+- **`skills/shared-rules.md`** — Single source of truth for all non-negotiable coding patterns and guardrail detection hints (FG-01 through FG-14). Agents reference this instead of embedding rules inline.
 - **`skills/config.md`** — All configurable values (ports, URLs, Confluence space, coverage thresholds, retry limits, chunk sizes, etc.). Never hardcode these in agent or command files.
 
-## 10. Guardrails
+## 9. Guardrails
 
 Every agent has an **Exit Checklist** — a set of conditions it MUST verify before writing its final output. If any check fails, the agent fixes the issue before proceeding. Unresolvable issues are logged to a `guardrail_warnings` array in the output JSON.
 
 Every command has a **Gate Check** after each agent completes — the orchestrator validates the output before spawning the next agent. If validation fails, the orchestrator reports the issue and offers to re-run the failed phase.
 
-## 11. Session Journal & Persistent Memory
+## 10. Session Journal & Persistent Memory
 
-Each pipeline writes two persistence files in the workspace:
+The pipeline writes persistence files in the workspace:
 
 - **`requirements_context.md`** — captures the user's original prompt, functional requirements, use cases, and all checkpoint decisions. This ensures Claude understands WHAT is being built across sessions.
 - **`session_journal.md`** — records what happened in each phase (execution log).
@@ -89,14 +81,14 @@ Together these enable:
 - **Resume after terminal close**: All state is on disk (JSON + journal), nothing in-memory
 - **Audit trail**: Human-readable log of every decision and artifact
 
-On resume, commands read THREE files:
-1. `pre_dev_state.json` / `dev_state.json` — WHERE to resume (which phase)
+On resume, `/gix` reads THREE files:
+1. `pipeline_state.json` — WHERE to resume (which phase)
 2. `session_journal.md` — WHAT happened (phase-by-phase execution log)
 3. `requirements_context.md` — WHY we're doing this (user's requirements + decisions)
 
-State files (`pre_dev_state.json`, `dev_state.json`) track:
+`pipeline_state.json` tracks:
 - Phase status, summaries, guardrail results
 - `recovery.last_successful_phase` and `recovery.can_resume_from`
 - `resume_instructions` — exact text for what to do next
 
-To resume: just re-run the command (e.g., `/pre-dev CAP-12345`) — it detects existing state and picks up where it stopped.
+To resume: run `/gix` and select mode [2] Resume — it detects existing state and picks up where it stopped.

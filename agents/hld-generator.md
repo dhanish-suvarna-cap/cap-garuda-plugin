@@ -24,10 +24,9 @@ Read `{workspacePath}/context_bundle.json`. Extract all relevant sections:
 - `jira` — ticket details for the feature
 - `prd` — product requirements
 - `transcript_summary` — grooming call insights (decisions, requirements, tech feedback, design inputs)
-- `figma` — design data if available
 - `codebase_context` — existing components, endpoints, slices
 
-**Figma Decomposition Data**: If `figma.status == "decomposed"` (standard for all Figma inputs):
+**Figma Decomposition Data**: If `{workspacePath}/figma_decomposition.json` exists:
 - Read `{workspacePath}/figma_decomposition.json`
 - Use `sections[].purpose` to inform component breakdown in HLD Section 3.5 (Components Needed)
 - Use `sections[].component_mapping` to list specific Cap UI components per section

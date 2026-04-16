@@ -66,25 +66,7 @@ Does it connect to Redux (actions/selectors)?
 
 ## Organism 10-File Anatomy
 
-Every organism MUST have exactly these 10 files:
-
-```
-MyOrganism/
-  constants.js      # Action type string constants
-  actions.js        # Action creators (import constants)
-  reducer.js        # ImmutableJS reducer (import constants, fromJS)
-  saga.js           # Redux-Saga workers + watchers (import constants, actions, Api)
-  selectors.js      # Reselect selectors (import initialState from reducer)
-  styles.js         # styled-components CSS template
-  messages.js       # react-intl message definitions
-  Component.js      # React component (functional or class)
-  index.js          # compose chain: withSaga → withReducer → withConnect → injectIntl → withStyles
-  Loadable.js       # React.lazy + loadable() wrapper
-  tests/            # Unit tests directory
-    Component.test.js
-    reducer.test.js
-    saga.test.js
-```
+See `skills/shared-rules.md` Section 1 for the exact 10-file anatomy, dependency order, and index.js purity rule.
 
 ## Import Rules
 
@@ -109,14 +91,8 @@ MyOrganism/
   4. Custom events (rare, avoid if possible)
 
 ### Cap* component imports:
-```js
-// CORRECT — individual file path
-import CapButton from '@capillarytech/cap-ui-library/CapButton';
-import CapSelect from '@capillarytech/cap-ui-library/CapSelect';
 
-// WRONG — barrel import (causes bundle bloat)
-import { CapButton, CapSelect } from '@capillarytech/cap-ui-library';
-```
+See `skills/shared-rules.md` Section 4 for Cap* import rules (individual file paths only, never barrel imports).
 
 ## Naming Conventions
 

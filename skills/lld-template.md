@@ -9,13 +9,13 @@ triggers:
   - "tech detailing"
 ---
 
-# LLD Template
+# LLD Template — Design Specification (No Code)
+
+> **CRITICAL**: The LLD is a design specification document. It describes WHAT to build, HOW components are structured, and WHICH Cap* components to use — but it NEVER contains actual code implementations. The code-generator agent writes all code.
 
 Use this template when generating Low Level Design documents for Confluence.
 
 ## Confluence Page Structure
-
-The LLD Confluence page must follow this exact structure:
 
 ---
 
@@ -26,158 +26,190 @@ The LLD Confluence page must follow this exact structure:
 - **Author**: AI-generated, reviewed by [Developer Name]
 - **Date**: [ISO date]
 - **Version**: [v1, v2, etc.]
+- **Knowledge Sources Used**: context_bundle.json, figma_decomposition.json (if available), prototype_analysis.json (if available)
 
-### 2. Component Design
+### 2. Page Layout Diagram (ASCII)
 
-#### 2.1 Atoms (from cap-ui-library)
-| Cap* Component | Import Path | Usage |
-|---------------|-------------|-------|
-| CapButton | `@capillarytech/cap-ui-library/CapButton` | Submit form action |
-| CapSelect | `@capillarytech/cap-ui-library/CapSelect` | Dropdown for filter selection |
+Full-page ASCII wireframe showing all organisms, their Cap* components, nesting, and conditional rendering:
 
-#### 2.2 Molecules
-For each molecule:
-
-**MoleculeName**
-- **Path**: `app/components/molecules/MoleculeName/`
-- **Props**:
-  | Prop | Type | Required | Description |
-  |------|------|----------|-------------|
-  | data | array | yes | List of items to render |
-  | onSelect | func | yes | Callback when item selected |
-- **Renders**: CapButton, CapIcon, CapText
-- **State**: None (molecules are stateless)
-
-#### 2.3 Organisms
-For each organism (this is the most detailed section):
-
-**OrganismName**
-- **Path**: `app/components/organisms/OrganismName/`
-- **Redux Slice Key**: `organismName`
-
-**Initial State** (ImmutableJS):
-```js
-fromJS({
-  data: [],
-  loading: false,
-  error: null,
-  filters: {},
-  pagination: { page: 1, pageSize: 10, total: 0 },
-})
+```
+┌────────────────────────────────────────────────────────────┐
+│ Page: [PageName]                                            │
+│ Route: /loyalty/ui/v3/[path]                                │
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Organism: [HeaderOrganism]                               ││
+│ │ CapRow (justify="space-between", align="middle")         ││
+│ │ ├── CapHeading (h3) "Page Title"                         ││
+│ │ └── CapButton (primary) "Create New"                     ││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐│
+│ │ Organism: [ListOrganism]                                 ││
+│ │ ┌── CapRow (filters, gutter=16)                        ─┐││
+│ │ │   CapInput.Search    CapSelect (filter)               │││
+│ │ └──────────────────────────────────────────────────────┘││
+│ │ ┌── CapTable                                           ─┐││
+│ │ │   Columns: Name | Value | Status | Actions            │││
+│ │ │   Pagination: pageSize=20                             │││
+│ │ └──────────────────────────────────────────────────────┘││
+│ └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│ ┌── CapModal (conditional: showModal === true) ───────────┐│
+│ │   CapInput (label: "Name")                               ││
+│ │   CapSelect (label: "Type")                              ││
+│ │   CapRow (footer): CapButton "Cancel" + "Save"           ││
+│ └─────────────────────────────────────────────────────────┘│
+└────────────────────────────────────────────────────────────┘
 ```
 
-**Action Types**:
-| Constant | Purpose |
-|----------|---------|
-| `garuda/OrganismName/FETCH_DATA_REQUEST` | Trigger data fetch |
-| `garuda/OrganismName/FETCH_DATA_SUCCESS` | Store fetched data |
-| `garuda/OrganismName/FETCH_DATA_FAILURE` | Store error |
-| `garuda/OrganismName/SET_FILTERS` | Update filter state |
-| `garuda/OrganismName/CLEAR_DATA` | Reset to initial state |
+### 3. Component Inventory (Verified Against Figma)
 
-**Saga Workers**:
-| Worker | Trigger | API Call | Success Action | Failure Action |
-|--------|---------|----------|---------------|---------------|
-| fetchDataWorker | takeLatest FETCH_DATA_REQUEST | Api.fetchOrganismData | FETCH_DATA_SUCCESS | FETCH_DATA_FAILURE |
+For each organism, a table of every Cap* component with verified props:
 
-**Selectors**:
-| Selector | Returns | Type |
-|----------|---------|------|
-| makeSelectData | data array | toJS() |
-| makeSelectLoading | boolean | primitive |
-| makeSelectError | error object or null | toJS() |
-| makeSelectFilters | filters object | toJS() |
+| # | Cap* Component | Purpose | Key Props | Design Tokens | Verification Source |
+|---|---------------|---------|-----------|--------------|-------------------|
+| 1 | CapHeading | Page title | type="h3" | FONT_SIZE_VL, FONT_WEIGHT_MEDIUM | get_design_context node:XXX |
+| 2 | CapButton | Create CTA | type="primary" | — | screenshot node:XXX |
+| 3 | CapTable | Data list | columns=[...], pagination | — | get_design_context node:XXX |
 
-**Cap* Components Used**:
-| Component | Purpose |
-|-----------|---------|
-| CapTable | Main data table |
-| CapButton | Action buttons |
-| CapSelect | Filter dropdowns |
+**Every component MUST have a Verification Source** — no guessed mappings.
 
-**Component Methods**:
-| Method | Purpose | Params |
-|--------|---------|--------|
-| handleFetchData | Dispatch fetch with current filters | none |
-| handleFilterChange | Update filters and refetch | (filterKey, value) |
-| handlePageChange | Update pagination and refetch | (page, pageSize) |
+### 4. Organism Specifications (Design Only — No Code)
 
-**Files** (all 10 required):
-1. `constants.js` — Action type constants
-2. `actions.js` — Action creators
-3. `reducer.js` — ImmutableJS reducer
-4. `saga.js` — Redux-Saga workers + watchers
-5. `selectors.js` — Reselect selectors
-6. `styles.js` — styled-components CSS
-7. `messages.js` — react-intl messages
-8. `Component.js` — React component
-9. `index.js` — Compose chain (withSaga, withReducer, withConnect)
-10. `Loadable.js` — React.lazy wrapper
+For each organism:
 
-#### 2.4 Pages
-**PageName**
-- **Path**: `app/components/pages/PageName/`
-- **Route**: `/loyalty/ui/v3/[path]`
-- **Organisms Rendered**: OrganismA, OrganismB
-- **Page-Level Logic**: Route params parsing, layout orchestration
+#### 4.1 Identity
+- **Name**: OrganismName
+- **Path**: `app/components/organisms/OrganismName/`
+- **Redux Slice Key**: `organismName`
+- **10 Files**: constants.js, actions.js, reducer.js, saga.js, selectors.js, styles.js, messages.js, Component.js, index.js, Loadable.js
 
-### 3. API Handling
+#### 4.2 State Design
+
+| State Key | Type | Default | Updated By Action | Description |
+|-----------|------|---------|------------------|-------------|
+| data | List | [] | FETCH_DATA_SUCCESS | Items from API |
+| loading | boolean | false | REQUEST → true, SUCCESS/FAILURE → false | Loading indicator |
+| error | any | null | FETCH_DATA_FAILURE | Error from API |
+
+#### 4.3 Action Types
+
+| Action Type | Trigger | Payload Shape | Purpose |
+|------------|---------|--------------|---------|
+| FETCH_DATA_REQUEST | Component mount | { params } | Start API fetch |
+| FETCH_DATA_SUCCESS | API success | { data, count } | Store results |
+| FETCH_DATA_FAILURE | API error | { error } | Store error |
+
+#### 4.4 Saga Workers
+
+| Worker | Watch Pattern | API Endpoint | On Success | On Failure |
+|--------|-------------|-------------|-----------|-----------|
+| fetchDataWorker | takeLatest(REQUEST) | GET /api/path | dispatch SUCCESS | notifyHandledException + dispatch FAILURE |
+
+#### 4.5 Selectors
+
+| Selector | Returns | Calls .toJS()? | Consumed By |
+|----------|---------|---------------|------------|
+| makeSelectData | data list | Yes | Component — table dataSource |
+| makeSelectLoading | boolean | No | Component — CapSpin spinning |
+
+#### 4.6 User Interactions
+
+| User Action | Component | Dispatches | Result |
+|------------|-----------|-----------|--------|
+| Page loads | mount | FETCH_DATA_REQUEST | Table shows data |
+| Clicks row | CapTable onRow | navigate to detail | Route change |
+| Clicks "Create" | CapButton onClick | SET_SHOW_MODAL(true) | Modal opens |
+
+#### 4.7 Styled Components (Tokens Only)
+
+| Styled Name | Base Component | Tokens | Purpose |
+|------------|---------------|--------|---------|
+| HeaderRow | CapRow | padding: CAP_SPACE_16, border-bottom: 1px solid CAP_G05 | Header wrapper |
+| FilterRow | CapRow | margin-bottom: CAP_SPACE_16, gap: CAP_SPACE_12 | Filters wrapper |
+
+#### 4.8 i18n Messages
+
+| Key | Default Text | Where Used |
+|-----|-------------|-----------|
+| pageTitle | "Feature Name" | CapHeading |
+| createBtn | "Create New" | CapButton |
+
+### 5. Molecule Specifications (if any)
+
+For each molecule:
+- **Name & Path**
+- **Props Interface**: name, type, required, description
+- **Cap* Components it renders** (from inventory table)
+- **Note**: Molecules are STATELESS — no Redux, no saga
+
+### 6. Page Specifications
+
+For each page:
+- **Route**: exact path with params
+- **Route Params**: which params, how extracted
+- **Organisms Rendered**: which organisms, in what layout
+- **Page-Level Concerns**: param parsing, tab switching, org-level data passing
+
+### 7. API Contracts (No Code)
 
 For each API endpoint:
 
-**EndpointName**
-- **Endpoint Key**: `ENDPOINT_KEY` (in `app/config/endpoints.js`)
-- **URL**: `/api/v1/path/`
-- **Method**: POST
-- **Request Builder**: `getAryaAPICallObject`
-- **Request Payload**:
-  ```json
-  { "field1": "string", "field2": 0 }
-  ```
-- **Response Shape**:
-  ```json
-  { "success": true, "data": [], "errors": null }
-  ```
-- **Error Handling**: Display error toast via `notifyHandledException`
+| Field | Value |
+|-------|-------|
+| Endpoint Key | FETCH_DATA |
+| URL | /v2/api/path |
+| Method | GET |
+| Query/Body Params | param1 (required, string), param2 (optional, number) |
+| Headers | Auto-injected by requestConstructor.js |
+| Success Response Shape | `{ success: true, data: [...], totalCount: N }` |
+| Error Response Shape | `{ success: false, errors: [{ code, message }] }` |
+| Used By | fetchDataWorker in OrganismName/saga.js |
+| UI Error Handling | Toast via CapNotification |
 
-### 4. State Management
+### 8. State Management Summary
 
-#### New Redux Slices
-| Key | Injected In | Initial State Summary |
-|-----|------------|----------------------|
-| organismName | OrganismName/index.js | data, loading, error, filters, pagination |
+**New Slices:**
 
-#### Modified Slices
-| Key | What Changes | Impact |
-|-----|-------------|--------|
-| [existing key] | [change description] | [downstream impact] |
+| Slice Key | Organism | State Keys | Notes |
+|-----------|----------|-----------|-------|
+| organismName | OrganismName | data, loading, error, filters | New |
 
-### 5. Data Flow
+**Modified Slices:** (if any)
+
+| Slice Key | Changes | Impact |
+|-----------|---------|--------|
+| — | — | — |
+
+### 9. Data Flow Diagrams (ASCII)
+
+One diagram per major user flow:
+
 ```
-User Action → dispatch(action) → Saga takeLatest
-  → API call (httpRequest) → Success/Failure
-  → Reducer updates ImmutableJS state
-  → Selector reads state → Component re-renders
+FETCH FLOW:
+  Component Mount → dispatch(REQUEST) → Saga(takeLatest)
+       → API call → Success? → dispatch(SUCCESS) → Reducer → Selector → Re-render
+                  → Failure? → notifyHandledException → dispatch(FAILURE) → Error state
 ```
 
-[Describe specific data flows for this feature]
+### 10. Integration Points
 
-### 6. Integration Points
-| Component | Integrates With | How |
-|-----------|----------------|-----|
-| [component] | [other component/service] | [mechanism: props, Redux, URL params] |
+| Component | Integrates With | Mechanism |
+|-----------|----------------|-----------|
+| [organism] | [other organism/page] | [props / Redux / URL params / route navigation] |
 
 ---
 
 ## Rules for LLD Generation
 
-1. **Every organism must specify all 10 files** — no exceptions. Follow the anatomy in CLAUDE.md.
-2. **Initial state must use ImmutableJS** — `fromJS({})` for the state shape.
-3. **Action type format**: `garuda/<OrganismName>/VERB_NOUN_REQUEST/SUCCESS/FAILURE`
-4. **Saga workers must use `call` for API calls** and `put` for dispatching actions.
-5. **Selectors use `createSelector` from reselect** and return `.toJS()` for complex types.
-6. **Cap* component imports must be individual file paths** — never barrel imports.
-7. **Request builders**: Use `getAryaAPICallObject` for Arya APIs, `getIRISAPICallObject` for IRIS, etc.
-8. **Cross-reference the HLD** — every component listed in HLD must appear in LLD with full details.
-9. **Cross-reference backend API signatures** — request/response shapes must match backend contracts.
-10. **Methods section must be complete** — list every handler, callback, and lifecycle method the component uses.
+1. **NO CODE in the LLD** — only design tables, ASCII diagrams, and structural specifications
+2. **Every organism must specify all 10 files** — follow anatomy in `skills/shared-rules.md`
+3. **Every Cap* component must be Figma-verified** — include verification source in inventory
+4. **State design uses tables** — not fromJS() code blocks
+5. **Action type format**: `garuda/<OrganismName>/VERB_NOUN_REQUEST/SUCCESS/FAILURE`
+6. **Selectors must note .toJS()** — for complex return types
+7. **API contracts must match backend signatures** — cross-reference every field
+8. **Use prototype_analysis.json** for interaction flows — don't guess user behavior
+9. **ASCII diagrams are mandatory** — page layout + data flow diagrams minimum
+10. **Design tokens only** — never raw px/hex values in styled component specs

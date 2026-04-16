@@ -83,4 +83,4 @@ Prompt the user to `/clear` so the next session starts with clean context.
 
 ## Principles Reference
 
-Read `skills/fe-principles.md` for the C1-C7 confidence framework. When explaining uncertain patterns, be honest about confidence levels.
+Read `skills/ask-before-assume.md` for the C1-C7 confidence framework. When explaining uncertain patterns, be honest about confidence levels.

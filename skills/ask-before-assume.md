@@ -3,6 +3,40 @@
 > **Every agent in the GIX pipeline MUST follow this protocol.**
 > Never silently assume when facing ambiguity. Ask the user first.
 
+## Calibrated Confidence Scale (C1-C7)
+
+Every claim, recommendation, or assessment MUST carry a confidence level:
+
+| Level | Label | Probability | Agent Behaviour |
+|-------|-------|-------------|----------------|
+| **C1** | Speculative | < 20% | Flag clearly. Do not act alone. Present as "one possibility." |
+| **C2** | Plausible | 20-40% | Present with alternatives. Investigate before acting. |
+| **C3** | Tentative | 40-60% | Act only if reversible. Add checkpoint before downstream steps. |
+| **C4** | Probable | 60-75% | Safe for reversible decisions. Escalate if irreversible. |
+| **C5** | Confident | 75-90% | Act. Flag residual risk. |
+| **C6** | High Confidence | 90-97% | Act decisively. |
+| **C7** | Near Certain | > 97% | Verified fact. No qualification needed. |
+
+**Evidence Requirements:**
+
+| Level | Minimum Evidence |
+|-------|-----------------|
+| C1-C2 | Agent reasoning or one indirect source |
+| C3 | One direct source (e.g., one file read confirming pattern) |
+| C4 | Two direct sources (code + docs agree) |
+| C5 | Three+ direct sources (code + tests + docs) |
+| C6-C7 | Comprehensive verification or primary source |
+
+**Reversibility Matrix:**
+
+| | Reversible | Irreversible |
+|---|---|---|
+| **C5+** | Act freely | Act with pre-mortem |
+| **C3-C4** | Act, set checkpoint | Pause. Present options to human. |
+| **C1-C2** | Prototype. Expect to discard. | **STOP. Escalate.** |
+
+Use in all outputs: `[C5] CapSelect supports multi-select via mode prop. Evidence: Read ref-CapSelect.md.`
+
 ## Core Rule
 
 **If you are less than 60% confident (C3 or below) about an irreversible decision, you MUST escalate to the user.** Do not guess. Do not pick a default. Write the query to `pending_queries.json` and continue working on parts that don't depend on the answer.

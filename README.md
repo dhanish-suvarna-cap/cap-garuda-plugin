@@ -156,7 +156,7 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
   |  | Figma "Table"   → CapTable   + ref spec      |       |
   |  | Figma "???"     → "custom needed" warning     |       |
   |  └──────────────────────────────────────────────┘       |
-  |  → dev_context.json (with component_mapping)            |
+  |  Agents read source artifacts directly (no dev_context)  |
   └────────────────────────────┬────────────────────────────┘
                                |
   ┌────────────────────────────┴────────────────────────────┐
@@ -248,7 +248,7 @@ AI-powered unified pipeline for Capillary Loyalty Frontend — from Jira ticket 
   |  ┌────────────────────────────────────────────┐         |
   |  | <ticket>-blueprint.html                    |         |
   |  |                                            |         |
-  |  | Stats: 15 phases | 12 artifacts | 10 files |         |
+  |  | Stats: 14 phases | 12 artifacts | 10 files |         |
   |  | HLD + LLD with Mermaid diagrams            |         |
   |  | All decisions from approach_log.md         |         |
   |  | Build: PASS | Visual QA: HIGH              |         |
@@ -299,7 +299,7 @@ Interactive menu:
 🚀 GIX — Garuda Intelligent eXecution
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[1] Full Pipeline — all 15 phases
+[1] Full Pipeline — all 14 phases + runtime context
 [2] Resume — continue from last phase
 [3] Pre-Dev Only — PRD → HLD → LLD → Test Cases
 [4] Dev Only — Context → Code → Build → Visual QA → Tests
@@ -346,13 +346,14 @@ Or skip the menu: `/gix CAP-12345`
 
 | Phase | When | Your Action |
 |-------|------|-------------|
-| 3 | After HLD | `approved` / `feedback: <text>` / `abort` |
+| 3 | After HLD + ProductEx | `approved` / `feedback: <text>` / `abort` |
 | 4 | Backend handoff | `ready` / `skip` |
-| 5 | After LLD | `approved` / `feedback: <text>` |
-| 6 | After test cases | Review |
-| 9 | After planning | `yes` to approve plan |
-| 13 | Before tests | `yes` / `no` |
-| 14 | After tests | Accept coverage or request more |
+| 5 | After LLD + ProductEx | `approved` / `feedback: <text>` |
+| 6 | After test cases | Review Google Sheet |
+| 8 | After 3-pass plan | `yes` to approve plan |
+| 10.5 | Before Visual QA | Provide route params + auth credentials |
+| 12 | Before tests | `yes` / `no` |
+| 13 | After tests | Accept coverage or request more |
 
 ### Resume
 
@@ -381,9 +382,10 @@ Or skip the menu: `/gix CAP-12345`
 ├── cross_repo_trace.json        # Cross-repo pattern findings
 ├── hld_artifact.json            # HLD + Mermaid diagrams
 ├── lld_artifact.json            # LLD + Mermaid diagrams
-├── testcase_sheet.json          # Test cases
-├── dev_context.json             # LLD + Figma + component mapping
-├── comprehension.json           # Codebase analysis
+├── testcase_sheet.json          # Test cases (also uploaded to Google Sheets)
+├── testcase_sheet.csv           # Test cases local CSV backup
+├── runtime_context.json         # Route params + query params + auth (for build verify + visual QA)
+├── comprehension.json           # Codebase analysis (with delta: new/existing/unchanged)
 ├── plan.json                    # File-by-file coding plan
 ├── generation_report.json       # Files created/modified
 ├── build_report.json            # Build verification
@@ -472,28 +474,27 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 
 ## Skills & Agents
 
-### Agents (19)
+### Agents (18)
 
 | Agent | Phase | Purpose |
 |-------|-------|---------|
-| prd-ingestion | 1 | Fetch Jira + PRD + transcript + design ref + Cap docs |
-| prototype-analyzer | 1 | Analyze v0/prototype URL: screenshot + DOM + component mapping |
+| prd-ingestion | 1 | Fetch Jira + PRD + transcript + product docs (requirements knowledge only) |
+| figma-decomposer | 1 | Decompose Figma frames → component sections → Cap UI mapping (parallel with prd-ingestion) |
+| prototype-analyzer | 1 | Analyze v0/prototype URL: screenshot + DOM + component mapping (parallel with prd-ingestion) |
 | codebase-scout | 2 | Lightweight scan of target codebase |
 | cross-repo-tracer | 2 | Trace patterns across repos |
 | hld-generator | 3 | HLD with Mermaid diagrams → Confluence |
-| lld-generator | 5 | LLD with organism designs → Confluence |
-| testcase-generator | 6 | P0/P1/P2 test cases |
-| dev-context-loader | 7 | Load LLD + design ref + component mapping |
-| codebase-comprehension | 8 | Deep-read existing organism |
-| dev-planner | 9 | File-by-file implementation plan |
-| code-generator | 10 | Generate 10 organism files (incremental) |
-| build-verifier | 11 | Compile check + 3x auto-fix |
-| visual-qa | 12 | Screenshot + design ref compare + 3x fix |
-| test-writer | 13 | Unit tests (>90% coverage) |
-| test-evaluator | 14 | Jest results + coverage |
-| productex-verifier | 3,5,9,10 | PRD + docs alignment check |
-| guardrail-checker | 10 | FG-01..FG-14 violation scan |
-| figma-decomposer | 1 | Decompose Figma frames → component sections → Cap UI mapping |
+| lld-generator | 5 | LLD design spec (tables + ASCII diagrams, NO code) → Confluence. Has Figma MCP tools for 100% verification. |
+| testcase-generator | 6 | P0/P1/P2 test cases → Google Sheets (template-based), Confluence fallback |
+| codebase-comprehension | 7 | Deep-read organism + smart reference selection + delta computation (new/existing/unchanged) |
+| dev-planner | 8 | 3-pass plan: Pass 1 UI (Cap* skeleton) → Pass 2 Redux → Pass 3 Integration (manifest-driven) |
+| code-generator | 9 | 3-pass execution: UI skeleton → Redux infrastructure → Integration wiring |
+| build-verifier | 10 | Compile + runtime smoke check (catches lazy-load errors via Playwright) |
+| visual-qa | 11 | MANDATORY. Screenshot + console errors + design compare + unlimited fix loop. Circuit breaker at 5 stale iterations. |
+| test-writer | 12 | Unit tests (>90% coverage) |
+| test-evaluator | 13 | Jest results + coverage |
+| productex-verifier | 3,5,8,9 | PRD + docs alignment check (MANDATORY for HLD and LLD) |
+| guardrail-checker | 9 | FG-01..FG-14 violation scan |
 | confluence-publisher | all | Auto-publish artifacts to Confluence |
 
 ### Skills (25+)
@@ -509,21 +510,16 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 | blueprint-template | Final HTML stakeholder document template |
 | live-dashboard-template | Progress dashboard template |
 | session-memory-template | Shared context structure |
-| fe-principles | C1-C7 confidence framework |
+| testcase-template | Google Sheets test case template (column structure + dropdown values) |
 | knowledge-bank | Pre-session context (human-populated) |
-| shared-rules | Non-negotiable coding patterns |
+| shared-rules | Non-negotiable coding patterns + guardrail detection hints (FG-01 through FG-14) |
 | config | Centralized configurable values |
-| ask-before-assume | Agent query protocol (C3-or-below → ask user) |
+| ask-before-assume | C1-C7 confidence framework + agent query protocol |
 
-### Standalone Commands
+### Commands
 
 ```bash
-/gix                     # Unified pipeline (interactive menu)
-/pre-dev CAP-12345       # Pre-dev phases only
-/dev-execute --lld=<id>  # Dev phases only
-/generate-hld CAP-12345  # Standalone HLD
-/generate-lld CAP-12345  # Standalone LLD
-/fetch-context CAP-12345 # Just fetch context
+/gix                     # GIX pipeline (interactive menu with 5 modes: Full, Resume, Pre-Dev Only, Dev Only, Status)
 /tutor                   # Codebase teaching
 /debug                   # Root cause analysis
 ```
@@ -556,25 +552,37 @@ Three-way cross-reference at phases 3, 5, 9, 10:
 
 ## Visual QA System
 
-Phase 12 uses a two-layer comparison to verify the generated UI matches the Figma design:
+**Phase 11 — MANDATORY (never skips).** Even without Figma, it checks runtime health (console errors, page rendering).
 
-- **Quantitative** (pixelmatch): Pixel-level diff producing mismatch percentage
-- **Semantic** (Claude vision): Claude reads Figma, localhost, and diff images to identify specific discrepancies
+### What It Checks (3 layers)
 
-### Flow
+1. **Runtime Health** (ALWAYS): Console JS errors, page state (rendered vs error_boundary vs blank vs spinner_stuck), import/wiring bugs
+2. **Quantitative** (if Figma + FIGMA_ACCESS_TOKEN): Pixel-level diff via pixelmatch producing mismatch %
+3. **Semantic** (if Figma): Claude reads Figma, localhost, and diff images to identify visual discrepancies
 
-1. `login.js` calls Arya login API → `auth.json` (localStorage entries)
-2. Reads `app-config.js` for URL prefix and `intouchBaseUrl`
-3. `screenshot.js` injects auth into localStorage → navigates to feature URL → captures PNG
-4. `figma-download.js` downloads Figma frame as PNG via REST API
-5. `diff.js` resizes + pixel-diffs → `diff.png` + mismatch %
-6. Claude reads all 3 images → structured discrepancy list
-7. Auto-fixes CSS using Cap UI tokens
-8. Repeats (max 3 iterations) until mismatch < 5%
+### Fix Loop (NO iteration limit)
 
-### Auth
+Loops until ZERO CRITICAL/MAJOR issues AND ZERO console errors AND page renders correctly:
+
+1. Orchestrator collects **runtime context** from user: auth credentials, dynamic route params (`:programId` → actual value), query params
+2. Dev server started once by orchestrator (shared with build verification)
+3. `screenshot.js` captures `localhost_iter_N.png` + console errors (`--capture-console`)
+4. **Priority 1**: Fix console errors (import_error, reference_error, null_reference, chunk_error) — reads plan.json, cap-ui-library ref files, shared-rules.md for correct fixes
+5. **Priority 2**: Fix page rendering (error boundary, stuck spinner, blank page) — traces saga → API → reducer → selector → component chain
+6. **Priority 3**: Fix visual discrepancies (spacing, color, typography, layout) — reads figma_decomposition.json tokens + cap-ui-composition-patterns.md
+7. Re-screenshot → re-check → loop
+
+**Circuit breaker**: Stops if same errors persist for 5 consecutive iterations with no improvement → escalates to user.
+
+**Auto re-auth**: Fresh login via `login.js` whenever login page detected (handles token expiry during long loops).
+
+**Screenshot history**: `localhost_iter_1.png`, `localhost_iter_2.png`, etc. — all iterations preserved for review.
+
+### Auth + Runtime Context
 
 Env vars: `GARUDA_USERNAME`, `GARUDA_PASSWORD` (required), `GARUDA_ORG_ID` (optional override), `GARUDA_INTOUCH_BASE_URL` (optional)
+
+Runtime context collected before Visual QA: route params, query params, or full URL override → saved to `runtime_context.json`
 
 ### Scripts
 
@@ -614,6 +622,6 @@ Standard Figma processing flow for all frames (handles both small and large):
 3. Claude analyzes both → identifies component sections (Header, Form, Table, etc.)
 4. `get_design_context` per section → detailed code, tokens, component tree
 5. Maps each section → Cap UI Library components
-6. Outputs `figma_decomposition.json` → consumed by HLD, LLD, dev-context-loader
+6. Outputs `figma_decomposition.json` → consumed by HLD, LLD, dev-planner, code-generator, visual-qa
 
 Solves `FIGMA_LARGE_FRAME` — individual sections are small enough for the API.

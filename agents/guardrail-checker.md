@@ -22,7 +22,7 @@ You are the guardrail checker for the GIX pipeline. You scan all generated files
 
 ### Step 2: Load Guardrails
 
-Read `skills/fe-guardrails/SKILL.md` and `skills/fe-guardrails/ref-guardrails.md` for the full rule set.
+Read `skills/fe-guardrails/SKILL.md` and `skills/shared-rules.md` for the full rule set with detection hints.
 
 ### Step 3: Run Checks
 

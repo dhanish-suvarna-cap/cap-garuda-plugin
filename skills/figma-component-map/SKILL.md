@@ -1,6 +1,6 @@
 ---
 name: figma-component-map
-description: "Maps Figma design elements to Cap UI Library components. Used by dev-context-loader to produce component_mapping in dev_context.json, and by code-generator to select correct components."
+description: "Maps Figma design elements to Cap UI Library components. Used by figma-decomposer, lld-generator, dev-planner, and code-generator to select correct components."
 ---
 
 # Figma-to-Component Mapping
@@ -78,7 +78,7 @@ When a Figma element doesn't have an obvious mapping:
 
 4. Does a similar Cap UI component exist?
    → YES: Use the closest Cap UI component, extend with styled-components if needed
-   → NO: Flag as "custom implementation needed" in dev_context.json
+   → NO: Flag as "custom implementation needed" in figma_decomposition.json unmapped_elements
 
 5. For custom implementations:
    → Use Cap UI tokens for styling (FG-11)
@@ -103,6 +103,7 @@ Components with HOC: CapInput, CapSelect, CapCheckbox, CapRadio, CapSwitch, CapS
 
 ## Usage by Agents
 
-- **dev-context-loader**: After loading Figma data, cross-reference each Figma element against this mapping. Produce `component_mapping` in `dev_context.json`.
-- **dev-planner**: Reference component_mapping when planning which Cap components to use per file.
-- **code-generator**: Before generating any UI element, check component_mapping. Use ONLY the mapped component. Read detailed props from `skills/cap-ui-library/ref-<ComponentName>.md`.
+- **figma-decomposer**: Uses this mapping to map Figma elements to Cap UI components in `figma_decomposition.json`.
+- **lld-generator**: Uses this mapping during Figma verification to confirm component choices.
+- **dev-planner**: References `figma_decomposition.json → component_mapping` when planning which Cap components to use per file.
+- **code-generator**: Before generating any UI element, checks `figma_decomposition.json → component_mapping`. Uses ONLY the mapped component. Reads detailed props from `skills/cap-ui-library/ref-<ComponentName>.md`.

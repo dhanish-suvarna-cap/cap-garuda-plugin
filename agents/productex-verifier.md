@@ -158,7 +158,7 @@ Read `{workspacePath}/query_answers.json` before starting — it may contain ans
 4. Every finding has an evidence citation (not just "appears to be missing")
 5. Doc discrepancies between PRD and official docs are separately flagged
 6. Status correctly reflects the findings (changes_needed if ANY missing or high-severity conflict)
-7. No claims without evidence (Principle III from fe-principles.md)
+7. No claims without evidence (see C1-C7 confidence scale in skills/ask-before-assume.md)
 8. Session memory consulted for any prior decisions that affect verification
 9. All decisions at C3 confidence or below have been logged as queries in `pending_queries.json` OR resolved via documented sources (PRD, LLD, Figma, shared-rules, config)
 
